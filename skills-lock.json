@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "skills/tanstack-router/SKILL.md",
       "computedHash": "65764bc7b90e47f6023cb7f89b3af93eaaafc517754f10b9382e184d4646a77d"
+    },
+    "tauri-pilot": {
+      "source": "mpiton/tauri-pilot",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "326b1333a18b08ef9390ec31ac5fad7b4393a65f49e9f8b4c17f4f37718888ca"
     }
   }
 }

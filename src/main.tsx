@@ -1,15 +1,23 @@
-import React from 'react'
+import { RouterProvider, createRouter, createBrowserHistory } from '@tanstack/react-router'
 import ReactDOM from 'react-dom/client'
 
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { routeTree } from './routeTree.gen'
 
 import './root.css'
-import App from './App'
+
+const router = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+  scrollRestoration: true,
+  history: createBrowserHistory(),
+})
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <TooltipProvider>
-      <App />
-    </TooltipProvider>
-  </React.StrictMode>,
+  <RouterProvider router={router} />,
 )

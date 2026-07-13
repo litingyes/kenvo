@@ -26,3 +26,6 @@ dist-ssr
 # ai
 .agents/skills
 .claude/skills
+
+# tanstack
+.tanstack

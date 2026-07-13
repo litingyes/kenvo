@@ -1,13 +1,25 @@
 import path from 'path'
 
 import tailwindcss from '@tailwindcss/vite'
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite-plus'
 
 const host = process.env.TAURI_DEV_HOST
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+      routesDirectory: './src/routes',
+      generatedRouteTree: './src/routeTree.gen.ts',
+      routeFileIgnorePrefix: '-',
+      quoteStyle: 'single',
+    }),
+    react(),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -46,6 +58,13 @@ export default defineConfig({
       'jsx-a11y',
       'promise',
     ],
+    jsPlugins: [
+      {
+        name: 'tanstack-router',
+        specifier: '@tanstack/eslint-plugin-router',
+      },
+    ],
+    ignorePatterns: ['./src/routeTree.gen.ts'],
   },
   fmt: {
     semi: false,
@@ -55,6 +74,7 @@ export default defineConfig({
     sortTailwindcss: {
       stylesheet: './src/root.css',
     },
+    ignorePatterns: ['./src/routeTree.gen.ts'],
   },
   staged: {
     '*': 'vp check --fix',

@@ -3,5 +3,47 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": ["core:default", "opener:default"]
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text",
+    "dialog:default",
+    "fs:default",
+    "fs:read-all",
+    "fs:read-dirs",
+    "fs:read-files",
+    "fs:read-meta",
+    "fs:write-files",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    },
+    "notification:default",
+    "shell:allow-open",
+    "shell:allow-kill",
+    "shell:allow-stdin-write",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        { "name": "run-zsh", "cmd": "/bin/zsh", "args": true },
+        { "name": "run-bash", "cmd": "/bin/bash", "args": true },
+        { "name": "run-sh", "cmd": "/bin/sh", "args": true }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        { "name": "run-zsh", "cmd": "/bin/zsh", "args": true },
+        { "name": "run-bash", "cmd": "/bin/bash", "args": true },
+        { "name": "run-sh", "cmd": "/bin/sh", "args": true }
+      ]
+    },
+    "window-state:default",
+    "sql:default",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-load",
+    "pilot:default"
+  ]
 }

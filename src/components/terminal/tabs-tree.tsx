@@ -1,0 +1,93 @@
+import { useNavigate } from '@tanstack/react-router'
+import { XIcon } from 'lucide-react'
+import * as React from 'react'
+
+import { touchSession } from '@/lib/db/terminal-repo'
+import type { TerminalSession } from '@/lib/terminal/types'
+import { cn } from '@/lib/utils'
+
+interface TabsTreeProps {
+  sessions: TerminalSession[]
+  activeSessionId: string
+  onClose: (e: React.MouseEvent, id: string) => void
+}
+
+export function TabsTree({ sessions, activeSessionId, onClose }: TabsTreeProps) {
+  const navigate = useNavigate()
+
+  const handleClick = (session: TerminalSession) => {
+    void touchSession(session.id)
+    void navigate({ to: '/terminal/$sessionId', params: { sessionId: session.id } })
+  }
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {sessions.map((session) => (
+        <SessionTreeNode
+          key={session.id}
+          session={session}
+          active={session.id === activeSessionId}
+          onClick={() => handleClick(session)}
+          onClose={(e) => onClose(e, session.id)}
+        />
+      ))}
+    </div>
+  )
+}
+
+function SessionTreeNode({
+  session,
+  active,
+  onClick,
+  onClose,
+}: {
+  session: TerminalSession
+  active: boolean
+  onClick: () => void
+  onClose: (e: React.MouseEvent) => void
+}) {
+  const title = session.title ?? getCwdDisplay(session.cwd)
+  const subtitle = session.title
+    ? getCwdDisplay(session.cwd)
+    : formatRelativeTime(session.last_active_at)
+
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        'group flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+        active
+          ? 'bg-background text-foreground shadow-sm'
+          : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+      )}
+    >
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-xs font-medium">{title}</span>
+        <span className="truncate text-[11px] text-muted-foreground/70">{subtitle}</span>
+      </div>
+      <button
+        onClick={onClose}
+        className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted"
+        aria-label="Close session"
+      >
+        <XIcon className="size-3" />
+      </button>
+    </div>
+  )
+}
+
+function getCwdDisplay(cwd: string): string {
+  if (cwd === '/' || cwd === '') return '/'
+  const parts = cwd.replace(/\/+$/, '').split('/')
+  const last = parts[parts.length - 1]
+  return last || cwd
+}
+
+function formatRelativeTime(ts: number): string {
+  const now = Date.now()
+  const diff = now - ts
+  if (diff < 60000) return 'just now'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
+  return `${Math.floor(diff / 86400000)}d ago`
+}

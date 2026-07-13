@@ -1,38 +1,62 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path"
-import tailwindcss from "@tailwindcss/vite"
+import path from 'path'
 
-const host = process.env.TAURI_DEV_HOST;
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite-plus'
 
-// https://vite.dev/config/
-export default defineConfig(async () => ({
-  plugins: [react(),tailwindcss()],
-    resolve: {
+const host = process.env.TAURI_DEV_HOST
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent Vite from obscuring rust errors
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
     strictPort: true,
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
+          protocol: 'ws',
           host,
           port: 1421,
         }
       : undefined,
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      ignored: ['**/src-tauri/**'],
     },
   },
-}));
+  lint: {
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+    plugins: [
+      'eslint',
+      'typescript',
+      'unicorn',
+      'react',
+      'react-perf',
+      'oxc',
+      'import',
+      'jsx-a11y',
+      'promise',
+    ],
+  },
+  fmt: {
+    semi: false,
+    singleQuote: true,
+    sortImports: true,
+    sortPackageJson: true,
+    sortTailwindcss: {
+      stylesheet: './src/root.css',
+    },
+  },
+  staged: {
+    '*': 'vp check --fix',
+  },
+})

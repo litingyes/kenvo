@@ -1,13 +1,15 @@
 {
   "name": "lume",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint": "vp check",
+    "lint:fix": "vp check --fix"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -42,6 +44,7 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "vite-plus": "^0.2.4"
   }
 }

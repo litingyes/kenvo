@@ -1,13 +1,15 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import './root.css'
-import { TooltipProvider } from "@/components/ui/tooltip"
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+import { TooltipProvider } from '@/components/ui/tooltip'
+
+import './root.css'
+import App from './App'
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <TooltipProvider>
-    <App />
+      <App />
     </TooltipProvider>
   </React.StrictMode>,
-);
+)

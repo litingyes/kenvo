@@ -1,22 +1,18 @@
 import { useNavigate } from '@tanstack/react-router'
 import {
   CopyIcon,
-  FolderIcon,
   FileIcon,
   ExternalLinkIcon,
+  FolderIcon,
   FolderOpenIcon,
   LinkIcon,
   LockIcon,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { useTerminalStore } from '@/lib/store/terminal-store'
-import {
-  copyToClipboard,
-  openExternal,
-  openInEditor,
-  revealInFinder,
-} from '@/lib/terminal/opener-helpers'
+import { copyToClipboard, openInEditor, revealInFinder } from '@/lib/terminal/opener-helpers'
 
 import { formatBytes, formatDate, formatMode, getParentDirs, usePathInfo } from './use-path-info'
 
@@ -36,23 +32,47 @@ export function PathInfoPanel({ cwd }: { cwd: string }) {
     void navigate({ to: '/terminal/$sessionId', params: { sessionId: activeId } })
   }
 
+  const handleCopy = async () => {
+    try {
+      await copyToClipboard(cwd)
+      toast.success('Path copied to clipboard')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to copy path')
+    }
+  }
+
+  const handleReveal = async () => {
+    try {
+      await revealInFinder(cwd)
+      toast.success('Revealed in Finder')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to reveal in Finder')
+    }
+  }
+
+  const handleOpenInEditor = async () => {
+    try {
+      await openInEditor(cwd, 'code')
+      toast.success('Opened in VS Code')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to open VS Code')
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4 text-sm">
       <section>
         <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">Current Path</h3>
         <p className="mb-2 font-mono text-xs break-all text-foreground">{cwd}</p>
         <div className="flex flex-wrap gap-1">
-          <Button variant="outline" size="xs" onClick={() => void copyToClipboard(cwd)}>
+          <Button variant="outline" size="xs" onClick={handleCopy}>
             <CopyIcon /> Copy
           </Button>
-          <Button variant="outline" size="xs" onClick={() => void revealInFinder(cwd)}>
+          <Button variant="outline" size="xs" onClick={handleReveal}>
             <FolderOpenIcon /> Reveal
           </Button>
-          <Button variant="outline" size="xs" onClick={() => void openInEditor(cwd, 'code')}>
+          <Button variant="outline" size="xs" onClick={handleOpenInEditor}>
             <ExternalLinkIcon /> in VS Code
-          </Button>
-          <Button variant="outline" size="xs" onClick={() => void openExternal(cwd)}>
-            <ExternalLinkIcon /> Default
           </Button>
         </div>
       </section>

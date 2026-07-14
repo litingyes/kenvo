@@ -1,16 +1,20 @@
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
-import { openPath, revealItemInDir } from '@tauri-apps/plugin-opener'
+import { Command } from '@tauri-apps/plugin-shell'
+
+async function runShell(cmd: string, cwd: string = '/'): Promise<void> {
+  const result = await Command.create('run-zsh', ['-c', cmd], { cwd }).execute()
+  if (result.code !== 0) {
+    const message = result.stderr?.trim() || `Command failed with exit code ${result.code}`
+    throw new Error(message)
+  }
+}
 
 export async function revealInFinder(path: string): Promise<void> {
-  await revealItemInDir(path)
+  await runShell(`open -R ${JSON.stringify(path)}`)
 }
 
 export async function openInEditor(path: string, cli: string): Promise<void> {
-  await openPath(path, cli)
-}
-
-export async function openExternal(path: string): Promise<void> {
-  await openPath(path)
+  await runShell(`${cli} ${JSON.stringify(path)}`)
 }
 
 export async function copyToClipboard(text: string): Promise<void> {

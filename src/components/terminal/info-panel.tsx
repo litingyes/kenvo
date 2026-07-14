@@ -32,28 +32,48 @@ const VIEWS: { id: RightView; label: string; icon: React.ElementType }[] = [
   { id: 'tree', label: 'Files', icon: FolderTreeIcon },
 ]
 
+const ViewTab = React.memo(function ViewTab({
+  view,
+  active,
+  onSelect,
+}: {
+  view: (typeof VIEWS)[number]
+  active: boolean
+  onSelect: (id: RightView) => void
+}) {
+  return (
+    <button
+      onClick={() => onSelect(view.id)}
+      className={cn(
+        'flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors',
+        active
+          ? 'bg-background text-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <view.icon className="size-3.5" />
+      <span className="hidden xl:inline">{view.label}</span>
+    </button>
+  )
+})
+
 export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPanelProps) {
   const rightView = useTerminalStore((s) => s.rightView)
   const setRightView = useTerminalStore((s) => s.setRightView)
   const toggleRightSidebar = useTerminalStore((s) => s.toggleRightSidebar)
 
+  const handleSelectView = React.useCallback((id: RightView) => setRightView(id), [setRightView])
+
   return (
     <div className="flex h-full flex-col border-l border-border bg-muted/30">
       <div className="flex items-center gap-0.5 border-b border-border px-1.5 py-1.5">
         {VIEWS.map((view) => (
-          <button
+          <ViewTab
             key={view.id}
-            onClick={() => setRightView(view.id)}
-            className={cn(
-              'flex flex-1 items-center justify-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors',
-              rightView === view.id
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <view.icon className="size-3.5" />
-            <span className="hidden xl:inline">{view.label}</span>
-          </button>
+            view={view}
+            active={rightView === view.id}
+            onSelect={handleSelectView}
+          />
         ))}
         <Button
           variant="ghost"

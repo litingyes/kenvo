@@ -87,6 +87,38 @@ export async function touchSession(id: string): Promise<void> {
   await db.execute('UPDATE terminal_sessions SET last_active_at = $1 WHERE id = $2', [now(), id])
 }
 
+export async function renameSession(id: string, title: string): Promise<void> {
+  const db = await getDatabase()
+  await db.execute('UPDATE terminal_sessions SET title = $1 WHERE id = $2', [title, id])
+}
+
+export async function duplicateSession(id: string): Promise<TerminalSession | null> {
+  const db = await getDatabase()
+  const rows = await db.select<Record<string, unknown>[]>(
+    'SELECT * FROM terminal_sessions WHERE id = $1',
+    [id],
+  )
+  if (rows.length === 0) return null
+  const src = rowToSession(rows[0]!)
+  const newId = uuid()
+  const ts = now()
+  await db.execute(
+    'INSERT INTO terminal_sessions (id, title, cwd, created_at, last_active_at) VALUES ($1, $2, $3, $4, $5)',
+    [newId, src.title, src.cwd, ts, ts],
+  )
+  const histRows = await db.select<Record<string, unknown>[]>(
+    'SELECT command, cwd, exit_code, executed_at FROM terminal_history WHERE session_id = $1 ORDER BY executed_at ASC',
+    [id],
+  )
+  for (const h of histRows) {
+    await db.execute(
+      'INSERT INTO terminal_history (session_id, command, cwd, exit_code, executed_at) VALUES ($1, $2, $3, $4, $5)',
+      [newId, h.command, h.cwd, h.exit_code, h.executed_at],
+    )
+  }
+  return { id: newId, title: src.title, cwd: src.cwd, created_at: ts, last_active_at: ts }
+}
+
 export async function deleteSession(id: string): Promise<void> {
   const db = await getDatabase()
   await db.execute('DELETE FROM terminal_history WHERE session_id = $1', [id])

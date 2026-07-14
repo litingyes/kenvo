@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import { addHistory } from '@/lib/db/terminal-repo'
+import { useTerminalStore } from '@/lib/store/terminal-store'
 import { ShellAdapter } from '@/lib/terminal/shell-adapter'
 import type { OutputLine } from '@/lib/terminal/types'
 
@@ -68,6 +69,7 @@ export function TerminalView({
         },
         onHistoryChange: (entry) => {
           void addHistory(entry)
+          useTerminalStore.getState().bumpHistory()
         },
         onReady: (hd) => {
           setHomeDir(hd)
@@ -115,7 +117,7 @@ export function TerminalView({
     <div
       ref={containerRef}
       tabIndex={0}
-      className="flex h-full flex-col bg-background font-mono text-sm leading-relaxed outline-none"
+      className="relative flex h-full flex-col bg-background font-mono text-sm leading-relaxed outline-none"
       onKeyDown={handleKeyDown}
       onClick={handleClick}
     >
@@ -127,23 +129,23 @@ export function TerminalView({
         ) : (
           outputLines.map((line) => <OutputLineView key={line.id} line={line} homeDir={homeDir} />)
         )}
-      </div>
-      <div className="flex items-center border-t border-border px-3 py-2">
-        <PromptView cwd={cwd} homeDir={homeDir} />
-        <span className="whitespace-pre text-foreground">{beforeCursor}</span>
-        <span
-          className="animate-pulse text-background"
-          style={{ background: 'var(--term-cursor-bg)' }}
-        >
-          {cursorChar}
-        </span>
-        <span className="whitespace-pre text-foreground">{afterCursor}</span>
-        {busy && (
-          <span className="ml-2 flex items-center gap-1 text-muted-foreground">
-            <span className="size-1.5 animate-spin rounded-full border border-current border-t-transparent" />
+        <div className="flex items-center px-0 py-1.5">
+          <PromptView cwd={cwd} homeDir={homeDir} />
+          <span className="whitespace-pre text-foreground">{beforeCursor}</span>
+          <span
+            className="animate-pulse text-background"
+            style={{ background: 'var(--term-cursor-bg)' }}
+          >
+            {cursorChar}
           </span>
-        )}
+          <span className="whitespace-pre text-foreground">{afterCursor}</span>
+        </div>
       </div>
+      {busy && (
+        <span className="absolute right-3 bottom-2 flex items-center gap-1 text-muted-foreground">
+          <span className="size-1.5 animate-spin rounded-full border border-current border-t-transparent" />
+        </span>
+      )}
     </div>
   )
 }

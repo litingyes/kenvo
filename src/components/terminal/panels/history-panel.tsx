@@ -2,6 +2,7 @@ import { ClockIcon, CornerUpLeftIcon } from 'lucide-react'
 import * as React from 'react'
 
 import { getHistory } from '@/lib/db/terminal-repo'
+import { useTerminalStore } from '@/lib/store/terminal-store'
 import type { HistoryEntry } from '@/lib/terminal/types'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +15,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
   const [entries, setEntries] = React.useState<HistoryEntry[]>([])
   const [loading, setLoading] = React.useState(true)
   const [filter, setFilter] = React.useState('')
+  const historyVersion = useTerminalStore((s) => s.historyVersion)
 
   React.useEffect(() => {
     let cancelled = false
@@ -28,7 +30,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
     return () => {
       cancelled = true
     }
-  }, [sessionId])
+  }, [sessionId, historyVersion])
 
   const filtered = React.useMemo(() => {
     if (!filter.trim()) return entries

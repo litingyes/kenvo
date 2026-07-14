@@ -1,15 +1,16 @@
 import { useNavigate } from '@tanstack/react-router'
-import { PlusIcon, TerminalIcon } from 'lucide-react'
+import { PanelLeftCloseIcon, PlusIcon, TerminalIcon } from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useTerminalStore } from '@/lib/store/terminal-store'
-import type { GroupMode, SessionGroup, TerminalSession } from '@/lib/terminal/types'
-import { cn } from '@/lib/utils'
+import { sortSessions, useTerminalStore } from '@/lib/store/terminal-store'
+import type { GroupMode, SessionGroup, SortMode, TerminalSession } from '@/lib/terminal/types'
 
+import { AppHeader } from './app-header'
 import { InfoPanel } from './info-panel'
+import { SessionGroupMenu } from './session-group-menu'
 import { TabsTree } from './tabs-tree'
 
 interface TerminalLayoutProps {
@@ -28,27 +29,40 @@ export function TerminalLayout({
   const sessions = useTerminalStore((s) => s.sessions)
   const activeSession = sessions.find((s) => s.id === activeSessionId)
   const activeCwd = activeSession?.cwd ?? ''
+  const leftOpen = useTerminalStore((s) => s.leftSidebarOpen)
+  const rightOpen = useTerminalStore((s) => s.rightSidebarOpen)
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
-      <ResizablePanelGroup orientation="horizontal">
-        <ResizablePanel defaultSize="20%" minSize="15%" maxSize="40%">
-          <TabsTreeSidebar activeSessionId={activeSessionId} activeCwd={activeCwd} />
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize="60%" minSize="30%">
-          {children}
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize="20%" minSize="15%" maxSize="40%">
-          <InfoPanel
-            sessionId={activeSessionId}
-            cwd={activeCwd}
-            homeDir={homeDir}
-            onInsertCommand={(cmd) => insertCommandRef.current?.(cmd)}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      <AppHeader activeSessionId={activeSessionId} />
+      <div className="flex min-h-0 flex-1">
+        <ResizablePanelGroup orientation="horizontal">
+          {leftOpen && (
+            <>
+              <ResizablePanel defaultSize="20%" minSize="15%" maxSize="40%">
+                <TabsTreeSidebar activeSessionId={activeSessionId} activeCwd={activeCwd} />
+              </ResizablePanel>
+              <ResizableHandle />
+            </>
+          )}
+          <ResizablePanel defaultSize={leftOpen ? '60%' : '80%'} minSize="30%">
+            {children}
+          </ResizablePanel>
+          {rightOpen && (
+            <>
+              <ResizableHandle />
+              <ResizablePanel defaultSize="20%" minSize="15%" maxSize="40%">
+                <InfoPanel
+                  sessionId={activeSessionId}
+                  cwd={activeCwd}
+                  homeDir={homeDir}
+                  onInsertCommand={(cmd) => insertCommandRef.current?.(cmd)}
+                />
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      </div>
     </div>
   )
 }
@@ -62,15 +76,17 @@ function TabsTreeSidebar({
 }) {
   const sessions = useTerminalStore((s) => s.sessions)
   const groupMode = useTerminalStore((s) => s.groupMode)
-  const setGroupMode = useTerminalStore((s) => s.setGroupMode)
+  const sortMode = useTerminalStore((s) => s.sortMode)
   const loaded = useTerminalStore((s) => s.loaded)
   const closeSession = useTerminalStore((s) => s.closeSession)
   const createSession = useTerminalStore((s) => s.createSession)
+  const toggleLeftSidebar = useTerminalStore((s) => s.toggleLeftSidebar)
   const navigate = useNavigate()
 
   const groups = React.useMemo(() => {
-    return groupSessions(sessions, groupMode)
-  }, [sessions, groupMode])
+    const sorted = sortSessions(sessions, sortMode)
+    return groupSessions(sorted, groupMode, sortMode)
+  }, [sessions, groupMode, sortMode])
 
   const handleNewSession = async () => {
     const session = await createSession(activeCwd)
@@ -97,17 +113,21 @@ function TabsTreeSidebar({
           <TerminalIcon className="size-4 text-muted-foreground" />
           <span className="text-sm font-medium">Sessions</span>
         </div>
-        <Button variant="ghost" size="icon" className="size-7" onClick={handleNewSession}>
-          <PlusIcon className="size-4" />
-        </Button>
-      </div>
-      <div className="flex items-center gap-1 px-2 pb-1">
-        <GroupModeButton active={groupMode === 'time'} onClick={() => setGroupMode('time')}>
-          Time
-        </GroupModeButton>
-        <GroupModeButton active={groupMode === 'path'} onClick={() => setGroupMode('path')}>
-          Path
-        </GroupModeButton>
+        <div className="flex items-center gap-0.5">
+          <SessionGroupMenu />
+          <Button variant="ghost" size="icon" className="size-7" onClick={handleNewSession}>
+            <PlusIcon className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={toggleLeftSidebar}
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftCloseIcon className="size-3.5" />
+          </Button>
+        </div>
       </div>
       <ScrollArea className="flex-1">
         <div className="px-1 pb-2">
@@ -131,30 +151,6 @@ function TabsTreeSidebar({
   )
 }
 
-function GroupModeButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors',
-        active
-          ? 'bg-background text-foreground shadow-sm'
-          : 'text-muted-foreground hover:text-foreground',
-      )}
-    >
-      {children}
-    </button>
-  )
-}
-
 function SessionGroupItem({
   group,
   activeSessionId,
@@ -172,7 +168,14 @@ function SessionGroupItem({
   )
 }
 
-function groupSessions(sessions: TerminalSession[], mode: GroupMode): SessionGroup[] {
+function groupSessions(
+  sessions: TerminalSession[],
+  mode: GroupMode,
+  sortMode: SortMode,
+): SessionGroup[] {
+  if (mode === 'none') {
+    return [{ key: 'all', label: '', sessions }]
+  }
   if (mode === 'time') {
     const now = Date.now()
     const todayStart = new Date(now).setHours(0, 0, 0, 0)
@@ -185,7 +188,7 @@ function groupSessions(sessions: TerminalSession[], mode: GroupMode): SessionGro
     const older: TerminalSession[] = []
 
     for (const s of sessions) {
-      const ts = s.last_active_at
+      const ts = sortMode === 'created' ? s.created_at : s.last_active_at
       if (ts >= todayStart) today.push(s)
       else if (ts >= yesterdayStart) yesterday.push(s)
       else if (ts >= weekStart) thisWeek.push(s)
@@ -215,5 +218,9 @@ function groupSessions(sessions: TerminalSession[], mode: GroupMode): SessionGro
     const label = parts.length > 2 ? `${parts[parts.length - 2]}/${parts[parts.length - 1]}` : key
     groups.push({ key, label, sessions: list })
   }
-  return groups.sort((a, b) => b.sessions[0]!.last_active_at - a.sessions[0]!.last_active_at)
+  return groups.sort((a, b) => {
+    const av = sortMode === 'created' ? a.sessions[0]!.created_at : a.sessions[0]!.last_active_at
+    const bv = sortMode === 'created' ? b.sessions[0]!.created_at : b.sessions[0]!.last_active_at
+    return bv - av
+  })
 }

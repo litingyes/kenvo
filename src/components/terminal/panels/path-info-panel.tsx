@@ -1,20 +1,60 @@
-import { FolderIcon, FileIcon, LinkIcon, LockIcon } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import {
+  CopyIcon,
+  FolderIcon,
+  FileIcon,
+  ExternalLinkIcon,
+  FolderOpenIcon,
+  LinkIcon,
+  LockIcon,
+} from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
 import { useTerminalStore } from '@/lib/store/terminal-store'
+import {
+  copyToClipboard,
+  openExternal,
+  openInEditor,
+  revealInFinder,
+} from '@/lib/terminal/opener-helpers'
 
 import { formatBytes, formatDate, formatMode, getParentDirs, usePathInfo } from './use-path-info'
 
 export function PathInfoPanel({ cwd }: { cwd: string }) {
   const { info, loading, error } = usePathInfo(cwd)
+  const activeId = useTerminalStore((s) => s.activeId)
+  const updateSessionCwd = useTerminalStore((s) => s.updateSessionCwd)
   const refreshSessions = useTerminalStore((s) => s.refreshSessions)
+  const navigate = useNavigate()
 
   const parents = getParentDirs(cwd)
+
+  const handleSwitchCwd = async (path: string) => {
+    if (!activeId) return
+    await updateSessionCwd(activeId, path)
+    await refreshSessions()
+    void navigate({ to: '/terminal/$sessionId', params: { sessionId: activeId } })
+  }
 
   return (
     <div className="flex flex-col gap-4 text-sm">
       <section>
         <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">Current Path</h3>
-        <p className="font-mono text-xs break-all text-foreground">{cwd}</p>
+        <p className="mb-2 font-mono text-xs break-all text-foreground">{cwd}</p>
+        <div className="flex flex-wrap gap-1">
+          <Button variant="outline" size="xs" onClick={() => void copyToClipboard(cwd)}>
+            <CopyIcon /> Copy
+          </Button>
+          <Button variant="outline" size="xs" onClick={() => void revealInFinder(cwd)}>
+            <FolderOpenIcon /> Reveal
+          </Button>
+          <Button variant="outline" size="xs" onClick={() => void openInEditor(cwd, 'code')}>
+            <ExternalLinkIcon /> in VS Code
+          </Button>
+          <Button variant="outline" size="xs" onClick={() => void openExternal(cwd)}>
+            <ExternalLinkIcon /> Default
+          </Button>
+        </div>
       </section>
 
       <section>
@@ -23,9 +63,7 @@ export function PathInfoPanel({ cwd }: { cwd: string }) {
           {parents.map((dir) => (
             <button
               key={dir.path}
-              onClick={() => {
-                void refreshSessions()
-              }}
+              onClick={() => void handleSwitchCwd(dir.path)}
               className="truncate rounded px-1.5 py-0.5 text-left font-mono text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
               title={dir.path}
             >

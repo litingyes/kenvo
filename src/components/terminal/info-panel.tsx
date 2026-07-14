@@ -1,6 +1,13 @@
-import { FolderTreeIcon, GitBranchIcon, HistoryIcon, InfoIcon } from 'lucide-react'
+import {
+  FolderTreeIcon,
+  GitBranchIcon,
+  HistoryIcon,
+  InfoIcon,
+  PanelRightCloseIcon,
+} from 'lucide-react'
 import * as React from 'react'
 
+import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useTerminalStore } from '@/lib/store/terminal-store'
 import type { RightView } from '@/lib/terminal/types'
@@ -28,6 +35,7 @@ const VIEWS: { id: RightView; label: string; icon: React.ElementType }[] = [
 export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPanelProps) {
   const rightView = useTerminalStore((s) => s.rightView)
   const setRightView = useTerminalStore((s) => s.setRightView)
+  const toggleRightSidebar = useTerminalStore((s) => s.toggleRightSidebar)
 
   return (
     <div className="flex h-full flex-col border-l border-border bg-muted/30">
@@ -47,6 +55,15 @@ export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPane
             <span className="hidden xl:inline">{view.label}</span>
           </button>
         ))}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="ml-0.5 shrink-0"
+          onClick={toggleRightSidebar}
+          aria-label="Collapse right sidebar"
+        >
+          <PanelRightCloseIcon className="size-3.5" />
+        </Button>
       </div>
       <ScrollArea className="flex-1">
         <div className="p-3">

@@ -2,9 +2,16 @@ import { useNavigate } from '@tanstack/react-router'
 import { XIcon } from 'lucide-react'
 import * as React from 'react'
 
+import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { touchSession } from '@/lib/db/terminal-repo'
 import type { TerminalSession } from '@/lib/terminal/types'
 import { cn } from '@/lib/utils'
+
+import {
+  SessionActionDialogs,
+  SessionContextMenuItems,
+  useSessionActions,
+} from './session-action-menu'
 
 interface TabsTreeProps {
   sessions: TerminalSession[]
@@ -50,29 +57,42 @@ function SessionTreeNode({
   const subtitle = session.title
     ? getCwdDisplay(session.cwd)
     : formatRelativeTime(session.last_active_at)
+  const actions = useSessionActions(session)
 
   return (
-    <div
-      onClick={onClick}
-      className={cn(
-        'group flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
-        active
-          ? 'bg-background text-foreground shadow-sm'
-          : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
-      )}
-    >
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-xs font-medium">{title}</span>
-        <span className="truncate text-[11px] text-muted-foreground/70">{subtitle}</span>
-      </div>
-      <button
-        onClick={onClose}
-        className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted"
-        aria-label="Close session"
-      >
-        <XIcon className="size-3" />
-      </button>
-    </div>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger
+          render={
+            <div
+              onClick={onClick}
+              className={cn(
+                'group flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
+                active
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+              )}
+            />
+          }
+        >
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-xs font-medium">{title}</span>
+            <span className="truncate text-[11px] text-muted-foreground/70">{subtitle}</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted"
+            aria-label="Close session"
+          >
+            <XIcon className="size-3" />
+          </button>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <SessionContextMenuItems session={session} actions={actions} />
+        </ContextMenuContent>
+      </ContextMenu>
+      <SessionActionDialogs session={session} actions={actions} />
+    </>
   )
 }
 

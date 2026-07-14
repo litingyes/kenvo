@@ -24,7 +24,9 @@ export interface OutputLine {
   cwd?: string
 }
 
-export type GroupMode = 'time' | 'path'
+export type GroupMode = 'none' | 'time' | 'path'
+
+export type SortMode = 'created' | 'updated'
 
 export type RightView = 'path' | 'history' | 'git' | 'tree'
 
@@ -32,4 +34,9 @@ export interface SessionGroup {
   key: string
   label: string
   sessions: TerminalSession[]
+}
+
+export interface EditorApp {
+  cli: string
+  name: string
 }

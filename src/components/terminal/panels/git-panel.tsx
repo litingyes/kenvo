@@ -1,7 +1,22 @@
-import { GitBranchIcon, GitCommitIcon, GitPullRequestIcon, RefreshCwIcon } from 'lucide-react'
+import {
+  ChevronDownIcon,
+  GitBranchIcon,
+  GitCommitIcon,
+  GitPullRequestIcon,
+  RefreshCwIcon,
+} from 'lucide-react'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Textarea } from '@/components/ui/textarea'
 import { runExternalQuiet } from '@/lib/terminal/external-runner'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +33,8 @@ export function GitPanel({ cwd }: { cwd: string }) {
   const [loading, setLoading] = React.useState(true)
   const [notRepo, setNotRepo] = React.useState(false)
   const [actionLoading, setActionLoading] = React.useState<string | null>(null)
+  const [commitOpen, setCommitOpen] = React.useState(false)
+  const [commitMsg, setCommitMsg] = React.useState('')
 
   const refresh = React.useCallback(async () => {
     setLoading(true)
@@ -83,6 +100,17 @@ export function GitPanel({ cwd }: { cwd: string }) {
     void refresh()
   }
 
+  const handleCommit = async () => {
+    const msg = commitMsg.trim()
+    if (!msg) return
+    setActionLoading('commit')
+    await runExternalQuiet(`git add -A 2>&1 && git commit -m ${JSON.stringify(msg)} 2>&1`, cwd)
+    setActionLoading(null)
+    setCommitMsg('')
+    setCommitOpen(false)
+    void refresh()
+  }
+
   if (loading) {
     return <p className="text-xs text-muted-foreground">Loading git info...</p>
   }
@@ -124,35 +152,71 @@ export function GitPanel({ cwd }: { cwd: string }) {
       </section>
 
       <section>
-        <div className="flex gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 flex-1 text-xs"
-            disabled={actionLoading !== null}
-            onClick={() => runGitAction('pull', 'git pull --rebase 2>&1')}
-          >
-            Pull
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 flex-1 text-xs"
-            disabled={actionLoading !== null}
-            onClick={() => runGitAction('push', 'git push 2>&1')}
-          >
-            Push
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-6 flex-1 text-xs"
-            disabled={actionLoading !== null}
-            onClick={() => runGitAction('stage', 'git add -A 2>&1')}
-          >
-            Stage
-          </Button>
-        </div>
+        <ButtonGroup>
+          <Popover open={commitOpen} onOpenChange={setCommitOpen}>
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 flex-1 text-xs"
+                  disabled={actionLoading !== null}
+                />
+              }
+            >
+              <GitCommitIcon /> Commit
+              <ChevronDownIcon className="size-3 opacity-60" />
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3">
+              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Commit message</p>
+              <Textarea
+                value={commitMsg}
+                onChange={(e) => setCommitMsg(e.target.value)}
+                placeholder="Enter commit message…"
+                className="mb-2 min-h-16 text-xs"
+              />
+              <div className="flex justify-end gap-1.5">
+                <Button variant="outline" size="sm" onClick={() => setCommitOpen(false)}>
+                  Cancel
+                </Button>
+                <Button size="sm" disabled={!commitMsg.trim()} onClick={() => void handleCommit()}>
+                  Commit
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  disabled={actionLoading !== null}
+                  aria-label="More git actions"
+                />
+              }
+            >
+              <ChevronDownIcon className="size-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => runGitAction('pull', 'git pull --rebase 2>&1')}>
+                Pull (rebase)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runGitAction('push', 'git push 2>&1')}>
+                Push
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runGitAction('stage', 'git add -A 2>&1')}>
+                Stage All
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runGitAction('fetch', 'git fetch 2>&1')}>
+                Fetch
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ButtonGroup>
+
         {actionLoading && (
           <p className="mt-1 text-[10px] text-muted-foreground">Running {actionLoading}...</p>
         )}

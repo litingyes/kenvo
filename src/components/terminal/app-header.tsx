@@ -32,64 +32,66 @@ export function AppHeader({ activeSessionId }: AppHeaderProps) {
   return (
     <div
       data-tauri-drag-region
-      className="flex h-9 shrink-0 items-stretch border-b border-border bg-background pl-20"
+      className="flex h-9 shrink-0 items-center border-b border-border bg-background pl-20"
     >
-      {/* Left: collapsed-left toggle slot (visible only when left sidebar closed) */}
-      <div className="flex items-center" data-tauri-drag-region={false}>
-        {!leftOpen && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={toggleLeft}
-            aria-label="Open left sidebar"
-          >
-            <PanelLeftOpenIcon className="size-3.5" />
-          </Button>
-        )}
-      </div>
+      {/* Left: open left sidebar (only when collapsed) */}
+      {!leftOpen && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 [-webkit-app-region:no-drag]"
+          onClick={toggleLeft}
+          aria-label="Open left sidebar"
+        >
+          <PanelLeftOpenIcon className="size-3.5" />
+        </Button>
+      )}
+
+      {/* Drag spacer */}
+      <div data-tauri-drag-region className="min-w-2 flex-1 self-stretch" />
 
       {/* Center: session name dropdown */}
-      <div className="flex flex-1 items-center justify-center" data-tauri-drag-region={false}>
-        {activeSession && (
-          <DropdownMenu open={open} onOpenChange={setOpen}>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="max-w-[60%] gap-1 px-2 text-xs font-medium"
-                />
-              }
-            >
-              <span className="truncate">
-                {activeSession.title ?? getCwdDisplay(activeSession.cwd)}
-              </span>
-              <ChevronDownIcon className="size-3 opacity-60" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="min-w-52">
-              <SessionDropdownItems
-                session={activeSession}
-                actions={actions}
-                closeMenu={() => setOpen(false)}
+      {activeSession && (
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="max-w-[40%] shrink-0 gap-1 px-2 text-xs font-medium [-webkit-app-region:no-drag]"
               />
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
-
-      {/* Right: only show expand button when right sidebar is collapsed */}
-      <div className="flex items-center gap-0.5 pr-2" data-tauri-drag-region={false}>
-        {!rightOpen && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={toggleRight}
-            aria-label="Open right sidebar"
+            }
           >
-            <PanelRightOpenIcon className="size-3.5" />
-          </Button>
-        )}
-      </div>
+            <span className="truncate">
+              {activeSession.title ?? getCwdDisplay(activeSession.cwd)}
+            </span>
+            <ChevronDownIcon className="size-3 opacity-60" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="min-w-52">
+            <SessionDropdownItems
+              session={activeSession}
+              actions={actions}
+              closeMenu={() => setOpen(false)}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Drag spacer */}
+      <div data-tauri-drag-region className="min-w-2 flex-1 self-stretch" />
+
+      {/* Right: open right sidebar (only when collapsed) */}
+      {!rightOpen && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 pr-2 [-webkit-app-region:no-drag]"
+          onClick={toggleRight}
+          aria-label="Open right sidebar"
+        >
+          <PanelRightOpenIcon className="size-3.5" />
+        </Button>
+      )}
 
       {activeSession && <SessionActionDialogs session={activeSession} actions={actions} />}
     </div>

@@ -1,7 +1,9 @@
 import { ClockIcon, CornerUpLeftIcon } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { getHistory } from '@/lib/db/terminal-repo'
+import i18n from '@/lib/i18n'
 import { useTerminalStore } from '@/lib/store/terminal-store'
 import type { HistoryEntry } from '@/lib/terminal/types'
 import { cn } from '@/lib/utils'
@@ -12,6 +14,7 @@ interface HistoryPanelProps {
 }
 
 export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) {
+  const { t } = useTranslation()
   const [entries, setEntries] = React.useState<HistoryEntry[]>([])
   const [loading, setLoading] = React.useState(true)
   const [filter, setFilter] = React.useState('')
@@ -20,7 +23,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
   React.useEffect(() => {
     let cancelled = false
     setLoading(true)
-    getHistory(sessionId, 200)
+    void getHistory(sessionId, 200)
       .then((data) => {
         if (!cancelled) setEntries(data)
       })
@@ -44,13 +47,13 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
         type="text"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        placeholder="Filter commands..."
+        placeholder={t('history.filter')}
         className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs outline-none focus:border-ring"
       />
       {loading ? (
-        <p className="text-xs text-muted-foreground">Loading...</p>
+        <p className="text-xs text-muted-foreground">{t('history.loading')}</p>
       ) : filtered.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No commands yet</p>
+        <p className="text-xs text-muted-foreground">{t('history.noCommands')}</p>
       ) : (
         <div className="flex flex-col gap-1">
           {filtered.map((entry, i) => {
@@ -83,7 +86,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
                             : 'text-red-500',
                         )}
                       >
-                        exit={entry.exit_code}
+                        {t('history.exitCode', { code: entry.exit_code })}
                       </span>
                     )}
                     <span className="truncate">{getCwdShort(entry.cwd)}</span>
@@ -92,7 +95,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
                 <button
                   onClick={() => onInsertCommand(entry.command)}
                   className="mt-0.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                  title="Insert to input"
+                  title={t('history.insertTooltip')}
                 >
                   <CornerUpLeftIcon className="size-3 text-muted-foreground" />
                 </button>
@@ -107,7 +110,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
-  return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
 }
 
 function getCwdShort(cwd: string): string {

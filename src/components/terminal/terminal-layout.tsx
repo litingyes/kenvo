@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { PanelLeftCloseIcon, PlusIcon, TerminalIcon } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { AppHeader } from '@/components/layout/app-header'
 import { Button } from '@/components/ui/button'
@@ -95,6 +96,7 @@ function TabsTreeSidebar({
   activeSessionId: string
   onNewSession: () => void
 }) {
+  const { t } = useTranslation()
   const sessions = useTerminalStore((s) => s.sessions)
   const groupMode = useTerminalStore((s) => s.groupMode)
   const sortMode = useTerminalStore((s) => s.sortMode)
@@ -126,7 +128,7 @@ function TabsTreeSidebar({
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
         <div className="flex items-center gap-1.5">
           <TerminalIcon className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Sessions</span>
+          <span className="text-sm font-medium">{t('terminal.sessions')}</span>
         </div>
         <div className="flex items-center gap-0.5">
           <SessionGroupMenu />
@@ -138,7 +140,7 @@ function TabsTreeSidebar({
             size="icon"
             className="size-7"
             onClick={toggleLeftSidebar}
-            aria-label="Collapse sidebar"
+            aria-label={t('terminal.collapseSidebar')}
           >
             <PanelLeftCloseIcon className="size-3.5" />
           </Button>
@@ -148,7 +150,7 @@ function TabsTreeSidebar({
         <div className="px-1 pb-2">
           {loaded && sessions.length === 0 ? (
             <div className="px-2 py-4 text-center text-xs text-muted-foreground">
-              No sessions yet
+              {t('terminal.noSessions')}
             </div>
           ) : (
             groups.map((group) => (
@@ -175,12 +177,19 @@ function SessionGroupItem({
   activeSessionId: string
   onClose: (e: React.MouseEvent, id: string) => void
 }) {
+  const { t } = useTranslation()
+  const label = isTimeGroup(group.key) ? t(`terminal.timeLabels.${group.key}`) : group.label
+
   return (
     <div className="mb-1">
-      <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{group.label}</div>
+      <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{label}</div>
       <TabsTree sessions={group.sessions} activeSessionId={activeSessionId} onClose={onClose} />
     </div>
   )
+}
+
+function isTimeGroup(key: string): boolean {
+  return ['today', 'yesterday', 'thisWeek', 'older'].includes(key)
 }
 
 function groupSessions(
@@ -211,11 +220,10 @@ function groupSessions(
     }
 
     const groups: SessionGroup[] = []
-    if (today.length > 0) groups.push({ key: 'today', label: 'Today', sessions: today })
-    if (yesterday.length > 0)
-      groups.push({ key: 'yesterday', label: 'Yesterday', sessions: yesterday })
-    if (thisWeek.length > 0) groups.push({ key: 'week', label: 'This Week', sessions: thisWeek })
-    if (older.length > 0) groups.push({ key: 'older', label: 'Older', sessions: older })
+    if (today.length > 0) groups.push({ key: 'today', label: '', sessions: today })
+    if (yesterday.length > 0) groups.push({ key: 'yesterday', label: '', sessions: yesterday })
+    if (thisWeek.length > 0) groups.push({ key: 'thisWeek', label: '', sessions: thisWeek })
+    if (older.length > 0) groups.push({ key: 'older', label: '', sessions: older })
     return groups
   }
 

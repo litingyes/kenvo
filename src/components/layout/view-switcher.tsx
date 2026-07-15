@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { ChevronDownIcon, PanelLeftIcon, PanelRightIcon } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -27,6 +28,7 @@ export function ViewSwitcher({
   onToggleLeftSidebar,
   onToggleRightSidebar,
 }: ViewSwitcherProps) {
+  const { t } = useTranslation()
   const activeView = useActiveView()
   const navigate = useNavigate()
   const [open, setOpen] = React.useState(false)
@@ -56,7 +58,7 @@ export function ViewSwitcher({
         }
       >
         <ActiveIcon className="size-3.5" />
-        <span>{activeView.label}</span>
+        <span>{t('terminal.title')}</span>
         <ChevronDownIcon className="size-3 opacity-60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-44">
@@ -64,7 +66,7 @@ export function ViewSwitcher({
           {APP_VIEWS.map((view) => (
             <DropdownMenuRadioItem key={view.id} value={view.id}>
               <view.icon className="size-3.5" />
-              {view.label}
+              {t('terminal.title')}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
@@ -78,7 +80,7 @@ export function ViewSwitcher({
                 onCheckedChange={onToggleLeftSidebar}
               >
                 <PanelLeftIcon className="size-3.5" />
-                Left sidebar
+                {t('terminal.leftSidebar')}
               </DropdownMenuCheckboxItem>
             )}
             {onToggleRightSidebar && (
@@ -87,7 +89,7 @@ export function ViewSwitcher({
                 onCheckedChange={onToggleRightSidebar}
               >
                 <PanelRightIcon className="size-3.5" />
-                Right sidebar
+                {t('terminal.rightSidebar')}
               </DropdownMenuCheckboxItem>
             )}
           </>

@@ -1,6 +1,8 @@
 import { stat } from '@tauri-apps/plugin-fs'
 import * as React from 'react'
 
+import i18n from '@/lib/i18n'
+
 interface PathInfo {
   isFile: boolean
   isDirectory: boolean
@@ -57,7 +59,7 @@ export function formatBytes(bytes: number): string {
 
 export function formatDate(date: Date | null): string {
   if (!date) return '-'
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString(i18n.language, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

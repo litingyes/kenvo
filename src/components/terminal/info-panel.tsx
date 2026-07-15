@@ -6,6 +6,7 @@ import {
   PanelRightCloseIcon,
 } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -25,19 +26,21 @@ interface InfoPanelProps {
   onInsertCommand: (cmd: string) => void
 }
 
-const VIEWS: { id: RightView; label: string; icon: React.ElementType }[] = [
-  { id: 'path', label: 'Path', icon: InfoIcon },
-  { id: 'history', label: 'History', icon: HistoryIcon },
-  { id: 'git', label: 'Git', icon: GitBranchIcon },
-  { id: 'tree', label: 'Files', icon: FolderTreeIcon },
+const VIEWS: { id: RightView; icon: React.ElementType }[] = [
+  { id: 'path', icon: InfoIcon },
+  { id: 'history', icon: HistoryIcon },
+  { id: 'git', icon: GitBranchIcon },
+  { id: 'files', icon: FolderTreeIcon },
 ]
 
 const ViewTab = React.memo(function ViewTab({
   view,
+  label,
   active,
   onSelect,
 }: {
   view: (typeof VIEWS)[number]
+  label: string
   active: boolean
   onSelect: (id: RightView) => void
 }) {
@@ -52,12 +55,13 @@ const ViewTab = React.memo(function ViewTab({
       )}
     >
       <view.icon className="size-3.5" />
-      <span className="hidden xl:inline">{view.label}</span>
+      <span className="hidden xl:inline">{label}</span>
     </button>
   )
 })
 
 export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPanelProps) {
+  const { t } = useTranslation()
   const rightView = useTerminalStore((s) => s.rightView)
   const setRightView = useTerminalStore((s) => s.setRightView)
   const toggleRightSidebar = useTerminalStore((s) => s.toggleRightSidebar)
@@ -71,6 +75,7 @@ export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPane
           <ViewTab
             key={view.id}
             view={view}
+            label={t(`infoPanel.tabs.${view.id}`)}
             active={rightView === view.id}
             onSelect={handleSelectView}
           />
@@ -80,7 +85,7 @@ export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPane
           size="icon-sm"
           className="ml-0.5 shrink-0"
           onClick={toggleRightSidebar}
-          aria-label="Collapse right sidebar"
+          aria-label={t('terminal.collapseRightSidebar')}
         >
           <PanelRightCloseIcon className="size-3.5" />
         </Button>
@@ -92,7 +97,7 @@ export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPane
             <HistoryPanel sessionId={sessionId} onInsertCommand={onInsertCommand} />
           )}
           {rightView === 'git' && <GitPanel cwd={cwd} />}
-          {rightView === 'tree' && <FileTreePanel cwd={cwd} homeDir={homeDir} />}
+          {rightView === 'files' && <FileTreePanel cwd={cwd} homeDir={homeDir} />}
         </div>
       </ScrollArea>
     </div>

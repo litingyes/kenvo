@@ -1,0 +1,201 @@
+{
+  "app": {
+    "name": "Kenvo"
+  },
+  "settings": {
+    "title": "设置",
+    "appearance": {
+      "title": "外观",
+      "description": "自定义 Kenvo 的外观。",
+      "theme": "主题",
+      "themePreset": "主题预设",
+      "modes": {
+        "light": "浅色",
+        "dark": "深色",
+        "system": "跟随系统"
+      },
+      "presets": {
+        "terminal": "终端",
+        "ocean": "海洋",
+        "midnight": "午夜"
+      }
+    },
+    "language": {
+      "title": "语言",
+      "description": "选择你的首选语言。"
+    }
+  },
+  "terminal": {
+    "title": "终端",
+    "sessions": "会话",
+    "noSessions": "还没有会话",
+    "newSession": "新建会话",
+    "sessionActions": "会话操作",
+    "closeSession": "关闭会话",
+    "collapseSidebar": "收起侧边栏",
+    "collapseRightSidebar": "收起右侧边栏",
+    "leftSidebar": "左侧边栏",
+    "rightSidebar": "右侧边栏",
+    "initializing": "正在初始化终端...",
+    "emptyPrompt": "输入命令后按回车...",
+    "groupBy": "分组方式",
+    "sortBy": "排序方式",
+    "groupOptions": {
+      "none": "不分组",
+      "time": "时间",
+      "path": "路径"
+    },
+    "sortOptions": {
+      "updated": "更新时间",
+      "created": "创建时间"
+    },
+    "timeLabels": {
+      "today": "今天",
+      "yesterday": "昨天",
+      "thisWeek": "本周",
+      "older": "更早"
+    },
+    "relativeTime": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}} 分钟前",
+      "hoursAgo": "{{count}} 小时前",
+      "daysAgo": "{{count}} 天前"
+    }
+  },
+  "session": {
+    "actions": {
+      "rename": "重命名",
+      "copyPath": "复制路径",
+      "reveal": "在 Finder 中显示",
+      "openIn": "打开方式…",
+      "duplicate": "复制",
+      "delete": "删除"
+    },
+    "dialogs": {
+      "rename": {
+        "title": "重命名会话",
+        "placeholder": "会话名称",
+        "cancel": "取消",
+        "save": "保存"
+      },
+      "delete": {
+        "title": "删除此会话？",
+        "description": "此操作无法撤销。该会话及其历史记录将被移除。",
+        "cancel": "取消",
+        "confirm": "删除"
+      },
+      "duplicate": {
+        "title": "复制此会话？",
+        "description": "创建一个工作目录和命令历史相同的新会话。",
+        "cancel": "取消",
+        "confirm": "复制"
+      }
+    },
+    "editor": {
+      "loading": "加载中…",
+      "label": "编辑器",
+      "empty": "未检测到编辑器"
+    }
+  },
+  "infoPanel": {
+    "tabs": {
+      "path": "路径",
+      "history": "历史",
+      "git": "Git",
+      "files": "文件"
+    }
+  },
+  "pathInfo": {
+    "currentPath": "当前路径",
+    "copy": "复制",
+    "reveal": "显示",
+    "openInVSCode": "在 VS Code 中打开",
+    "parentDirectories": "父级目录",
+    "details": "详情",
+    "loading": "加载中...",
+    "type": "类型",
+    "size": "大小",
+    "modified": "修改时间",
+    "mode": "权限",
+    "readOnly": "只读",
+    "yes": "是",
+    "no": "否",
+    "directory": "目录",
+    "symlink": "符号链接",
+    "file": "文件",
+    "unknown": "未知"
+  },
+  "history": {
+    "filter": "筛选命令...",
+    "loading": "加载中...",
+    "noCommands": "还没有命令",
+    "insertTooltip": "插入到输入框",
+    "exitCode": "退出码={{code}}"
+  },
+  "git": {
+    "loading": "正在加载 Git 信息...",
+    "notRepo": "不是 Git 仓库",
+    "ahead": "领先 {{count}} 个提交",
+    "behind": "落后 {{count}} 个提交",
+    "commitMessage": "提交信息",
+    "commitPlaceholder": "输入提交信息…",
+    "cancel": "取消",
+    "commit": "提交",
+    "moreActions": "更多 Git 操作",
+    "pull": "拉取（变基）",
+    "push": "推送",
+    "stageAll": "全部暂存",
+    "fetch": "获取",
+    "running": "正在执行 {{action}}...",
+    "changes": "变更（{{count}}）",
+    "moreFiles": "还有 {{count}} 项",
+    "recentCommits": "最近提交"
+  },
+  "files": {
+    "search": "搜索文件…",
+    "showHidden": "显示隐藏文件",
+    "hideHidden": "隐藏隐藏文件",
+    "showDotfiles": "显示 dotfiles",
+    "hideDotfiles": "隐藏 dotfiles",
+    "loading": "加载中…",
+    "emptyDirectory": "空目录"
+  },
+  "toast": {
+    "copyPath": "路径已复制到剪贴板",
+    "reveal": "已在 Finder 中显示",
+    "openVSCode": "已在 VS Code 中打开",
+    "copyPathError": "复制路径失败",
+    "revealError": "在 Finder 中显示失败",
+    "openVSCodeError": "在 VS Code 中打开失败"
+  },
+  "menu": {
+    "app": "Kenvo",
+    "about": "关于 Kenvo",
+    "settings": "设置...",
+    "hide": "隐藏 Kenvo",
+    "quit": "退出 Kenvo",
+    "edit": "编辑"
+  },
+  "errors": {
+    "commandFailed": "命令执行失败，退出码 {{code}}",
+    "cdNotDirectory": "cd: 不是目录: {{target}}",
+    "cdNotFound": "cd: 没有这样的文件或目录: {{target}}"
+  },
+  "shell": {
+    "welcome": "Kenvo 终端 — 当前目录: {{cwd}}"
+  },
+  "ui": {
+    "toggleSidebar": "切换侧边栏",
+    "sidebar": "侧边栏",
+    "sidebarDescription": "显示移动端侧边栏。",
+    "breadcrumb": "面包屑导航",
+    "pagination": "分页",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "previous": "上一页",
+    "next": "下一页",
+    "morePages": "更多页面",
+    "more": "更多",
+    "loading": "加载中"
+  }
+}

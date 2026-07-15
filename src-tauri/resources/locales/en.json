@@ -1,0 +1,201 @@
+{
+  "app": {
+    "name": "Kenvo"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize the appearance of Kenvo.",
+      "theme": "Theme",
+      "themePreset": "Theme preset",
+      "modes": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "presets": {
+        "terminal": "Terminal",
+        "ocean": "Ocean",
+        "midnight": "Midnight"
+      }
+    },
+    "language": {
+      "title": "Language",
+      "description": "Select your preferred language."
+    }
+  },
+  "terminal": {
+    "title": "Terminal",
+    "sessions": "Sessions",
+    "noSessions": "No sessions yet",
+    "newSession": "New session",
+    "sessionActions": "Session actions",
+    "closeSession": "Close session",
+    "collapseSidebar": "Collapse sidebar",
+    "collapseRightSidebar": "Collapse right sidebar",
+    "leftSidebar": "Left sidebar",
+    "rightSidebar": "Right sidebar",
+    "initializing": "Initializing terminal...",
+    "emptyPrompt": "Type a command and press Enter...",
+    "groupBy": "Group by",
+    "sortBy": "Sort by",
+    "groupOptions": {
+      "none": "No Group",
+      "time": "Time",
+      "path": "Path"
+    },
+    "sortOptions": {
+      "updated": "Updated Time",
+      "created": "Created Time"
+    },
+    "timeLabels": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "older": "Older"
+    },
+    "relativeTime": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    }
+  },
+  "session": {
+    "actions": {
+      "rename": "Rename",
+      "copyPath": "Copy Path",
+      "reveal": "Reveal in Finder",
+      "openIn": "Open in…",
+      "duplicate": "Duplicate",
+      "delete": "Delete"
+    },
+    "dialogs": {
+      "rename": {
+        "title": "Rename Session",
+        "placeholder": "Session name",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "delete": {
+        "title": "Delete this session?",
+        "description": "This action cannot be undone. The session and its history will be removed.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      },
+      "duplicate": {
+        "title": "Duplicate this session?",
+        "description": "Creates a new session with the same working directory and command history.",
+        "cancel": "Cancel",
+        "confirm": "Duplicate"
+      }
+    },
+    "editor": {
+      "loading": "Loading…",
+      "label": "Editor",
+      "empty": "No editors detected"
+    }
+  },
+  "infoPanel": {
+    "tabs": {
+      "path": "Path",
+      "history": "History",
+      "git": "Git",
+      "files": "Files"
+    }
+  },
+  "pathInfo": {
+    "currentPath": "Current Path",
+    "copy": "Copy",
+    "reveal": "Reveal",
+    "openInVSCode": "in VS Code",
+    "parentDirectories": "Parent Directories",
+    "details": "Details",
+    "loading": "Loading...",
+    "type": "Type",
+    "size": "Size",
+    "modified": "Modified",
+    "mode": "Mode",
+    "readOnly": "Read-only",
+    "yes": "Yes",
+    "no": "No",
+    "directory": "Directory",
+    "symlink": "Symlink",
+    "file": "File",
+    "unknown": "Unknown"
+  },
+  "history": {
+    "filter": "Filter commands...",
+    "loading": "Loading...",
+    "noCommands": "No commands yet",
+    "insertTooltip": "Insert to input",
+    "exitCode": "exit={{code}}"
+  },
+  "git": {
+    "loading": "Loading git info...",
+    "notRepo": "Not a git repository",
+    "ahead": "{{count}} ahead",
+    "behind": "{{count}} behind",
+    "commitMessage": "Commit message",
+    "commitPlaceholder": "Enter commit message…",
+    "cancel": "Cancel",
+    "commit": "Commit",
+    "moreActions": "More git actions",
+    "pull": "Pull (rebase)",
+    "push": "Push",
+    "stageAll": "Stage All",
+    "fetch": "Fetch",
+    "running": "Running {{action}}...",
+    "changes": "Changes ({{count}})",
+    "moreFiles": "+{{count}} more",
+    "recentCommits": "Recent Commits"
+  },
+  "files": {
+    "search": "Search files…",
+    "showHidden": "Show hidden files",
+    "hideHidden": "Hide hidden files",
+    "showDotfiles": "Show dotfiles",
+    "hideDotfiles": "Hide dotfiles",
+    "loading": "Loading…",
+    "emptyDirectory": "Empty directory"
+  },
+  "toast": {
+    "copyPath": "Path copied to clipboard",
+    "reveal": "Revealed in Finder",
+    "openVSCode": "Opened in VS Code",
+    "copyPathError": "Failed to copy path",
+    "revealError": "Failed to reveal in Finder",
+    "openVSCodeError": "Failed to open VS Code"
+  },
+  "menu": {
+    "app": "Kenvo",
+    "about": "About Kenvo",
+    "settings": "Settings...",
+    "hide": "Hide Kenvo",
+    "quit": "Quit Kenvo",
+    "edit": "Edit"
+  },
+  "errors": {
+    "commandFailed": "Command failed with exit code {{code}}",
+    "cdNotDirectory": "cd: not a directory: {{target}}",
+    "cdNotFound": "cd: no such file or directory: {{target}}"
+  },
+  "shell": {
+    "welcome": "Kenvo Terminal — cwd: {{cwd}}"
+  },
+  "ui": {
+    "toggleSidebar": "Toggle Sidebar",
+    "sidebar": "Sidebar",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "breadcrumb": "breadcrumb",
+    "pagination": "pagination",
+    "previousPage": "Go to previous page",
+    "nextPage": "Go to next page",
+    "previous": "Previous",
+    "next": "Next",
+    "morePages": "More pages",
+    "more": "More",
+    "loading": "Loading"
+  }
+}

@@ -2,3 +2,8 @@
 identifier = "allow-theme"
 description = "Allows reading and writing the application theme settings."
 commands.allow = ["get_theme", "set_theme"]
+
+[[permission]]
+identifier = "allow-language"
+description = "Allows reading and writing the application language settings."
+commands.allow = ["get_language", "set_language"]

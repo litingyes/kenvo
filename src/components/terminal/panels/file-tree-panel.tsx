@@ -9,6 +9,7 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +31,7 @@ interface TreeNode {
 }
 
 export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
+  const { t } = useTranslation()
   const [tree, setTree] = React.useState<TreeNode[]>([])
   const [loading, setLoading] = React.useState(true)
   const [showHidden, setShowHidden] = React.useState(false)
@@ -38,7 +40,7 @@ export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
   React.useEffect(() => {
     let cancelled = false
     setLoading(true)
-    loadChildren(cwd, showHidden)
+    void loadChildren(cwd, showHidden)
       .then((nodes) => {
         if (!cancelled) setTree(nodes)
       })
@@ -60,7 +62,7 @@ export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search files…"
+            placeholder={t('files.search')}
             className="h-7 pl-7 text-xs"
           />
         </div>
@@ -68,8 +70,8 @@ export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
           variant={showHidden ? 'secondary' : 'ghost'}
           size="icon-sm"
           onClick={() => setShowHidden((v) => !v)}
-          aria-label={showHidden ? 'Hide hidden files' : 'Show hidden files'}
-          title={showHidden ? 'Hide dotfiles' : 'Show dotfiles'}
+          aria-label={showHidden ? t('files.hideHidden') : t('files.showHidden')}
+          title={showHidden ? t('files.hideDotfiles') : t('files.showDotfiles')}
         >
           {showHidden ? <EyeIcon className="size-3.5" /> : <EyeOffIcon className="size-3.5" />}
         </Button>
@@ -82,9 +84,9 @@ export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
       </div>
 
       {loading ? (
-        <p className="text-xs text-muted-foreground">Loading…</p>
+        <p className="text-xs text-muted-foreground">{t('files.loading')}</p>
       ) : tree.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Empty directory</p>
+        <p className="text-xs text-muted-foreground">{t('files.emptyDirectory')}</p>
       ) : (
         <div className="flex flex-col gap-0.5">
           {tree

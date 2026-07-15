@@ -6,14 +6,11 @@ export type AppViewId = 'terminal'
 
 export interface AppView {
   id: AppViewId
-  label: string
   icon: React.ComponentType<{ className?: string }>
   route: string
 }
 
-export const APP_VIEWS: AppView[] = [
-  { id: 'terminal', label: 'Terminal', icon: TerminalIcon, route: '/terminal' },
-]
+export const APP_VIEWS: AppView[] = [{ id: 'terminal', icon: TerminalIcon, route: '/terminal' }]
 
 export function useActiveView(): AppView {
   const location = useLocation()

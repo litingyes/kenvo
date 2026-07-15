@@ -28,7 +28,7 @@ export type GroupMode = 'none' | 'time' | 'path'
 
 export type SortMode = 'created' | 'updated'
 
-export type RightView = 'path' | 'history' | 'git' | 'tree'
+export type RightView = 'path' | 'history' | 'git' | 'files'
 
 export interface SessionGroup {
   key: string

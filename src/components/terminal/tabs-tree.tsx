@@ -1,6 +1,8 @@
 import { useNavigate } from '@tanstack/react-router'
+import type { TFunction } from 'i18next'
 import { XIcon } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { touchSession } from '@/lib/db/terminal-repo'
@@ -53,10 +55,11 @@ function SessionTreeNode({
   onClick: () => void
   onClose: (e: React.MouseEvent) => void
 }) {
+  const { t } = useTranslation()
   const title = session.title ?? getCwdDisplay(session.cwd)
   const subtitle = session.title
     ? getCwdDisplay(session.cwd)
-    : formatRelativeTime(session.last_active_at)
+    : formatRelativeTime(session.last_active_at, t)
   const actions = useSessionActions(session)
 
   return (
@@ -82,7 +85,7 @@ function SessionTreeNode({
           <button
             onClick={onClose}
             className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted"
-            aria-label="Close session"
+            aria-label={t('terminal.closeSession')}
           >
             <XIcon className="size-3" />
           </button>
@@ -103,11 +106,13 @@ function getCwdDisplay(cwd: string): string {
   return last || cwd
 }
 
-function formatRelativeTime(ts: number): string {
+function formatRelativeTime(ts: number, t: TFunction): string {
   const now = Date.now()
   const diff = now - ts
-  if (diff < 60000) return 'just now'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`
-  return `${Math.floor(diff / 86400000)}d ago`
+  if (diff < 60000) return t('terminal.relativeTime.justNow')
+  if (diff < 3600000)
+    return t('terminal.relativeTime.minutesAgo', { count: Math.floor(diff / 60000) })
+  if (diff < 86400000)
+    return t('terminal.relativeTime.hoursAgo', { count: Math.floor(diff / 3600000) })
+  return t('terminal.relativeTime.daysAgo', { count: Math.floor(diff / 86400000) })
 }

@@ -1,5 +1,6 @@
 import { MoreHorizontalIcon, PlusIcon } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +23,7 @@ interface TerminalHeaderRightProps {
 }
 
 export function TerminalHeaderRight({ activeSessionId, onNewSession }: TerminalHeaderRightProps) {
+  const { t } = useTranslation()
   const activeSession = useTerminalStore((s) => s.sessions.find((x) => x.id === activeSessionId))
   const actions = useSessionActions(activeSession ?? PLACEHOLDER_SESSION)
   const [menuOpen, setMenuOpen] = React.useState(false)
@@ -48,7 +50,7 @@ export function TerminalHeaderRight({ activeSessionId, onNewSession }: TerminalH
           size="icon-sm"
           className="shrink-0"
           onClick={onNewSession}
-          aria-label="New session"
+          aria-label={t('terminal.newSession')}
         >
           <PlusIcon className="size-3.5" />
         </Button>
@@ -62,7 +64,7 @@ export function TerminalHeaderRight({ activeSessionId, onNewSession }: TerminalH
                 variant="ghost"
                 size="icon-sm"
                 className="shrink-0"
-                aria-label="Session actions"
+                aria-label={t('terminal.sessionActions')}
               />
             }
           >

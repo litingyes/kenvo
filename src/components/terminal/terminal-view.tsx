@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { addHistory } from '@/lib/db/terminal-repo'
 import { useTerminalStore } from '@/lib/store/terminal-store'
@@ -22,6 +23,7 @@ export function TerminalView({
   onHomeDirChange,
   insertCommandRef,
 }: TerminalViewProps) {
+  const { t } = useTranslation()
   const [outputLines, setOutputLines] = React.useState<OutputLine[]>([])
   const [input, setInput] = React.useState('')
   const [cursor, setCursor] = React.useState(0)
@@ -104,7 +106,7 @@ export function TerminalView({
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
         <div className="size-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        <p className="text-xs">Initializing terminal...</p>
+        <p className="text-xs">{t('terminal.initializing')}</p>
       </div>
     )
   }
@@ -124,7 +126,7 @@ export function TerminalView({
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2">
         {outputLines.length === 0 ? (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground/50">
-            Type a command and press Enter...
+            {t('terminal.emptyPrompt')}
           </div>
         ) : (
           outputLines.map((line) => <OutputLineView key={line.id} line={line} homeDir={homeDir} />)

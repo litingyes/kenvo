@@ -8,6 +8,7 @@
     "core:event:allow-listen",
     "core:event:allow-emit",
     "allow-theme",
+    "allow-language",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
@@ -83,6 +84,7 @@
     "sql:allow-load",
     "pilot:default",
     "store:default",
-    "os:default"
+    "os:default",
+    "fs:allow-resource-read-recursive"
   ]
 }

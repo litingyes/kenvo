@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import {
   ChevronDownIcon,
   GitBranchIcon,
@@ -6,6 +7,7 @@ import {
   RefreshCwIcon,
 } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
@@ -29,6 +31,7 @@ interface GitStatus {
 }
 
 export function GitPanel({ cwd }: { cwd: string }) {
+  const { t } = useTranslation()
   const [status, setStatus] = React.useState<GitStatus | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [notRepo, setNotRepo] = React.useState(false)
@@ -112,14 +115,14 @@ export function GitPanel({ cwd }: { cwd: string }) {
   }
 
   if (loading) {
-    return <p className="text-xs text-muted-foreground">Loading git info...</p>
+    return <p className="text-xs text-muted-foreground">{t('git.loading')}</p>
   }
 
   if (notRepo) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center text-xs text-muted-foreground">
         <GitBranchIcon className="size-6 opacity-40" />
-        <p>Not a git repository</p>
+        <p>{t('git.notRepo')}</p>
       </div>
     )
   }
@@ -143,10 +146,12 @@ export function GitPanel({ cwd }: { cwd: string }) {
             {status.ahead > 0 && (
               <span className="flex items-center gap-0.5 text-green-600 dark:text-green-400">
                 <GitPullRequestIcon className="size-2.5" />
-                {status.ahead} ahead
+                {t('git.ahead', { count: status.ahead })}
               </span>
             )}
-            {status.behind > 0 && <span className="text-orange-500">{status.behind} behind</span>}
+            {status.behind > 0 && (
+              <span className="text-orange-500">{t('git.behind', { count: status.behind })}</span>
+            )}
           </div>
         )}
       </section>
@@ -164,23 +169,25 @@ export function GitPanel({ cwd }: { cwd: string }) {
                 />
               }
             >
-              <GitCommitIcon /> Commit
+              <GitCommitIcon /> {t('git.commit')}
               <ChevronDownIcon className="size-3 opacity-60" />
             </PopoverTrigger>
             <PopoverContent align="start" className="w-72 p-3">
-              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Commit message</p>
+              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                {t('git.commitMessage')}
+              </p>
               <Textarea
                 value={commitMsg}
                 onChange={(e) => setCommitMsg(e.target.value)}
-                placeholder="Enter commit message…"
+                placeholder={t('git.commitPlaceholder')}
                 className="mb-2 min-h-16 text-xs"
               />
               <div className="flex justify-end gap-1.5">
                 <Button variant="outline" size="sm" onClick={() => setCommitOpen(false)}>
-                  Cancel
+                  {t('git.cancel')}
                 </Button>
                 <Button size="sm" disabled={!commitMsg.trim()} onClick={() => void handleCommit()}>
-                  Commit
+                  {t('git.commit')}
                 </Button>
               </div>
             </PopoverContent>
@@ -194,7 +201,7 @@ export function GitPanel({ cwd }: { cwd: string }) {
                   size="sm"
                   className="h-6 px-2 text-xs"
                   disabled={actionLoading !== null}
-                  aria-label="More git actions"
+                  aria-label={t('git.moreActions')}
                 />
               }
             >
@@ -202,30 +209,32 @@ export function GitPanel({ cwd }: { cwd: string }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => runGitAction('pull', 'git pull --rebase 2>&1')}>
-                Pull (rebase)
+                {t('git.pull')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => runGitAction('push', 'git push 2>&1')}>
-                Push
+                {t('git.push')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => runGitAction('stage', 'git add -A 2>&1')}>
-                Stage All
+                {t('git.stageAll')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => runGitAction('fetch', 'git fetch 2>&1')}>
-                Fetch
+                {t('git.fetch')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </ButtonGroup>
 
         {actionLoading && (
-          <p className="mt-1 text-[10px] text-muted-foreground">Running {actionLoading}...</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            {t('git.running', { action: getActionName(actionLoading, t) })}
+          </p>
         )}
       </section>
 
       {status.files.length > 0 && (
         <section>
           <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">
-            Changes ({status.files.length})
+            {t('git.changes', { count: status.files.length })}
           </h3>
           <div className="flex flex-col gap-0.5">
             {status.files.slice(0, 20).map((f) => (
@@ -239,7 +248,9 @@ export function GitPanel({ cwd }: { cwd: string }) {
               </div>
             ))}
             {status.files.length > 20 && (
-              <p className="text-[10px] text-muted-foreground">+{status.files.length - 20} more</p>
+              <p className="text-[10px] text-muted-foreground">
+                {t('git.moreFiles', { count: status.files.length - 20 })}
+              </p>
             )}
           </div>
         </section>
@@ -248,7 +259,7 @@ export function GitPanel({ cwd }: { cwd: string }) {
       <section>
         <h3 className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
           <GitCommitIcon className="size-3.5" />
-          Recent Commits
+          {t('git.recentCommits')}
         </h3>
         <div className="flex flex-col gap-1.5">
           {status.commits.map((c) => (
@@ -266,6 +277,17 @@ export function GitPanel({ cwd }: { cwd: string }) {
       </section>
     </div>
   )
+}
+
+function getActionName(name: string, t: TFunction): string {
+  const keyMap: Record<string, string> = {
+    pull: 'git.pull',
+    push: 'git.push',
+    stage: 'git.stageAll',
+    fetch: 'git.fetch',
+    commit: 'git.commit',
+  }
+  return t(keyMap[name] ?? name)
 }
 
 function getStatusColor(status: string): string {

@@ -2,6 +2,7 @@ import { homeDir } from '@tauri-apps/api/path'
 import { Bash, InMemoryFs, MountableFs } from 'just-bash'
 
 import { updateCwd } from '@/lib/db/terminal-repo'
+import i18n from '@/lib/i18n'
 import { BUILTIN_COMMANDS, isBuiltinOnly } from '@/lib/terminal/builtins'
 import { runExternal } from '@/lib/terminal/external-runner'
 import { TauriFs } from '@/lib/terminal/tauri-fs'
@@ -66,7 +67,7 @@ export class ShellAdapter {
       env: { TERM: 'xterm-256color', HOME: this.homeDir },
     })
 
-    this.emitSystem(`Kenvo Terminal — cwd: ${this.cwd}`)
+    this.emitSystem(i18n.t('shell.welcome', { cwd: this.cwd }))
     this.callbacks.onInputChange('', 0)
     this.callbacks.onReady(this.homeDir)
   }
@@ -351,7 +352,7 @@ export class ShellAdapter {
   }
 
   private async trackCwd(cmd: string): Promise<void> {
-    const bareCd = /\bcd\s*(?:&&|;|\||$|\n)/.test(cmd)
+    const bareCd = /\bcd\s*(?:&&|\|\||\||$|\n)/.test(cmd)
     const cdMatch = cmd.match(/\bcd\s+(['"]?)([^'";&|\n]+)\1/)
 
     if (!cdMatch && !bareCd) return
@@ -384,10 +385,10 @@ export class ShellAdapter {
       if (info.isDirectory) {
         this.setCwd(resolved)
       } else {
-        this.emitOutput('error', `cd: not a directory: ${target}`)
+        this.emitOutput('error', i18n.t('errors.cdNotDirectory', { target }))
       }
     } catch {
-      this.emitOutput('error', `cd: no such file or directory: ${target}`)
+      this.emitOutput('error', i18n.t('errors.cdNotFound', { target }))
     }
   }
 

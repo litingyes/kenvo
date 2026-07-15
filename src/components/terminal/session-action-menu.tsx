@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import type { TFunction } from 'i18next'
 import {
   CopyIcon,
   CopyPlusIcon,
@@ -8,6 +9,7 @@ import {
   Trash2Icon,
 } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import {
   AlertDialog,
@@ -126,6 +128,7 @@ export function SessionActionDialogs({
   session: TerminalSession
   actions: ReturnType<typeof useSessionActions>
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const onDup = async () => {
     await actions.confirmDuplicate()
@@ -138,18 +141,20 @@ export function SessionActionDialogs({
     <>
       <Dialog open={actions.renameOpen} onOpenChange={actions.setRenameOpen}>
         <DialogContent>
-          <DialogTitle>Rename Session</DialogTitle>
+          <DialogTitle>{t('session.dialogs.rename.title')}</DialogTitle>
           <Input
             value={actions.renameValue}
             onChange={(e) => actions.setRenameValue(e.target.value)}
-            placeholder="Session name"
+            placeholder={t('session.dialogs.rename.placeholder')}
             onKeyDown={(e) => e.key === 'Enter' && void actions.confirmRename()}
           />
           <DialogFooter>
             <Button variant="outline" onClick={() => actions.setRenameOpen(false)}>
-              Cancel
+              {t('session.dialogs.rename.cancel')}
             </Button>
-            <Button onClick={() => void actions.confirmRename()}>Save</Button>
+            <Button onClick={() => void actions.confirmRename()}>
+              {t('session.dialogs.rename.save')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -157,15 +162,15 @@ export function SessionActionDialogs({
       <AlertDialog open={actions.deleteOpen} onOpenChange={actions.setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this session?</AlertDialogTitle>
+            <AlertDialogTitle>{t('session.dialogs.delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The session and its history will be removed.
+              {t('session.dialogs.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('session.dialogs.delete.cancel')}</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={() => void actions.confirmDelete()}>
-              Delete
+              {t('session.dialogs.delete.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -174,14 +179,16 @@ export function SessionActionDialogs({
       <AlertDialog open={actions.duplicateOpen} onOpenChange={actions.setDuplicateOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Duplicate this session?</AlertDialogTitle>
+            <AlertDialogTitle>{t('session.dialogs.duplicate.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Creates a new session with the same working directory and command history.
+              {t('session.dialogs.duplicate.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void onDup()}>Duplicate</AlertDialogAction>
+            <AlertDialogCancel>{t('session.dialogs.duplicate.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void onDup()}>
+              {t('session.dialogs.duplicate.confirm')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -227,6 +234,7 @@ function buildItemTree(
   actions: ReturnType<typeof useSessionActions>,
   closeMenu: (() => void) | undefined,
   submenu: ReturnType<typeof useEditorSubmenuState>,
+  t: TFunction,
 ) {
   const handlers = buildHandlers(session, closeMenu)
   const choices = editorChoices(submenu.editors, submenu.loading)
@@ -235,24 +243,24 @@ function buildItemTree(
   return (
     <>
       <Item onClick={actions.requestRename}>
-        <PencilIcon /> Rename
+        <PencilIcon /> {t('session.actions.rename')}
       </Item>
       <Item onClick={handlers.copyPath}>
-        <CopyIcon /> Copy Path
+        <CopyIcon /> {t('session.actions.copyPath')}
       </Item>
       <Item onClick={handlers.reveal}>
-        <FolderOpenIcon /> Reveal in Finder
+        <FolderOpenIcon /> {t('session.actions.reveal')}
       </Item>
       <Sub onOpenChange={(open) => open && void submenu.handleOpen()}>
         <SubTrigger>
-          <ExternalLinkIcon /> Open in…
+          <ExternalLinkIcon /> {t('session.actions.openIn')}
         </SubTrigger>
         <SubContent>
           {choices.state === 'loading' ? (
-            <Item disabled>Loading…</Item>
+            <Item disabled>{t('session.editor.loading')}</Item>
           ) : choices.state === 'list' ? (
             <Group>
-              <Label>Editor</Label>
+              <Label>{t('session.editor.label')}</Label>
               {choices.editors.map((app) => (
                 <Item key={app.cli} onClick={() => handlers.openIn(app.cli)}>
                   {app.name}
@@ -260,16 +268,16 @@ function buildItemTree(
               ))}
             </Group>
           ) : (
-            <Item disabled>No editors detected</Item>
+            <Item disabled>{t('session.editor.empty')}</Item>
           )}
         </SubContent>
       </Sub>
       <ItemSep />
       <Item onClick={actions.requestDuplicate}>
-        <CopyPlusIcon /> Duplicate
+        <CopyPlusIcon /> {t('session.actions.duplicate')}
       </Item>
       <Item variant="destructive" onClick={actions.requestDelete}>
-        <Trash2Icon /> Delete
+        <Trash2Icon /> {t('session.actions.delete')}
       </Item>
     </>
   )
@@ -300,8 +308,9 @@ export function SessionDropdownItems({
   actions,
   closeMenu,
 }: SessionActionsProps & { actions: ReturnType<typeof useSessionActions> }) {
+  const { t } = useTranslation()
   const submenu = useEditorSubmenuState()
-  return buildItemTree(DROPDOWN_PRIMITIVES, session, actions, closeMenu, submenu)
+  return buildItemTree(DROPDOWN_PRIMITIVES, session, actions, closeMenu, submenu, t)
 }
 
 export function SessionContextMenuItems({
@@ -309,6 +318,7 @@ export function SessionContextMenuItems({
   actions,
   closeMenu,
 }: SessionActionsProps & { actions: ReturnType<typeof useSessionActions> }) {
+  const { t } = useTranslation()
   const submenu = useEditorSubmenuState()
-  return buildItemTree(CONTEXT_PRIMITIVES, session, actions, closeMenu, submenu)
+  return buildItemTree(CONTEXT_PRIMITIVES, session, actions, closeMenu, submenu, t)
 }

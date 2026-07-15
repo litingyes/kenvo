@@ -1,11 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod language;
 mod theme;
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 use tauri::webview::WebviewWindowBuilder;
-use tauri::{Manager, WebviewUrl};
+use tauri::{Listener, Manager, WebviewUrl};
 
 fn main() {
     let mut builder = tauri::Builder::default()
@@ -18,9 +19,22 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_os::init())
-        .invoke_handler(tauri::generate_handler![theme::get_theme, theme::set_theme])
+        .invoke_handler(tauri::generate_handler![
+            theme::get_theme,
+            theme::set_theme,
+            language::get_language,
+            language::set_language,
+        ])
         .setup(|app| {
-            setup_menu(app)?;
+            let app_handle = app.handle().clone();
+            setup_menu(&app_handle)?;
+
+            app.listen("language-changed", move |_event| {
+                if let Err(e) = setup_menu(&app_handle) {
+                    eprintln!("failed to rebuild menu: {}", e);
+                }
+            });
+
             Ok(())
         });
 
@@ -34,25 +48,28 @@ fn main() {
         .expect("error running app");
 }
 
-fn setup_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let app_menu = SubmenuBuilder::new(app, "Kenvo")
+fn setup_menu(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    let language = language::get_language_settings(app)?.language;
+    let labels = language::menu_labels(&language);
+
+    let app_menu = SubmenuBuilder::new(app, labels.app)
         .item(
-            &MenuItemBuilder::with_id("about", "About Kenvo")
+            &MenuItemBuilder::with_id("about", labels.about)
                 .enabled(true)
                 .build(app)?,
         )
         .item(
-            &MenuItemBuilder::with_id("settings", "Settings...")
+            &MenuItemBuilder::with_id("settings", labels.settings)
                 .enabled(true)
                 .accelerator("CmdOrCtrl+,")
                 .build(app)?,
         )
         .separator()
-        .item(&PredefinedMenuItem::hide(app, Some("Hide Kenvo"))?)
-        .item(&PredefinedMenuItem::quit(app, Some("Quit Kenvo"))?)
+        .item(&PredefinedMenuItem::hide(app, Some(labels.hide))?)
+        .item(&PredefinedMenuItem::quit(app, Some(labels.quit))?)
         .build()?;
 
-    let edit_menu = SubmenuBuilder::new(app, "Edit")
+    let edit_menu = SubmenuBuilder::new(app, labels.edit)
         .item(&PredefinedMenuItem::undo(app, None)?)
         .item(&PredefinedMenuItem::redo(app, None)?)
         .separator()
@@ -69,11 +86,12 @@ fn setup_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
     app.set_menu(menu)?;
 
-    let app_handle = app.handle().clone();
+    let menu_language = language.clone();
+    let app_handle = app.clone();
     app.on_menu_event(move |_app, event| {
         match event.id().0.as_str() {
             "settings" => {
-                if let Err(e) = open_settings_window(&app_handle) {
+                if let Err(e) = open_settings_window(&app_handle, &menu_language) {
                     eprintln!("failed to open settings window: {}", e);
                 }
             }
@@ -87,14 +105,16 @@ fn setup_menu(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn open_settings_window(app: &tauri::AppHandle) -> Result<(), String> {
+fn open_settings_window(app: &tauri::AppHandle, language: &str) -> Result<(), String> {
+    let labels = language::menu_labels(language);
+
     if let Some(window) = app.get_webview_window("settings") {
         window.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
 
     WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("/settings".into()))
-        .title("Settings")
+        .title(labels.settings_window_title)
         .inner_size(720.0, 480.0)
         .min_inner_size(540.0, 360.0)
         .decorations(true)

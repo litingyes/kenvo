@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:tauri": "tsx scripts/clean-pilot-socket.ts && pnpm tauri dev",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
@@ -37,6 +38,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.4.0",
     "embla-carousel-react": "^8.6.0",
+    "i18next": "^26.3.6",
     "input-otp": "^1.4.2",
     "just-bash": "^3.1.0",
     "lucide-react": "^1.24.0",
@@ -44,6 +46,7 @@
     "react": "^19.1.0",
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.1.0",
+    "react-i18next": "^17.0.9",
     "react-resizable-panels": "^4.12.1",
     "recharts": "3.8.0",
     "shadcn": "^4.13.0",
@@ -61,6 +64,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^6.0.3",
+    "tsx": "^4.23.1",
     "typescript": "~7.0.2",
     "vite": "^8.1.4",
     "vite-plus": "^0.2.4"

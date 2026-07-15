@@ -3,10 +3,8 @@ import { persist } from 'zustand/middleware'
 
 /**
  * Kenvo theme presets.
- * Currently only "terminal" is available, but the shape is intentionally
- * extensible for future presets (e.g. ocean, midnight, paper).
  */
-export type ThemePreset = 'terminal'
+export type ThemePreset = 'terminal' | 'ocean' | 'midnight'
 
 interface ThemeState {
   themePreset: ThemePreset

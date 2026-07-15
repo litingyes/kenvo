@@ -1,10 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": ["main"],
+  "description": "Capability for the main and settings windows",
+  "windows": ["main", "settings"],
   "permissions": [
     "core:default",
+    "core:event:allow-listen",
+    "core:event:allow-emit",
+    "allow-theme",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
@@ -23,7 +26,11 @@
     "fs:write-files",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
     },
     "notification:default",
     "shell:allow-open",
@@ -32,17 +39,41 @@
     {
       "identifier": "shell:allow-spawn",
       "allow": [
-        { "name": "run-zsh", "cmd": "/bin/zsh", "args": true },
-        { "name": "run-bash", "cmd": "/bin/bash", "args": true },
-        { "name": "run-sh", "cmd": "/bin/sh", "args": true }
+        {
+          "name": "run-zsh",
+          "cmd": "/bin/zsh",
+          "args": true
+        },
+        {
+          "name": "run-bash",
+          "cmd": "/bin/bash",
+          "args": true
+        },
+        {
+          "name": "run-sh",
+          "cmd": "/bin/sh",
+          "args": true
+        }
       ]
     },
     {
       "identifier": "shell:allow-execute",
       "allow": [
-        { "name": "run-zsh", "cmd": "/bin/zsh", "args": true },
-        { "name": "run-bash", "cmd": "/bin/bash", "args": true },
-        { "name": "run-sh", "cmd": "/bin/sh", "args": true }
+        {
+          "name": "run-zsh",
+          "cmd": "/bin/zsh",
+          "args": true
+        },
+        {
+          "name": "run-bash",
+          "cmd": "/bin/bash",
+          "args": true
+        },
+        {
+          "name": "run-sh",
+          "cmd": "/bin/sh",
+          "args": true
+        }
       ]
     },
     "window-state:default",
@@ -50,6 +81,7 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-load",
-    "pilot:default"
+    "pilot:default",
+    "store:default"
   ]
 }

@@ -6,6 +6,8 @@
 
 /* Kenvo theme presets. Add one line per preset file here. */
 @import './themes/terminal.css';
+@import './themes/ocean.css';
+@import './themes/midnight.css';
 
 @custom-variant dark (&:is(.dark *));
 

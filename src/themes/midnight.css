@@ -1,0 +1,98 @@
+/**
+ * Kenvo Theme: Midnight
+ *
+ * A deep purple-violet palette for late-night focus. Light mode keeps things
+ * readable with a soft lavender tint; dark mode dives into a near-black cabin.
+ */
+
+[data-theme='midnight'] {
+  --background: oklch(0.98 0.005 300);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(0.97 0.005 300);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(0.97 0.005 300);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.55 0.2 300);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.94 0.02 300);
+  --secondary-foreground: oklch(0.25 0 0);
+  --muted: oklch(0.93 0.01 300);
+  --muted-foreground: oklch(0.5 0.02 300);
+  --accent: oklch(0.94 0.04 300);
+  --accent-foreground: oklch(0.2 0 0);
+  --destructive: oklch(0.62 0.2 25);
+  --border: oklch(0.85 0.02 300);
+  --input: oklch(0.9 0.015 300);
+  --ring: oklch(0.55 0.2 300);
+  --chart-1: oklch(0.6 0.2 300);
+  --chart-2: oklch(0.5 0.18 300);
+  --chart-3: oklch(0.4 0.16 300);
+  --chart-4: oklch(0.3 0.14 300);
+  --chart-5: oklch(0.2 0.12 300);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.97 0.005 300);
+  --sidebar-foreground: oklch(0.18 0 0);
+  --sidebar-primary: oklch(0.55 0.2 300);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.94 0.04 300);
+  --sidebar-accent-foreground: oklch(0.2 0 0);
+  --sidebar-border: oklch(0.85 0.02 300);
+  --sidebar-ring: oklch(0.55 0.2 300);
+}
+
+[data-theme='midnight'].dark {
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.92 0 0);
+  --card: oklch(0.16 0 0);
+  --card-foreground: oklch(0.92 0 0);
+  --popover: oklch(0.16 0 0);
+  --popover-foreground: oklch(0.92 0 0);
+  --primary: oklch(0.7 0.2 300);
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.22 0.02 300);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.65 0.02 300);
+  --accent: oklch(0.22 0.05 300);
+  --accent-foreground: oklch(0.92 0 0);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(0.25 0.01 300);
+  --input: oklch(0.25 0.01 300);
+  --ring: oklch(0.7 0.2 300);
+  --chart-1: oklch(0.75 0.18 300);
+  --chart-2: oklch(0.65 0.16 300);
+  --chart-3: oklch(0.55 0.14 300);
+  --chart-4: oklch(0.45 0.12 300);
+  --chart-5: oklch(0.35 0.1 300);
+  --sidebar: oklch(0.14 0 0);
+  --sidebar-foreground: oklch(0.92 0 0);
+  --sidebar-primary: oklch(0.7 0.2 300);
+  --sidebar-primary-foreground: oklch(0.1 0 0);
+  --sidebar-accent: oklch(0.22 0.05 300);
+  --sidebar-accent-foreground: oklch(0.92 0 0);
+  --sidebar-border: oklch(0.25 0.01 300);
+  --sidebar-ring: oklch(0.7 0.2 300);
+}
+
+/* Midnight-specific semantic tokens. */
+[data-theme='midnight'] {
+  --term-prompt-user: var(--primary);
+  --term-prompt-path: oklch(0.55 0.15 270);
+  --term-cursor: var(--foreground);
+  --term-cursor-bg: var(--foreground);
+  --term-error: var(--destructive);
+  --term-output: var(--foreground);
+  --term-system: var(--muted-foreground);
+  --term-command: var(--foreground);
+}
+
+[data-theme='midnight'].dark {
+  --term-prompt-user: var(--primary);
+  --term-prompt-path: oklch(0.65 0.15 270);
+  --term-cursor: var(--foreground);
+  --term-cursor-bg: var(--foreground);
+  --term-error: var(--destructive);
+  --term-output: var(--foreground);
+  --term-system: var(--muted-foreground);
+  --term-command: var(--foreground);
+}

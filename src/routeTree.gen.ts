@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TerminalIndexRouteImport } from './routes/terminal/index'
 import { Route as TerminalSessionIdRouteImport } from './routes/terminal/$sessionId'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,36 +37,47 @@ const TerminalSessionIdRoute = TerminalSessionIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal': typeof TerminalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/settings': typeof SettingsRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/terminal/$sessionId' | '/terminal/'
+  fullPaths: '/' | '/settings' | '/terminal/$sessionId' | '/terminal/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/terminal/$sessionId' | '/terminal'
-  id: '__root__' | '/' | '/terminal/$sessionId' | '/terminal/'
+  to: '/' | '/settings' | '/terminal/$sessionId' | '/terminal'
+  id: '__root__' | '/' | '/settings' | '/terminal/$sessionId' | '/terminal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SettingsRoute: typeof SettingsRoute
   TerminalSessionIdRoute: typeof TerminalSessionIdRoute
   TerminalIndexRoute: typeof TerminalIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SettingsRoute: SettingsRoute,
   TerminalSessionIdRoute: TerminalSessionIdRoute,
   TerminalIndexRoute: TerminalIndexRoute,
 }

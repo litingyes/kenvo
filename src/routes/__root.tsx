@@ -4,6 +4,7 @@ import * as React from 'react'
 
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { useThemeBridge } from '@/lib/settings/theme-bridge'
 import { useThemeStore } from '@/lib/store/theme-store'
 
 export const Route = createRootRoute({
@@ -12,6 +13,7 @@ export const Route = createRootRoute({
 
 function ThemePresetSync() {
   const { themePreset } = useThemeStore()
+  useThemeBridge()
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', themePreset)

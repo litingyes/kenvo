@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-theme"
+description = "Allows reading and writing the application theme settings."
+commands.allow = ["get_theme", "set_theme"]

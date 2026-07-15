@@ -2,16 +2,17 @@ import { useNavigate } from '@tanstack/react-router'
 import { PanelLeftCloseIcon, PlusIcon, TerminalIcon } from 'lucide-react'
 import * as React from 'react'
 
+import { AppHeader } from '@/components/layout/app-header'
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { sortSessions, useTerminalStore } from '@/lib/store/terminal-store'
 import type { GroupMode, SessionGroup, SortMode, TerminalSession } from '@/lib/terminal/types'
 
-import { AppHeader } from './app-header'
 import { InfoPanel } from './info-panel'
 import { SessionGroupMenu } from './session-group-menu'
 import { TabsTree } from './tabs-tree'
+import { TerminalHeaderRight } from './terminal-header-right'
 
 interface TerminalLayoutProps {
   activeSessionId: string
@@ -31,16 +32,36 @@ export function TerminalLayout({
   const activeCwd = activeSession?.cwd ?? ''
   const leftOpen = useTerminalStore((s) => s.leftSidebarOpen)
   const rightOpen = useTerminalStore((s) => s.rightSidebarOpen)
+  const toggleLeft = useTerminalStore((s) => s.toggleLeftSidebar)
+  const toggleRight = useTerminalStore((s) => s.toggleRightSidebar)
+  const createSession = useTerminalStore((s) => s.createSession)
+  const navigate = useNavigate()
+
+  const handleNewSession = React.useCallback(async () => {
+    const session = await createSession(activeCwd)
+    void navigate({ to: '/terminal/$sessionId', params: { sessionId: session.id } })
+  }, [activeCwd, createSession, navigate])
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
-      <AppHeader activeSessionId={activeSessionId} />
+      <AppHeader
+        leftSidebarOpen={leftOpen}
+        rightSidebarOpen={rightOpen}
+        onToggleLeftSidebar={toggleLeft}
+        onToggleRightSidebar={toggleRight}
+        rightContent={
+          <TerminalHeaderRight activeSessionId={activeSessionId} onNewSession={handleNewSession} />
+        }
+      />
       <div className="flex min-h-0 flex-1">
         <ResizablePanelGroup orientation="horizontal">
           {leftOpen && (
             <>
               <ResizablePanel defaultSize="20%" minSize="15%" maxSize="40%">
-                <TabsTreeSidebar activeSessionId={activeSessionId} activeCwd={activeCwd} />
+                <TabsTreeSidebar
+                  activeSessionId={activeSessionId}
+                  onNewSession={handleNewSession}
+                />
               </ResizablePanel>
               <ResizableHandle />
             </>
@@ -69,17 +90,16 @@ export function TerminalLayout({
 
 function TabsTreeSidebar({
   activeSessionId,
-  activeCwd,
+  onNewSession,
 }: {
   activeSessionId: string
-  activeCwd: string
+  onNewSession: () => void
 }) {
   const sessions = useTerminalStore((s) => s.sessions)
   const groupMode = useTerminalStore((s) => s.groupMode)
   const sortMode = useTerminalStore((s) => s.sortMode)
   const loaded = useTerminalStore((s) => s.loaded)
   const closeSession = useTerminalStore((s) => s.closeSession)
-  const createSession = useTerminalStore((s) => s.createSession)
   const toggleLeftSidebar = useTerminalStore((s) => s.toggleLeftSidebar)
   const navigate = useNavigate()
 
@@ -87,11 +107,6 @@ function TabsTreeSidebar({
     const sorted = sortSessions(sessions, sortMode)
     return groupSessions(sorted, groupMode, sortMode)
   }, [sessions, groupMode, sortMode])
-
-  const handleNewSession = async () => {
-    const session = await createSession(activeCwd)
-    void navigate({ to: '/terminal/$sessionId', params: { sessionId: session.id } })
-  }
 
   const handleClose = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
@@ -115,7 +130,7 @@ function TabsTreeSidebar({
         </div>
         <div className="flex items-center gap-0.5">
           <SessionGroupMenu />
-          <Button variant="ghost" size="icon" className="size-7" onClick={handleNewSession}>
+          <Button variant="ghost" size="icon" className="size-7" onClick={onNewSession}>
             <PlusIcon className="size-4" />
           </Button>
           <Button

@@ -4,8 +4,14 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Label } from '@/components/ui/label'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { applyTheme, type ThemeMode } from '@/lib/settings/theme-bridge'
 import { type ThemePreset, useThemeStore } from '@/lib/store/theme-store'
 
@@ -78,17 +84,18 @@ export function AppearanceSettings() {
 
       <div className="space-y-3">
         <Label htmlFor="theme-preset">{t('settings.appearance.themePreset')}</Label>
-        <NativeSelect
-          id="theme-preset"
-          value={preset}
-          onChange={(e) => handlePresetChange(e.target.value)}
-        >
-          {PRESETS.map((p) => (
-            <NativeSelectOption key={p.value} value={p.value}>
-              {t(`settings.appearance.presets.${p.value}`)}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        <Select value={preset} onValueChange={(value) => value && handlePresetChange(value)}>
+          <SelectTrigger id="theme-preset" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {PRESETS.map((p) => (
+              <SelectItem key={p.value} value={p.value}>
+                {t(`settings.appearance.presets.${p.value}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <LanguageSettings />

@@ -66,7 +66,7 @@ export class ShellAdapter {
       env: { TERM: 'xterm-256color', HOME: this.homeDir },
     })
 
-    this.emitSystem(`Lume Terminal — cwd: ${this.cwd}`)
+    this.emitSystem(`Kenvo Terminal — cwd: ${this.cwd}`)
     this.callbacks.onInputChange('', 0)
     this.callbacks.onReady(this.homeDir)
   }

@@ -154,7 +154,7 @@ function PromptView({ cwd, homeDir }: { cwd: string; homeDir: string }) {
   const display = homeDir && cwd.startsWith(homeDir) ? '~' + cwd.slice(homeDir.length) : cwd
   return (
     <span className="whitespace-pre">
-      <span style={{ color: 'var(--term-prompt-user)' }}>user@lume</span>
+      <span style={{ color: 'var(--term-prompt-user)' }}>user@kenvo</span>
       <span className="text-foreground">:</span>
       <span style={{ color: 'var(--term-prompt-path)' }}>{display}</span>
       <span className="text-foreground">$ </span>

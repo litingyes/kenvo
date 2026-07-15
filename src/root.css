@@ -4,7 +4,7 @@
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/geist-mono';
 
-/* Lume theme presets. Add one line per preset file here. */
+/* Kenvo theme presets. Add one line per preset file here. */
 @import './themes/terminal.css';
 
 @custom-variant dark (&:is(.dark *));

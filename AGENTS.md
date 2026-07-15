@@ -1,4 +1,4 @@
-# Lume
+# Kenvo
 
 ## Tech Stack & Architecture
 

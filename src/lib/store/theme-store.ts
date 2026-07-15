@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 /**
- * Lume theme presets.
+ * Kenvo theme presets.
  * Currently only "terminal" is available, but the shape is intentionally
  * extensible for future presets (e.g. ocean, midnight, paper).
  */
@@ -19,6 +19,6 @@ export const useThemeStore = create<ThemeState>()(
       themePreset: 'terminal',
       setThemePreset: (themePreset) => set({ themePreset }),
     }),
-    { name: 'lume-theme' },
+    { name: 'kenvo-theme' },
   ),
 )

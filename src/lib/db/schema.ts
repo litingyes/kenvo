@@ -1,6 +1,6 @@
 import Database from '@tauri-apps/plugin-sql'
 
-const DB_PATH = 'sqlite:lume.db'
+const DB_PATH = 'sqlite:kenvo.db'
 
 let dbInstance: Database | null = null
 let initPromise: Promise<Database> | null = null

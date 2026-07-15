@@ -64,7 +64,7 @@ export default defineConfig({
         specifier: '@tanstack/eslint-plugin-router',
       },
     ],
-    ignorePatterns: ['./src/routeTree.gen.ts'],
+    ignorePatterns: ['src/routeTree.gen.ts'],
   },
   fmt: {
     semi: false,
@@ -74,7 +74,7 @@ export default defineConfig({
     sortTailwindcss: {
       stylesheet: './src/root.css',
     },
-    ignorePatterns: ['./src/routeTree.gen.ts'],
+    ignorePatterns: ['src/routeTree.gen.ts'],
   },
   staged: {
     '*': 'vp check --fix',

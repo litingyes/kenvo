@@ -1,5 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ChevronDownIcon, PanelLeftIcon, PanelRightIcon } from 'lucide-react'
+import {
+  ChevronDownIcon,
+  MonitorIcon,
+  MoonIcon,
+  PanelLeftIcon,
+  PanelRightIcon,
+  SunIcon,
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
 import * as React from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -7,6 +15,8 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -29,6 +39,7 @@ export function ViewSwitcher({
 }: ViewSwitcherProps) {
   const activeView = useActiveView()
   const navigate = useNavigate()
+  const { theme, setTheme } = useTheme()
   const [open, setOpen] = React.useState(false)
 
   const handleViewChange = React.useCallback(
@@ -40,6 +51,14 @@ export function ViewSwitcher({
       setOpen(false)
     },
     [activeView.id, navigate],
+  )
+
+  const handleModeChange = React.useCallback(
+    (mode: string) => {
+      setTheme(mode)
+      setOpen(false)
+    },
+    [setTheme],
   )
 
   const ActiveIcon = activeView.icon
@@ -92,6 +111,25 @@ export function ViewSwitcher({
             )}
           </>
         )}
+
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+          <DropdownMenuRadioGroup value={theme} onValueChange={handleModeChange}>
+            <DropdownMenuRadioItem value="light">
+              <SunIcon className="size-3.5" />
+              Light
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="dark">
+              <MoonIcon className="size-3.5" />
+              Dark
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="system">
+              <MonitorIcon className="size-3.5" />
+              System
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

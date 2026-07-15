@@ -65,7 +65,7 @@ export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPane
   const handleSelectView = React.useCallback((id: RightView) => setRightView(id), [setRightView])
 
   return (
-    <div className="flex h-full flex-col border-l border-border bg-muted/30">
+    <div className="flex h-full flex-col border-l border-border">
       <div className="flex items-center gap-0.5 border-b border-border px-1.5 py-1.5">
         {VIEWS.map((view) => (
           <ViewTab

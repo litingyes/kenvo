@@ -117,7 +117,7 @@ export function TerminalView({
     <div
       ref={containerRef}
       tabIndex={0}
-      className="relative flex h-full flex-col bg-background font-mono text-sm leading-relaxed outline-none"
+      className="relative flex h-full flex-col bg-card font-mono text-sm leading-relaxed outline-none"
       onKeyDown={handleKeyDown}
       onClick={handleClick}
     >

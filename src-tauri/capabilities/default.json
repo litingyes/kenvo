@@ -82,6 +82,7 @@
     "sql:allow-select",
     "sql:allow-load",
     "pilot:default",
-    "store:default"
+    "store:default",
+    "os:default"
   ]
 }

@@ -122,7 +122,7 @@ function TabsTreeSidebar({
   }
 
   return (
-    <div className="flex h-full flex-col border-r border-border bg-muted/30">
+    <div className="flex h-full flex-col border-r border-border">
       <div className="flex items-center justify-between gap-2 px-3 py-2.5">
         <div className="flex items-center gap-1.5">
           <TerminalIcon className="size-4 text-muted-foreground" />

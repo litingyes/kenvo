@@ -13,6 +13,12 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TerminalIndexRouteImport } from './routes/terminal/index'
 import { Route as TerminalSessionIdRouteImport } from './routes/terminal/$sessionId'
+import { Route as SettingsLanguageRouteImport } from './routes/settings/language'
+import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
+import { Route as SettingsAiIndexRouteImport } from './routes/settings/ai/index'
+import { Route as SettingsAiProvidersRouteImport } from './routes/settings/ai/providers'
+import { Route as SettingsAiModelsRouteImport } from './routes/settings/ai/models'
+import { Route as SettingsAiBasicRouteImport } from './routes/settings/ai/basic'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -34,37 +40,116 @@ const TerminalSessionIdRoute = TerminalSessionIdRouteImport.update({
   path: '/terminal/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
+  id: '/language',
+  path: '/language',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
+  id: '/appearance',
+  path: '/appearance',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAiIndexRoute = SettingsAiIndexRouteImport.update({
+  id: '/ai/',
+  path: '/ai/',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAiProvidersRoute = SettingsAiProvidersRouteImport.update({
+  id: '/ai/providers',
+  path: '/ai/providers',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAiModelsRoute = SettingsAiModelsRouteImport.update({
+  id: '/ai/models',
+  path: '/ai/models',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsAiBasicRoute = SettingsAiBasicRouteImport.update({
+  id: '/ai/basic',
+  path: '/ai/basic',
+  getParentRoute: () => SettingsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
+  '/settings/ai/basic': typeof SettingsAiBasicRoute
+  '/settings/ai/models': typeof SettingsAiModelsRoute
+  '/settings/ai/providers': typeof SettingsAiProvidersRoute
+  '/settings/ai/': typeof SettingsAiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal': typeof TerminalIndexRoute
+  '/settings/ai/basic': typeof SettingsAiBasicRoute
+  '/settings/ai/models': typeof SettingsAiModelsRoute
+  '/settings/ai/providers': typeof SettingsAiProvidersRoute
+  '/settings/ai': typeof SettingsAiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
+  '/settings/appearance': typeof SettingsAppearanceRoute
+  '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
+  '/settings/ai/basic': typeof SettingsAiBasicRoute
+  '/settings/ai/models': typeof SettingsAiModelsRoute
+  '/settings/ai/providers': typeof SettingsAiProvidersRoute
+  '/settings/ai/': typeof SettingsAiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/settings' | '/terminal/$sessionId' | '/terminal/'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/settings/appearance'
+    | '/settings/language'
+    | '/terminal/$sessionId'
+    | '/terminal/'
+    | '/settings/ai/basic'
+    | '/settings/ai/models'
+    | '/settings/ai/providers'
+    | '/settings/ai/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/settings' | '/terminal/$sessionId' | '/terminal'
-  id: '__root__' | '/' | '/settings' | '/terminal/$sessionId' | '/terminal/'
+  to:
+    | '/'
+    | '/settings'
+    | '/settings/appearance'
+    | '/settings/language'
+    | '/terminal/$sessionId'
+    | '/terminal'
+    | '/settings/ai/basic'
+    | '/settings/ai/models'
+    | '/settings/ai/providers'
+    | '/settings/ai'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/settings/appearance'
+    | '/settings/language'
+    | '/terminal/$sessionId'
+    | '/terminal/'
+    | '/settings/ai/basic'
+    | '/settings/ai/models'
+    | '/settings/ai/providers'
+    | '/settings/ai/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  SettingsRoute: typeof SettingsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   TerminalSessionIdRoute: typeof TerminalSessionIdRoute
   TerminalIndexRoute: typeof TerminalIndexRoute
 }
@@ -99,12 +184,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TerminalSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/language': {
+      id: '/settings/language'
+      path: '/language'
+      fullPath: '/settings/language'
+      preLoaderRoute: typeof SettingsLanguageRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/appearance': {
+      id: '/settings/appearance'
+      path: '/appearance'
+      fullPath: '/settings/appearance'
+      preLoaderRoute: typeof SettingsAppearanceRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/ai/': {
+      id: '/settings/ai/'
+      path: '/ai'
+      fullPath: '/settings/ai/'
+      preLoaderRoute: typeof SettingsAiIndexRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/ai/providers': {
+      id: '/settings/ai/providers'
+      path: '/ai/providers'
+      fullPath: '/settings/ai/providers'
+      preLoaderRoute: typeof SettingsAiProvidersRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/ai/models': {
+      id: '/settings/ai/models'
+      path: '/ai/models'
+      fullPath: '/settings/ai/models'
+      preLoaderRoute: typeof SettingsAiModelsRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/ai/basic': {
+      id: '/settings/ai/basic'
+      path: '/ai/basic'
+      fullPath: '/settings/ai/basic'
+      preLoaderRoute: typeof SettingsAiBasicRouteImport
+      parentRoute: typeof SettingsRoute
+    }
   }
 }
 
+interface SettingsRouteChildren {
+  SettingsAppearanceRoute: typeof SettingsAppearanceRoute
+  SettingsLanguageRoute: typeof SettingsLanguageRoute
+  SettingsAiBasicRoute: typeof SettingsAiBasicRoute
+  SettingsAiModelsRoute: typeof SettingsAiModelsRoute
+  SettingsAiProvidersRoute: typeof SettingsAiProvidersRoute
+  SettingsAiIndexRoute: typeof SettingsAiIndexRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsAppearanceRoute: SettingsAppearanceRoute,
+  SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsAiBasicRoute: SettingsAiBasicRoute,
+  SettingsAiModelsRoute: SettingsAiModelsRoute,
+  SettingsAiProvidersRoute: SettingsAiProvidersRoute,
+  SettingsAiIndexRoute: SettingsAiIndexRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  SettingsRoute: SettingsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   TerminalSessionIdRoute: TerminalSessionIdRoute,
   TerminalIndexRoute: TerminalIndexRoute,
 }

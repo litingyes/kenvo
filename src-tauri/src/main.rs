@@ -1,6 +1,8 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod agent_server;
+mod ai_settings;
 mod language;
 mod theme;
 
@@ -10,6 +12,7 @@ use tauri::{Listener, Manager, WebviewUrl};
 
 fn main() {
     let mut builder = tauri::Builder::default()
+        .manage(agent_server::AgentServerState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::new().build())
@@ -24,10 +27,20 @@ fn main() {
             theme::set_theme,
             language::get_language,
             language::set_language,
+            agent_server::agent_server_start,
+            agent_server::agent_server_stop,
+            agent_server::agent_server_status,
+            ai_settings::get_ai_settings_command,
+            ai_settings::set_ai_settings_command,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
             setup_menu(&app_handle)?;
+
+            let app_handle_for_server = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                agent_server::maybe_start_agent_server(&app_handle_for_server).await;
+            });
 
             app.listen("language-changed", move |_event| {
                 if let Err(e) = setup_menu(&app_handle) {

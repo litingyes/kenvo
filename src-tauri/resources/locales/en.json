@@ -23,6 +23,44 @@
     "language": {
       "title": "Language",
       "description": "Select your preferred language."
+    },
+    "aiCapabilities": {
+      "title": "AI Capabilities",
+      "basic": {
+        "title": "Basic",
+        "description": "Configure the AI agent server.",
+        "serverPort": "Server port",
+        "autoStart": "Auto-start",
+        "autoStartDescription": "Automatically start the agent server when the app launches.",
+        "status": "Server status",
+        "running": "Running on port {{port}}",
+        "stopped": "Stopped",
+        "start": "Start",
+        "stop": "Stop"
+      },
+      "providers": {
+        "title": "Providers",
+        "description": "Connect and manage AI providers.",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "edit": "Edit",
+        "test": "Test",
+        "connection": "Connection",
+        "connectionDescription": "Enter your API key and optional base URL for this provider.",
+        "apiKey": "API key",
+        "apiKeyPlaceholder": "Enter your API key",
+        "baseUrl": "Base URL",
+        "save": "Save",
+        "cancel": "Cancel",
+        "testSuccess": "Connection succeeded",
+        "testFailed": "Connection failed",
+        "empty": "No providers available."
+      },
+      "models": {
+        "title": "Models",
+        "description": "Enable or disable models per provider.",
+        "empty": "Connect a provider in the Providers tab to see available models."
+      }
     }
   },
   "terminal": {
@@ -196,6 +234,7 @@
     "next": "Next",
     "morePages": "More pages",
     "more": "More",
-    "loading": "Loading"
+    "loading": "Loading",
+    "retry": "Retry"
   }
 }

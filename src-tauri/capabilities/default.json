@@ -9,6 +9,8 @@
     "core:event:allow-emit",
     "allow-theme",
     "allow-language",
+    "allow-ai-settings",
+    "allow-agent-server",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",
@@ -54,6 +56,10 @@
           "name": "run-sh",
           "cmd": "/bin/sh",
           "args": true
+        },
+        {
+          "name": "agent-server",
+          "sidecar": true
         }
       ]
     },

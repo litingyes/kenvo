@@ -127,6 +127,7 @@ async function main(): Promise<void> {
 
   await cleanPort(31420)
   await cleanPort(31421)
+  await cleanPort(32420)
 
   if (socketCount === 0) {
     console.log('No stale tauri-pilot sockets found')

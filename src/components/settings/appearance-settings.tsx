@@ -15,8 +15,6 @@ import {
 import { applyTheme, type ThemeMode } from '@/lib/settings/theme-bridge'
 import { type ThemePreset, useThemeStore } from '@/lib/store/theme-store'
 
-import { LanguageSettings } from './language-settings'
-
 const MODES: { value: ThemeMode; icon: React.ComponentType<{ className?: string }> }[] = [
   { value: 'light', icon: SunIcon },
   { value: 'dark', icon: MoonIcon },
@@ -97,8 +95,6 @@ export function AppearanceSettings() {
           </SelectContent>
         </Select>
       </div>
-
-      <LanguageSettings />
     </div>
   )
 }

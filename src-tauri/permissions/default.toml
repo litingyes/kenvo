@@ -7,3 +7,13 @@ commands.allow = ["get_theme", "set_theme"]
 identifier = "allow-language"
 description = "Allows reading and writing the application language settings."
 commands.allow = ["get_language", "set_language"]
+
+[[permission]]
+identifier = "allow-ai-settings"
+description = "Allows reading and writing the AI capabilities settings."
+commands.allow = ["get_ai_settings_command", "set_ai_settings_command"]
+
+[[permission]]
+identifier = "allow-agent-server"
+description = "Allows starting, stopping, and querying the agent server."
+commands.allow = ["agent_server_start", "agent_server_stop", "agent_server_status"]

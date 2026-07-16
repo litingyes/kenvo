@@ -23,6 +23,44 @@
     "language": {
       "title": "语言",
       "description": "选择你的首选语言。"
+    },
+    "aiCapabilities": {
+      "title": "AI 能力",
+      "basic": {
+        "title": "基础配置",
+        "description": "配置 AI agent server。",
+        "serverPort": "服务端口",
+        "autoStart": "自动启动",
+        "autoStartDescription": "应用启动时自动启动 agent server。",
+        "status": "服务状态",
+        "running": "运行中，端口 {{port}}",
+        "stopped": "已停止",
+        "start": "启动",
+        "stop": "停止"
+      },
+      "providers": {
+        "title": "Providers",
+        "description": "连接并管理 AI provider。",
+        "connect": "连接",
+        "disconnect": "断开",
+        "edit": "编辑",
+        "test": "测试",
+        "connection": "连接配置",
+        "connectionDescription": "输入该 provider 的 API key 和可选的 base URL。",
+        "apiKey": "API key",
+        "apiKeyPlaceholder": "输入你的 API key",
+        "baseUrl": "Base URL",
+        "save": "保存",
+        "cancel": "取消",
+        "testSuccess": "连接成功",
+        "testFailed": "连接失败",
+        "empty": "未找到可用 provider。"
+      },
+      "models": {
+        "title": "Models",
+        "description": "按 provider 启用或禁用模型。",
+        "empty": "先在 Providers 中连接一个 provider 才能查看可用模型。"
+      }
     }
   },
   "terminal": {
@@ -196,6 +234,7 @@
     "next": "下一页",
     "morePages": "更多页面",
     "more": "更多",
-    "loading": "加载中"
+    "loading": "加载中",
+    "retry": "重试"
   }
 }

@@ -11,6 +11,7 @@
     "vite.config.ts",
     "scripts/dev-config.ts",
     "scripts/dev-prepare.ts",
+    "scripts/release.ts",
     "packages/agent-server/scripts/build-binary.ts"
   ]
 }

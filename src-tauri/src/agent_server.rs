@@ -1,9 +1,9 @@
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use tauri::{AppHandle, Emitter, Runtime};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_store::StoreExt;
+use tokio::sync::Mutex;
 
 const DEFAULT_PORT: u16 = 32420;
 
@@ -59,9 +59,7 @@ pub async fn agent_server_start<R: Runtime>(
         .map_err(|e| e.to_string())?
         .args(["--port", &port.to_string()]);
 
-    let (mut rx, child) = sidecar_command
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    let (mut rx, child) = sidecar_command.spawn().map_err(|e| e.to_string())?;
 
     let app_handle = app.clone();
     let state_for_task = Arc::clone(state.inner());

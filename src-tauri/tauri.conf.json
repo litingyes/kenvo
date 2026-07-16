@@ -43,6 +43,13 @@
     "resources": {
       "resources/locales/*": "resources/locales/"
     },
-    "externalBin": ["binaries/agent-server"]
+    "externalBin": ["binaries/agent-server"],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzaWduIGVuY3J5cHRlZCBzZWNyZXQga2V5ClJXUlRZMEl5MWVoazRBRXFHYkhSTnRxQ1RiZDByMVZXRWZMMEl6bHFxeTYvNyt2VkI0RUFBQkFBQUFBQUFBQUFBQUlBQUFBQXAvNkxWVmlWVGVWTUc1UXhVaWhraWNEbS9tcWs3dzB6eHRZejRUMmJ5aWx4Yk9ZaVZCSitOdjRDWDh3OXorZDJKUUd3ZjBUTS90QmVaRmlVTTdhVTVnUU42MDlLbklTNVNuT2QyN0xnSGlPVkpmT2hDbTlWc1ZPeHcyby9WblVjYXdZaUQ1bmcvcHM9Cg==",
+      "endpoints": ["https://github.com/litingyes/kenvo/releases/latest/download/latest.json"]
+    }
   }
 }

@@ -1,5 +1,12 @@
 import { Link, useLocation } from '@tanstack/react-router'
-import { BrainCircuitIcon, CpuIcon, GlobeIcon, PaletteIcon, ServerIcon } from 'lucide-react'
+import {
+  BrainCircuitIcon,
+  CpuIcon,
+  GlobeIcon,
+  InfoIcon,
+  PaletteIcon,
+  ServerIcon,
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface NavItemProps {
@@ -42,6 +49,7 @@ export function SettingsSidebar() {
           label={t('settings.appearance.title')}
         />
         <NavItem to="/settings/language" icon={GlobeIcon} label={t('settings.language.title')} />
+        <NavItem to="/settings/about" icon={InfoIcon} label={t('settings.about.title')} />
       </nav>
 
       <div className="mt-6 mb-2 px-2 text-xs font-medium text-muted-foreground">

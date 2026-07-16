@@ -24,6 +24,13 @@
       "title": "语言",
       "description": "选择你的首选语言。"
     },
+    "about": {
+      "title": "关于",
+      "description": "版本信息与更新。",
+      "version": "版本",
+      "checkForUpdates": "检查更新",
+      "checking": "正在检查…"
+    },
     "aiCapabilities": {
       "title": "AI 能力",
       "basic": {
@@ -205,6 +212,19 @@
     "copyPathError": "复制路径失败",
     "revealError": "在 Finder 中显示失败",
     "openVSCodeError": "在 VS Code 中打开失败"
+  },
+  "updater": {
+    "availableTitle": "发现新版本",
+    "availableMessage": "Kenvo {{version}} 已发布，是否立即下载并安装？",
+    "updateNow": "立即更新",
+    "later": "稍后",
+    "downloading": "正在下载更新… {{progress}}%",
+    "readyTitle": "更新已就绪",
+    "readyMessage": "更新已安装完成，是否立即重启 Kenvo 以应用更新？",
+    "restartNow": "立即重启",
+    "upToDate": "当前已是最新版本",
+    "checkFailed": "检查更新失败",
+    "installFailed": "安装更新失败"
   },
   "menu": {
     "app": "Kenvo",

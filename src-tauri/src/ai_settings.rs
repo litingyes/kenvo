@@ -52,7 +52,8 @@ pub fn set_ai_settings(app: &AppHandle, settings: &AiSettings) -> Result<(), Str
     let value = serde_json::to_value(settings).map_err(|e| e.to_string())?;
     store.set("ai", value);
     store.save().map_err(|e| e.to_string())?;
-    app.emit("ai-settings-changed", settings).map_err(|e| e.to_string())
+    app.emit("ai-settings-changed", settings)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -61,9 +62,6 @@ pub async fn get_ai_settings_command(app: AppHandle) -> Result<AiSettings, Strin
 }
 
 #[tauri::command]
-pub async fn set_ai_settings_command(
-    app: AppHandle,
-    settings: AiSettings,
-) -> Result<(), String> {
+pub async fn set_ai_settings_command(app: AppHandle, settings: AiSettings) -> Result<(), String> {
     set_ai_settings(&app, &settings)
 }

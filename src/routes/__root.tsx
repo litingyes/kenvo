@@ -1,4 +1,5 @@
 import { Outlet, createRootRoute, useNavigate } from '@tanstack/react-router'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { ThemeProvider } from 'next-themes'
 import * as React from 'react'
 
@@ -6,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { useThemeBridge } from '@/lib/settings/theme-bridge'
 import { useThemeStore } from '@/lib/store/theme-store'
+import { checkForUpdate } from '@/lib/updater'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -39,6 +41,12 @@ function RootComponent() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [navigate])
+
+  React.useEffect(() => {
+    if (import.meta.env.PROD && getCurrentWebviewWindow().label === 'main') {
+      void checkForUpdate({ silent: true })
+    }
+  }, [])
 
   return (
     <React.Fragment>

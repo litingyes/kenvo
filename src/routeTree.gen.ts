@@ -15,6 +15,7 @@ import { Route as TerminalIndexRouteImport } from './routes/terminal/index'
 import { Route as TerminalSessionIdRouteImport } from './routes/terminal/$sessionId'
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
+import { Route as SettingsAboutRouteImport } from './routes/settings/about'
 import { Route as SettingsAiIndexRouteImport } from './routes/settings/ai/index'
 import { Route as SettingsAiProvidersRouteImport } from './routes/settings/ai/providers'
 import { Route as SettingsAiModelsRouteImport } from './routes/settings/ai/models'
@@ -50,6 +51,11 @@ const SettingsAppearanceRoute = SettingsAppearanceRouteImport.update({
   path: '/appearance',
   getParentRoute: () => SettingsRoute,
 } as any)
+const SettingsAboutRoute = SettingsAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const SettingsAiIndexRoute = SettingsAiIndexRouteImport.update({
   id: '/ai/',
   path: '/ai/',
@@ -74,6 +80,7 @@ const SettingsAiBasicRoute = SettingsAiBasicRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/settings/about'
     | '/settings/appearance'
     | '/settings/language'
     | '/terminal/$sessionId'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/settings'
+    | '/settings/about'
     | '/settings/appearance'
     | '/settings/language'
     | '/terminal/$sessionId'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
+    | '/settings/about'
     | '/settings/appearance'
     | '/settings/language'
     | '/terminal/$sessionId'
@@ -198,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsAppearanceRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/settings/about': {
+      id: '/settings/about'
+      path: '/about'
+      fullPath: '/settings/about'
+      preLoaderRoute: typeof SettingsAboutRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/settings/ai/': {
       id: '/settings/ai/'
       path: '/ai'
@@ -230,6 +249,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface SettingsRouteChildren {
+  SettingsAboutRoute: typeof SettingsAboutRoute
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsLanguageRoute: typeof SettingsLanguageRoute
   SettingsAiBasicRoute: typeof SettingsAiBasicRoute
@@ -239,6 +259,7 @@ interface SettingsRouteChildren {
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsAboutRoute: SettingsAboutRoute,
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
   SettingsAiBasicRoute: SettingsAiBasicRoute,

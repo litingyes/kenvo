@@ -24,6 +24,13 @@
       "title": "Language",
       "description": "Select your preferred language."
     },
+    "about": {
+      "title": "About",
+      "description": "Version information and updates.",
+      "version": "Version",
+      "checkForUpdates": "Check for updates",
+      "checking": "Checking…"
+    },
     "aiCapabilities": {
       "title": "AI Capabilities",
       "basic": {
@@ -205,6 +212,19 @@
     "copyPathError": "Failed to copy path",
     "revealError": "Failed to reveal in Finder",
     "openVSCodeError": "Failed to open VS Code"
+  },
+  "updater": {
+    "availableTitle": "Update available",
+    "availableMessage": "Kenvo {{version}} is available. Download and install now?",
+    "updateNow": "Update now",
+    "later": "Later",
+    "downloading": "Downloading update… {{progress}}%",
+    "readyTitle": "Update ready",
+    "readyMessage": "The update has been installed. Restart Kenvo to apply it?",
+    "restartNow": "Restart now",
+    "upToDate": "You're up to date",
+    "checkFailed": "Failed to check for updates",
+    "installFailed": "Failed to install the update"
   },
   "menu": {
     "app": "Kenvo",

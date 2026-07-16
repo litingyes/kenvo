@@ -36,12 +36,12 @@ pub fn get_theme_settings(app: &AppHandle) -> Result<ThemeSettings, String> {
     Ok(ThemeSettings { mode, preset })
 }
 
-pub fn set_theme_settings(
-    app: &AppHandle,
-    settings: &ThemeSettings,
-) -> Result<(), String> {
+pub fn set_theme_settings(app: &AppHandle, settings: &ThemeSettings) -> Result<(), String> {
     let store = settings_store(app)?;
-    store.set("theme.mode", serde_json::Value::String(settings.mode.clone()));
+    store.set(
+        "theme.mode",
+        serde_json::Value::String(settings.mode.clone()),
+    );
     store.set(
         "theme.preset",
         serde_json::Value::String(settings.preset.clone()),

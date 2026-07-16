@@ -10,6 +10,11 @@
 
 Designed as a desktop AI chat/assistant application with a modern, native-feeling UI.
 
+## Code Conventions
+
+- All source files, scripts, and tooling are written in TypeScript.
+- Do not create new `.js` files; always use `.ts` and run Node scripts with `tsx`.
+
 ## Testing
 
 Every feature must be verified with `tauri-pilot` (globally installed CLI) by simulating real user interactions on the actual UI. See `.agents/skills/tauri-pilot/SKILL.md` for the full command reference and workflow.

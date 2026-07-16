@@ -7,5 +7,10 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "scripts/dev-config.ts", "scripts/clean-pilot-socket.ts"]
+  "include": [
+    "vite.config.ts",
+    "scripts/dev-config.ts",
+    "scripts/dev-prepare.ts",
+    "packages/agent-server/scripts/build-binary.ts"
+  ]
 }

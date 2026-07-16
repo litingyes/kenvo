@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:agent-server": "pnpm --filter @kenvo/agent-server dev",
-    "dev:tauri": "tsx scripts/clean-pilot-socket.ts && pnpm tauri dev",
+    "dev:tauri": "tsx scripts/dev-prepare.ts && pnpm tauri dev",
     "dev:tauri:before": "tsx scripts/dev.ts",
     "build": "pnpm --filter @kenvo/agent-server build:binary && vite build && tsc",
     "build:agent-server": "pnpm --filter @kenvo/agent-server build:binary",

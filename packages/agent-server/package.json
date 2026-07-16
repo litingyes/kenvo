@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsup",
-    "build:binary": "pnpm build && node scripts/build-binary.js"
+    "build:binary": "pnpm build && tsx scripts/build-binary.ts"
   },
   "dependencies": {
     "@ai-sdk/alibaba": "^2.0.12",

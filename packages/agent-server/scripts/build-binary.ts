@@ -1,7 +1,9 @@
+#!/usr/bin/env tsx
 import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 const ext = process.platform === 'win32' ? '.exe' : ''
 
@@ -14,14 +16,17 @@ if (!targetTriple) {
 }
 
 const binaryName = `agent-server-${targetTriple}${ext}`
-const projectRoot = path.resolve('../..')
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const projectRoot = path.resolve(__dirname, '..', '..', '..')
 const outputDir = path.join(projectRoot, 'src-tauri', 'binaries')
 
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true })
 }
 
-const localBinDir = path.join(process.cwd(), 'bin')
+const localBinDir = path.resolve(__dirname, '..', 'bin')
 if (!fs.existsSync(localBinDir)) {
   fs.mkdirSync(localBinDir, { recursive: true })
 }

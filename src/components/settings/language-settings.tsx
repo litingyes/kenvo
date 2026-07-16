@@ -12,7 +12,9 @@ import { SUPPORTED_LANGUAGES, changeLanguage, type SupportedLanguage } from '@/l
 
 export function LanguageSettings() {
   const { t, i18n } = useTranslation()
-  const currentLanguage = (i18n.resolvedLanguage ?? 'en') as SupportedLanguage
+  const currentLanguage = (i18n.resolvedLanguage ?? 'en-US') as SupportedLanguage
+  const currentLanguageName =
+    SUPPORTED_LANGUAGES.find((lang) => lang.code === currentLanguage)?.name ?? currentLanguage
 
   const handleChange = async (value: string) => {
     const language = value as SupportedLanguage
@@ -24,7 +26,7 @@ export function LanguageSettings() {
       <Label htmlFor="language">{t('settings.language.title')}</Label>
       <Select value={currentLanguage} onValueChange={(value) => value && void handleChange(value)}>
         <SelectTrigger id="language" className="w-full">
-          <SelectValue />
+          <SelectValue>{currentLanguageName}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {SUPPORTED_LANGUAGES.map((lang) => (

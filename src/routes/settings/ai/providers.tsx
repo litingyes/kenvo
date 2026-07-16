@@ -160,7 +160,10 @@ function AiProvidersPage() {
     }
   }
 
-  async function handleTest(provider: ProviderMetadata) {
+  async function handleTest(
+    provider: ProviderMetadata,
+    overrides?: { apiKey?: string; baseUrl?: string },
+  ) {
     if (!settings) return
 
     setLoading(true)
@@ -168,14 +171,12 @@ function AiProvidersPage() {
       const port = await ensureServerRunning(settings.serverPort)
       const client = createAgentServerClient(port)
       const existing = settings.providers.find((p) => p.id === provider.id)
-      if (existing) {
-        await client.configureProvider(provider.id, {
-          apiKey: existing.apiKey,
-          baseUrl: existing.baseUrl,
-          enabled: existing.enabled,
-        })
-      }
-      const result = await client.testProvider(provider.id)
+      const apiKeyToTest = overrides?.apiKey ?? existing?.apiKey
+      const baseUrlToTest = overrides?.baseUrl ?? existing?.baseUrl
+      const result = await client.testProvider(provider.id, {
+        apiKey: apiKeyToTest,
+        baseUrl: baseUrlToTest || undefined,
+      })
       setTestResult(result)
     } finally {
       setLoading(false)
@@ -315,7 +316,7 @@ function AiProvidersPage() {
               {t('settings.aiCapabilities.providers.cancel')}
             </Button>
             <Button
-              onClick={() => selectedProvider && handleTest(selectedProvider)}
+              onClick={() => selectedProvider && handleTest(selectedProvider, { apiKey, baseUrl })}
               disabled={loading}
             >
               {t('settings.aiCapabilities.providers.test')}

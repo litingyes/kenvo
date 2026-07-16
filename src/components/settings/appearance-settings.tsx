@@ -5,13 +5,6 @@ import { useTranslation } from 'react-i18next'
 
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { applyTheme, type ThemeMode } from '@/lib/settings/theme-bridge'
 import { type ThemePreset, useThemeStore } from '@/lib/store/theme-store'
 
@@ -68,7 +61,7 @@ export function AppearanceSettings() {
                   key={m.value}
                   className="flex flex-1 cursor-pointer flex-col items-center gap-2 rounded-lg border border-border p-4 transition-colors hover:bg-accent/50 has-[[data-checked]]:border-primary has-[[data-checked]]:bg-accent"
                 >
-                  <RadioGroupItem value={m.value} />
+                  <RadioGroupItem value={m.value} className="sr-only" />
                   <Icon className="size-5 text-muted-foreground" />
                   <span className="text-sm font-medium">
                     {t(`settings.appearance.modes.${m.value}`)}
@@ -81,19 +74,33 @@ export function AppearanceSettings() {
       </div>
 
       <div className="space-y-3">
-        <Label htmlFor="theme-preset">{t('settings.appearance.themePreset')}</Label>
-        <Select value={preset} onValueChange={(value) => value && handlePresetChange(value)}>
-          <SelectTrigger id="theme-preset" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
+        <Label>{t('settings.appearance.themePreset')}</Label>
+        <RadioGroup value={preset} onValueChange={handlePresetChange}>
+          <div className="grid grid-cols-3 gap-3">
             {PRESETS.map((p) => (
-              <SelectItem key={p.value} value={p.value}>
-                {t(`settings.appearance.presets.${p.value}`)}
-              </SelectItem>
+              <label
+                key={p.value}
+                className="flex cursor-pointer flex-col gap-2 rounded-lg border border-border p-3 transition-colors hover:bg-accent/50 has-[[data-checked]]:border-primary has-[[data-checked]]:bg-accent"
+              >
+                <RadioGroupItem value={p.value} className="sr-only" />
+                <div
+                  data-theme={p.value}
+                  className="h-24 w-full rounded-md border border-border bg-background p-2"
+                >
+                  <div className="mb-2 h-2 w-1/3 rounded bg-primary" />
+                  <div className="space-y-1.5">
+                    <div className="h-1.5 w-full rounded bg-primary/20" />
+                    <div className="h-1.5 w-4/5 rounded bg-primary/20" />
+                  </div>
+                  <div className="mt-2 h-5 w-12 rounded bg-primary" />
+                </div>
+                <span className="text-center text-sm font-medium">
+                  {t(`settings.appearance.presets.${p.value}`)}
+                </span>
+              </label>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </RadioGroup>
       </div>
     </div>
   )

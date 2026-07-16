@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_store::StoreExt;
 
-const DEFAULT_LANGUAGE: &str = "en";
-const SUPPORTED_LANGUAGES: [&str; 2] = ["en", "zh-CN"];
+const DEFAULT_LANGUAGE: &str = "en-US";
+const SUPPORTED_LANGUAGES: [&str; 2] = ["en-US", "zh-CN"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LanguageSettings {

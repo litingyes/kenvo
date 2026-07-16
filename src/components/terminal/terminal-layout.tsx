@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { PanelLeftCloseIcon, PlusIcon, TerminalIcon } from 'lucide-react'
+import { PanelLeftCloseIcon, PlusIcon } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -125,26 +125,20 @@ function TabsTreeSidebar({
 
   return (
     <div className="flex h-full flex-col border-r border-border">
-      <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-        <div className="flex items-center gap-1.5">
-          <TerminalIcon className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium">{t('terminal.sessions')}</span>
-        </div>
-        <div className="flex items-center gap-0.5">
-          <SessionGroupMenu />
-          <Button variant="ghost" size="icon" className="size-7" onClick={onNewSession}>
-            <PlusIcon className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={toggleLeftSidebar}
-            aria-label={t('terminal.collapseSidebar')}
-          >
-            <PanelLeftCloseIcon className="size-3.5" />
-          </Button>
-        </div>
+      <div className="flex items-center justify-end gap-0.5 px-2 py-2">
+        <SessionGroupMenu />
+        <Button variant="ghost" size="icon" className="size-7" onClick={onNewSession}>
+          <PlusIcon className="size-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={toggleLeftSidebar}
+          aria-label={t('terminal.collapseSidebar')}
+        >
+          <PanelLeftCloseIcon className="size-3.5" />
+        </Button>
       </div>
       <ScrollArea className="flex-1">
         <div className="px-1 pb-2">

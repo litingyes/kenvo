@@ -1,11 +1,3 @@
-import { createAlibaba } from '@ai-sdk/alibaba'
-import { createAnthropic } from '@ai-sdk/anthropic'
-import { createDeepSeek } from '@ai-sdk/deepseek'
-import { createMoonshotAI } from '@ai-sdk/moonshotai'
-import { createOpenAI } from '@ai-sdk/openai'
-import { createXai } from '@ai-sdk/xai'
-import { generateText } from 'ai'
-
 export type ProviderId = 'openai' | 'anthropic' | 'deepseek' | 'moonshotai' | 'alibaba' | 'xai'
 
 export interface ProviderConfig {
@@ -16,7 +8,6 @@ export interface ProviderConfig {
   apiKeyHeaderName: string
   apiKeyPrefix?: string
   extraHeaders?: Record<string, string>
-  defaultModels: string[]
   iconKey: string
   description: string
   recommended?: boolean
@@ -37,7 +28,6 @@ const PROVIDERS: ProviderConfig[] = [
     modelsEndpoint: '/v1/models',
     apiKeyHeaderName: 'Authorization',
     apiKeyPrefix: 'Bearer ',
-    defaultModels: ['gpt-4o', 'gpt-4o-mini', 'o3-mini', 'o1'],
     iconKey: 'OpenAI',
     description: 'Use OpenAI models via API key.',
     recommended: true,
@@ -49,7 +39,6 @@ const PROVIDERS: ProviderConfig[] = [
     modelsEndpoint: '/v1/models',
     apiKeyHeaderName: 'x-api-key',
     extraHeaders: { 'anthropic-version': '2023-06-01' },
-    defaultModels: ['claude-3-5-sonnet-latest', 'claude-3-opus-latest', 'claude-3-haiku-latest'],
     iconKey: 'Anthropic',
     description: 'Use Claude models via API key.',
   },
@@ -60,7 +49,6 @@ const PROVIDERS: ProviderConfig[] = [
     modelsEndpoint: '/models',
     apiKeyHeaderName: 'Authorization',
     apiKeyPrefix: 'Bearer ',
-    defaultModels: ['deepseek-chat', 'deepseek-reasoner'],
     iconKey: 'DeepSeek',
     description: 'Use DeepSeek models via API key.',
   },
@@ -71,7 +59,6 @@ const PROVIDERS: ProviderConfig[] = [
     modelsEndpoint: '/v1/models',
     apiKeyHeaderName: 'Authorization',
     apiKeyPrefix: 'Bearer ',
-    defaultModels: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
     iconKey: 'Moonshot',
     description: 'Use Moonshot AI models via API key.',
   },
@@ -82,7 +69,6 @@ const PROVIDERS: ProviderConfig[] = [
     modelsEndpoint: '/v1/models',
     apiKeyHeaderName: 'Authorization',
     apiKeyPrefix: 'Bearer ',
-    defaultModels: ['qwen-max', 'qwen-plus', 'qwen-turbo'],
     iconKey: 'Alibaba',
     description: 'Use Qwen models via API key.',
   },
@@ -93,7 +79,6 @@ const PROVIDERS: ProviderConfig[] = [
     modelsEndpoint: '/v1/models',
     apiKeyHeaderName: 'Authorization',
     apiKeyPrefix: 'Bearer ',
-    defaultModels: ['grok-3', 'grok-2', 'grok-3-mini'],
     iconKey: 'XAI',
     description: 'Use xAI Grok models via API key.',
   },
@@ -105,24 +90,6 @@ export function getProviderConfig(id: string): ProviderConfig | undefined {
 
 export function getAllProviders(): ProviderConfig[] {
   return PROVIDERS
-}
-
-export function createProviderFactory(id: ProviderId, apiKey?: string, baseUrl?: string) {
-  const options = { apiKey, baseURL: baseUrl }
-  switch (id) {
-    case 'openai':
-      return (modelId: string) => createOpenAI(options)(modelId)
-    case 'anthropic':
-      return (modelId: string) => createAnthropic(options)(modelId)
-    case 'deepseek':
-      return (modelId: string) => createDeepSeek(options)(modelId)
-    case 'moonshotai':
-      return (modelId: string) => createMoonshotAI(options)(modelId)
-    case 'alibaba':
-      return (modelId: string) => createAlibaba(options)(modelId)
-    case 'xai':
-      return (modelId: string) => createXai(options)(modelId)
-  }
 }
 
 export async function testProvider(
@@ -137,17 +104,10 @@ export async function testProvider(
       return { success: false, error: 'API key is required' }
     }
 
-    const factory = createProviderFactory(
-      instance.id,
-      instance.apiKey,
-      instance.baseUrl || config.defaultBaseUrl,
-    )
-    const model = factory(config.defaultModels[0])
-
-    await generateText({
-      model,
-      prompt: 'Say hello',
-    })
+    const models = await fetchModels(instance)
+    if (models.length === 0) {
+      return { success: false, error: 'No models available' }
+    }
 
     return { success: true }
   } catch (error) {
@@ -178,9 +138,8 @@ export async function fetchModels(instance: ProviderInstance): Promise<string[]>
     }
 
     const data = (await response.json()) as { data?: Array<{ id: string }> }
-    const models = data.data?.map((m) => m.id).filter(Boolean) || []
-    return models.length > 0 ? models : config.defaultModels
+    return data.data?.map((m) => m.id).filter(Boolean) || []
   } catch {
-    return config.defaultModels
+    return []
   }
 }

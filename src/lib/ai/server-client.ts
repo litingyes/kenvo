@@ -53,9 +53,13 @@ export class AgentServerClient {
     })
   }
 
-  async testProvider(id: string): Promise<TestProviderResult> {
+  async testProvider(
+    id: string,
+    config?: { apiKey?: string; baseUrl?: string },
+  ): Promise<TestProviderResult> {
     const response = await this.request(`/providers/${id}/test`, {
       method: 'POST',
+      body: JSON.stringify(config ?? {}),
     })
     return response.json()
   }

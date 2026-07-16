@@ -5,10 +5,10 @@ import { initReactI18next } from 'react-i18next'
 
 import { tauriBackend } from './tauri-backend'
 
-export const DEFAULT_LANGUAGE = 'en'
+export const DEFAULT_LANGUAGE = 'en-US'
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: 'English' },
+  { code: 'en-US', name: 'English' },
   { code: 'zh-CN', name: '简体中文' },
 ] as const
 

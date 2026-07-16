@@ -21,6 +21,11 @@ const configureSchema = z.object({
   enabled: z.boolean().optional(),
 })
 
+const testSchema = z.object({
+  apiKey: z.string().optional(),
+  baseUrl: z.string().optional(),
+})
+
 export function createApp() {
   const app = new Hono()
 
@@ -72,9 +77,24 @@ export function createApp() {
 
   app.post('/providers/:id/test', async (c) => {
     const id = c.req.param('id') as ProviderId
-    const instance = providerInstances.get(id)
-    if (!instance || !instance.apiKey) {
+    const body = await c.req.json()
+    const parsed = testSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: parsed.error.errors }, 400)
+    }
+
+    const existing = providerInstances.get(id)
+    const apiKey = parsed.data.apiKey ?? existing?.apiKey
+
+    if (!apiKey) {
       return c.json({ success: false, error: 'Provider not configured' }, 400)
+    }
+
+    const instance: ProviderInstance = {
+      id,
+      apiKey,
+      baseUrl: parsed.data.baseUrl ?? existing?.baseUrl,
+      enabled: existing?.enabled ?? false,
     }
 
     const result = await testProvider(instance)

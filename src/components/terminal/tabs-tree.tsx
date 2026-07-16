@@ -72,8 +72,8 @@ function SessionTreeNode({
               className={cn(
                 'group flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors',
                 active
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               )}
             />
           }

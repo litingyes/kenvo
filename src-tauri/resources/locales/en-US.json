@@ -67,6 +67,20 @@
         "title": "Models",
         "description": "Enable or disable models per provider.",
         "empty": "Connect a provider in the Providers tab to see available models."
+      },
+      "agents": {
+        "title": "Agents",
+        "description": "Built-in agents and the model each one uses.",
+        "model": "Model",
+        "auto": "Auto",
+        "autoHint": "Uses {{model}} (first enabled model)",
+        "noModel": "No models enabled. Enable models in the Models tab first.",
+        "coder": {
+          "description": "Handles code-focused tasks such as summarizing file changes into commit messages.",
+          "tasks": {
+            "commit-message": "Commit message"
+          }
+        }
       }
     }
   },
@@ -194,7 +208,11 @@
     "running": "Running {{action}}...",
     "changes": "Changes ({{count}})",
     "moreFiles": "+{{count}} more",
-    "recentCommits": "Recent Commits"
+    "recentCommits": "Recent Commits",
+    "generateWithAi": "Generate with AI",
+    "generating": "Generating…",
+    "aiNoModel": "No model available. Enable a model in Settings → AI → Models.",
+    "aiGenerateFailed": "AI generation failed: {{error}}"
   },
   "files": {
     "search": "Search files…",

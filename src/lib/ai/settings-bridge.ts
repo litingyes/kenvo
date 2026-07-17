@@ -8,11 +8,17 @@ export interface AiProviderSettings {
   enabled: boolean
 }
 
+export interface AgentModelAssignment {
+  providerId: string
+  modelId: string
+}
+
 export interface AiSettings {
   serverPort: number
   serverAutoStart: boolean
   providers: AiProviderSettings[]
   enabledModels: Record<string, string[]>
+  agentModels: Record<string, AgentModelAssignment>
 }
 
 export interface AgentServerStatus {
@@ -103,4 +109,42 @@ export function toggleModelEnabled(
       [providerId]: Array.from(enabled),
     },
   }
+}
+
+export function setAgentModel(
+  settings: AiSettings,
+  agentId: string,
+  assignment: AgentModelAssignment | null,
+): AiSettings {
+  const agentModels = { ...settings.agentModels }
+  if (assignment) {
+    agentModels[agentId] = assignment
+  } else {
+    delete agentModels[agentId]
+  }
+  return { ...settings, agentModels }
+}
+
+export function resolveAgentModel(
+  settings: AiSettings,
+  agentId: string,
+): AgentModelAssignment | undefined {
+  const hasApiKey = (providerId: string) =>
+    Boolean(settings.providers.find((p) => p.id === providerId)?.apiKey)
+
+  const assigned = settings.agentModels[agentId]
+  if (
+    assigned &&
+    hasApiKey(assigned.providerId) &&
+    settings.enabledModels[assigned.providerId]?.includes(assigned.modelId)
+  ) {
+    return assigned
+  }
+  for (const [providerId, models] of Object.entries(settings.enabledModels)) {
+    const modelId = models[0]
+    if (modelId && hasApiKey(providerId)) {
+      return { providerId, modelId }
+    }
+  }
+  return undefined
 }

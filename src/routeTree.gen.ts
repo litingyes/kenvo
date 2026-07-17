@@ -20,6 +20,7 @@ import { Route as SettingsAiIndexRouteImport } from './routes/settings/ai/index'
 import { Route as SettingsAiProvidersRouteImport } from './routes/settings/ai/providers'
 import { Route as SettingsAiModelsRouteImport } from './routes/settings/ai/models'
 import { Route as SettingsAiBasicRouteImport } from './routes/settings/ai/basic'
+import { Route as SettingsAiAgentsRouteImport } from './routes/settings/ai/agents'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -76,6 +77,11 @@ const SettingsAiBasicRoute = SettingsAiBasicRouteImport.update({
   path: '/ai/basic',
   getParentRoute: () => SettingsRoute,
 } as any)
+const SettingsAiAgentsRoute = SettingsAiAgentsRouteImport.update({
+  id: '/ai/agents',
+  path: '/ai/agents',
+  getParentRoute: () => SettingsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
+  '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
   '/settings/ai/models': typeof SettingsAiModelsRoute
   '/settings/ai/providers': typeof SettingsAiProvidersRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal': typeof TerminalIndexRoute
+  '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
   '/settings/ai/models': typeof SettingsAiModelsRoute
   '/settings/ai/providers': typeof SettingsAiProvidersRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/settings/language': typeof SettingsLanguageRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
+  '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
   '/settings/ai/models': typeof SettingsAiModelsRoute
   '/settings/ai/providers': typeof SettingsAiProvidersRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/settings/language'
     | '/terminal/$sessionId'
     | '/terminal/'
+    | '/settings/ai/agents'
     | '/settings/ai/basic'
     | '/settings/ai/models'
     | '/settings/ai/providers'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/settings/language'
     | '/terminal/$sessionId'
     | '/terminal'
+    | '/settings/ai/agents'
     | '/settings/ai/basic'
     | '/settings/ai/models'
     | '/settings/ai/providers'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/settings/language'
     | '/terminal/$sessionId'
     | '/terminal/'
+    | '/settings/ai/agents'
     | '/settings/ai/basic'
     | '/settings/ai/models'
     | '/settings/ai/providers'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsAiBasicRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/settings/ai/agents': {
+      id: '/settings/ai/agents'
+      path: '/ai/agents'
+      fullPath: '/settings/ai/agents'
+      preLoaderRoute: typeof SettingsAiAgentsRouteImport
+      parentRoute: typeof SettingsRoute
+    }
   }
 }
 
@@ -252,6 +271,7 @@ interface SettingsRouteChildren {
   SettingsAboutRoute: typeof SettingsAboutRoute
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsLanguageRoute: typeof SettingsLanguageRoute
+  SettingsAiAgentsRoute: typeof SettingsAiAgentsRoute
   SettingsAiBasicRoute: typeof SettingsAiBasicRoute
   SettingsAiModelsRoute: typeof SettingsAiModelsRoute
   SettingsAiProvidersRoute: typeof SettingsAiProvidersRoute
@@ -262,6 +282,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAboutRoute: SettingsAboutRoute,
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsAiAgentsRoute: SettingsAiAgentsRoute,
   SettingsAiBasicRoute: SettingsAiBasicRoute,
   SettingsAiModelsRoute: SettingsAiModelsRoute,
   SettingsAiProvidersRoute: SettingsAiProvidersRoute,

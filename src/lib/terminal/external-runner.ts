@@ -36,3 +36,7 @@ export async function runExternalQuiet(cmd: string, cwd: string): Promise<string
   })
   return output.trim()
 }
+
+export function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`
+}

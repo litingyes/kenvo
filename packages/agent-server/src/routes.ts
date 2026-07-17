@@ -3,7 +3,9 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { z } from 'zod'
 
+import { getAgent, listAgents } from './agents/registry.js'
 import {
+  createLanguageModel,
   fetchModels,
   getAllProviders,
   getProviderConfig,
@@ -16,14 +18,21 @@ import type { ProviderMetadata } from './types.js'
 const providerInstances = new Map<ProviderId, ProviderInstance>()
 
 const configureSchema = z.object({
-  apiKey: z.string().optional(),
-  baseUrl: z.string().optional(),
-  enabled: z.boolean().optional(),
+  apiKey: z.string().nullish(),
+  baseUrl: z.string().nullish(),
+  enabled: z.boolean().nullish(),
 })
 
 const testSchema = z.object({
-  apiKey: z.string().optional(),
-  baseUrl: z.string().optional(),
+  apiKey: z.string().nullish(),
+  baseUrl: z.string().nullish(),
+})
+
+const runAgentSchema = z.object({
+  task: z.string(),
+  providerId: z.string(),
+  modelId: z.string(),
+  input: z.unknown(),
 })
 
 export function createApp() {
@@ -116,8 +125,45 @@ export function createApp() {
     return c.json({ error: 'Not implemented' }, 501)
   })
 
+  app.get('/agents', (c) => {
+    return c.json({ agents: listAgents() })
+  })
+
   app.post('/agents/:id/run', async (c) => {
-    return c.json({ error: 'Not implemented' }, 501)
+    const agent = getAgent(c.req.param('id'))
+    if (!agent) {
+      return c.json({ error: 'Unknown agent' }, 404)
+    }
+
+    const body = await c.req.json()
+    const parsed = runAgentSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json({ error: parsed.error.errors }, 400)
+    }
+
+    const { task: taskId, providerId, modelId, input } = parsed.data
+    const task = agent.tasks[taskId]
+    if (!task) {
+      return c.json({ error: `Unknown task: ${taskId}` }, 404)
+    }
+
+    const instance = providerInstances.get(providerId as ProviderId)
+    if (!instance?.apiKey) {
+      return c.json({ error: 'Provider not configured' }, 400)
+    }
+
+    const inputParsed = task.inputSchema.safeParse(input)
+    if (!inputParsed.success) {
+      return c.json({ error: inputParsed.error.errors }, 400)
+    }
+
+    try {
+      const model = createLanguageModel(instance, modelId)
+      const output = await task.run(model, inputParsed.data)
+      return c.json({ output })
+    } catch (error) {
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 500)
+    }
   })
 
   return app

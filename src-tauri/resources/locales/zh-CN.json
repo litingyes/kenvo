@@ -67,6 +67,20 @@
         "title": "Models",
         "description": "按 provider 启用或禁用模型。",
         "empty": "先在 Providers 中连接一个 provider 才能查看可用模型。"
+      },
+      "agents": {
+        "title": "智能体",
+        "description": "内置智能体及其各自使用的模型。",
+        "model": "模型",
+        "auto": "自动",
+        "autoHint": "使用 {{model}}（第一个启用的模型）",
+        "noModel": "尚未启用任何模型，请先在 Models 页启用。",
+        "coder": {
+          "description": "处理代码相关任务，例如将文件变更总结为 commit message。",
+          "tasks": {
+            "commit-message": "Commit message"
+          }
+        }
       }
     }
   },
@@ -194,7 +208,11 @@
     "running": "正在执行 {{action}}...",
     "changes": "变更（{{count}}）",
     "moreFiles": "还有 {{count}} 项",
-    "recentCommits": "最近提交"
+    "recentCommits": "最近提交",
+    "generateWithAi": "使用 AI 生成",
+    "generating": "生成中…",
+    "aiNoModel": "没有可用模型，请先在 设置 → AI → Models 中启用模型。",
+    "aiGenerateFailed": "AI 生成失败：{{error}}"
   },
   "files": {
     "search": "搜索文件…",

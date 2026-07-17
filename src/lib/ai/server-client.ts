@@ -18,6 +18,20 @@ export interface ModelsResponse {
   models: string[]
 }
 
+export interface AgentMetadata {
+  id: string
+  name: string
+  description: string
+  tasks: string[]
+}
+
+export interface RunAgentRequest {
+  task: string
+  providerId: string
+  modelId: string
+  input: unknown
+}
+
 export class AgentServerClient {
   constructor(private baseUrl: string) {}
 
@@ -45,12 +59,15 @@ export class AgentServerClient {
 
   async configureProvider(
     id: string,
-    config: { apiKey?: string; baseUrl?: string; enabled?: boolean },
+    config: { apiKey?: string | null; baseUrl?: string | null; enabled?: boolean | null },
   ): Promise<void> {
-    await this.request(`/providers/${id}/config`, {
+    const response = await this.request(`/providers/${id}/config`, {
       method: 'POST',
       body: JSON.stringify(config),
     })
+    if (!response.ok) {
+      throw new Error(`Failed to configure provider ${id} (${response.status})`)
+    }
   }
 
   async testProvider(
@@ -68,6 +85,25 @@ export class AgentServerClient {
     const response = await this.request(`/providers/${id}/models`)
     const data = await response.json()
     return data.models
+  }
+
+  async getAgents(): Promise<AgentMetadata[]> {
+    const response = await this.request('/agents')
+    const data = await response.json()
+    return data.agents
+  }
+
+  async runAgent(id: string, body: RunAgentRequest): Promise<unknown> {
+    const response = await this.request(`/agents/${id}/run`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    const data = await response.json()
+    if (!response.ok) {
+      const error = typeof data.error === 'string' ? data.error : JSON.stringify(data.error)
+      throw new Error(error || `Agent run failed (${response.status})`)
+    }
+    return data.output
   }
 }
 

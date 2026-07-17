@@ -14,11 +14,20 @@ pub struct AiProviderSettings {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct AgentModelAssignment {
+    pub provider_id: String,
+    pub model_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AiSettings {
     pub server_port: u16,
     pub server_auto_start: bool,
     pub providers: Vec<AiProviderSettings>,
     pub enabled_models: HashMap<String, Vec<String>>,
+    #[serde(default)]
+    pub agent_models: HashMap<String, AgentModelAssignment>,
 }
 
 impl Default for AiSettings {
@@ -28,6 +37,7 @@ impl Default for AiSettings {
             server_auto_start: true,
             providers: Vec::new(),
             enabled_models: HashMap::new(),
+            agent_models: HashMap::new(),
         }
     }
 }

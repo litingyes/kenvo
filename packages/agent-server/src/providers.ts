@@ -1,3 +1,7 @@
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import type { LanguageModel } from 'ai'
+
 export type ProviderId = 'openai' | 'anthropic' | 'deepseek' | 'moonshotai' | 'alibaba' | 'xai'
 
 export interface ProviderConfig {
@@ -142,4 +146,31 @@ export async function fetchModels(instance: ProviderInstance): Promise<string[]>
   } catch {
     return []
   }
+}
+
+function chatCompletionsBaseUrl(config: ProviderConfig, baseUrl: string): string {
+  const prefix = config.modelsEndpoint.replace(/\/?models\/?$/, '')
+  return `${baseUrl.replace(/\/+$/, '')}${prefix}`
+}
+
+export function createLanguageModel(instance: ProviderInstance, modelId: string): LanguageModel {
+  const config = getProviderConfig(instance.id)
+  if (!config) {
+    throw new Error(`Unknown provider: ${instance.id}`)
+  }
+  if (!instance.apiKey) {
+    throw new Error(`Provider not configured: ${instance.id}`)
+  }
+
+  const baseUrl = instance.baseUrl || config.defaultBaseUrl
+
+  if (instance.id === 'anthropic') {
+    return createAnthropic({ apiKey: instance.apiKey, baseURL: baseUrl })(modelId)
+  }
+
+  return createOpenAICompatible({
+    name: config.id,
+    apiKey: instance.apiKey,
+    baseURL: chatCompletionsBaseUrl(config, baseUrl),
+  })(modelId)
 }

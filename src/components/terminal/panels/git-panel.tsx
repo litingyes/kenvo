@@ -5,6 +5,7 @@ import {
   GitCommitIcon,
   GitPullRequestIcon,
   RefreshCwIcon,
+  SparklesIcon,
 } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,7 +20,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
-import { runExternalQuiet } from '@/lib/terminal/external-runner'
+import { generateCommitMessage } from '@/lib/agents/coder'
+import { runExternalQuiet, shellQuote } from '@/lib/terminal/external-runner'
 import { cn } from '@/lib/utils'
 
 interface GitStatus {
@@ -38,6 +40,8 @@ export function GitPanel({ cwd }: { cwd: string }) {
   const [actionLoading, setActionLoading] = React.useState<string | null>(null)
   const [commitOpen, setCommitOpen] = React.useState(false)
   const [commitMsg, setCommitMsg] = React.useState('')
+  const [generating, setGenerating] = React.useState(false)
+  const [generateError, setGenerateError] = React.useState<string | null>(null)
 
   const refresh = React.useCallback(async () => {
     setLoading(true)
@@ -107,11 +111,27 @@ export function GitPanel({ cwd }: { cwd: string }) {
     const msg = commitMsg.trim()
     if (!msg) return
     setActionLoading('commit')
-    await runExternalQuiet(`git add -A 2>&1 && git commit -m ${JSON.stringify(msg)} 2>&1`, cwd)
+    await runExternalQuiet(`git add -A 2>&1 && git commit -m ${shellQuote(msg)} 2>&1`, cwd)
     setActionLoading(null)
     setCommitMsg('')
     setCommitOpen(false)
     void refresh()
+  }
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    setGenerateError(null)
+    try {
+      const message = await generateCommitMessage(cwd)
+      setCommitMsg(message)
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      setGenerateError(
+        reason === 'no-model' ? t('git.aiNoModel') : t('git.aiGenerateFailed', { error: reason }),
+      )
+    } finally {
+      setGenerating(false)
+    }
   }
 
   if (loading) {
@@ -173,15 +193,31 @@ export function GitPanel({ cwd }: { cwd: string }) {
               <ChevronDownIcon className="size-3 opacity-60" />
             </PopoverTrigger>
             <PopoverContent align="start" className="w-72 p-3">
-              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
-                {t('git.commitMessage')}
-              </p>
+              <div className="mb-1.5 flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {t('git.commitMessage')}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 gap-1 px-1.5 text-[10px] text-muted-foreground"
+                  disabled={generating || status.files.length === 0}
+                  onClick={() => void handleGenerate()}
+                >
+                  <SparklesIcon className={cn('size-3', generating && 'animate-pulse')} />
+                  {generating ? t('git.generating') : t('git.generateWithAi')}
+                </Button>
+              </div>
               <Textarea
                 value={commitMsg}
                 onChange={(e) => setCommitMsg(e.target.value)}
                 placeholder={t('git.commitPlaceholder')}
                 className="mb-2 min-h-16 text-xs"
+                disabled={generating}
               />
+              {generateError && (
+                <p className="mb-2 text-[10px] text-destructive">{generateError}</p>
+              )}
               <div className="flex justify-end gap-1.5">
                 <Button variant="outline" size="sm" onClick={() => setCommitOpen(false)}>
                   {t('git.cancel')}

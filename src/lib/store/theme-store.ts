@@ -4,7 +4,12 @@ import { persist } from 'zustand/middleware'
 /**
  * Kenvo theme presets.
  */
-export type ThemePreset = 'terminal' | 'ocean' | 'midnight'
+export const THEME_PRESETS = ['kenvo', 'ayu', 'catppuccin'] as const
+export type ThemePreset = (typeof THEME_PRESETS)[number]
+
+export function isThemePreset(value: string): value is ThemePreset {
+  return (THEME_PRESETS as readonly string[]).includes(value)
+}
 
 interface ThemeState {
   themePreset: ThemePreset
@@ -14,7 +19,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      themePreset: 'terminal',
+      themePreset: 'kenvo',
       setThemePreset: (themePreset) => set({ themePreset }),
     }),
     { name: 'kenvo-theme' },

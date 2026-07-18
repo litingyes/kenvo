@@ -15,9 +15,9 @@
         "system": "System"
       },
       "presets": {
-        "terminal": "Terminal",
-        "ocean": "Ocean",
-        "midnight": "Midnight"
+        "kenvo": "Kenvo",
+        "ayu": "Ayu",
+        "catppuccin": "Catppuccin"
       }
     },
     "language": {

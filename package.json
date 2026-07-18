@@ -78,5 +78,12 @@
     "typescript": "~7.0.2",
     "vite": "^8.1.4",
     "vite-plus": "^0.2.4"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.14.0",
+      "onFail": "download"
+    }
   }
 }

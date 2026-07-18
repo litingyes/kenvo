@@ -15,9 +15,9 @@ const MODES: { value: ThemeMode; icon: React.ComponentType<{ className?: string 
 ]
 
 const PRESETS: { value: ThemePreset }[] = [
-  { value: 'terminal' },
-  { value: 'ocean' },
-  { value: 'midnight' },
+  { value: 'kenvo' },
+  { value: 'ayu' },
+  { value: 'catppuccin' },
 ]
 
 export function AppearanceSettings() {

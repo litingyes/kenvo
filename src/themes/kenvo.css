@@ -1,0 +1,105 @@
+/**
+ * Kenvo Theme: Kenvo (default)
+ *
+ * Kenvo's own brand palette. Light mode is a clean white canvas with an
+ * indigo primary and green accent; dark mode is an OLED-friendly deep black
+ * with the same indigo glow and green highlights.
+ */
+
+:root,
+[data-theme='kenvo'] {
+  --background: #ffffff;
+  --foreground: #0a0a0c;
+  --card: #fafafa;
+  --card-foreground: #0a0a0c;
+  --popover: #fafafa;
+  --popover-foreground: #0a0a0c;
+  --primary: #5e6ad2;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #22c55e;
+  --accent-foreground: #0a0a0c;
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #5e6ad2;
+  --radius: 0.875rem;
+  --chart-1: #5e6ad2;
+  --chart-2: #22c55e;
+  --chart-3: #f43f5e;
+  --chart-4: #f59e0b;
+  --chart-5: #06b6d4;
+  --sidebar: #f4f4f5;
+  --sidebar-foreground: #0a0a0c;
+  --sidebar-primary: #5e6ad2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #22c55e;
+  --sidebar-accent-foreground: #0a0a0c;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #5e6ad2;
+}
+
+.dark,
+[data-theme='kenvo'].dark {
+  --background: #050506;
+  --foreground: #ededef;
+  --card: #0a0a0c;
+  --card-foreground: #ededef;
+  --popover: #0a0a0c;
+  --popover-foreground: #ededef;
+  --primary: #5e6ad2;
+  --primary-foreground: #ffffff;
+  --secondary: #141416;
+  --secondary-foreground: #ededef;
+  --muted: #141416;
+  --muted-foreground: #a1a1aa;
+  --accent: #22c55e;
+  --accent-foreground: #050506;
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #5e6ad2;
+  --chart-1: #5e6ad2;
+  --chart-2: #22c55e;
+  --chart-3: #f43f5e;
+  --chart-4: #fbbf24;
+  --chart-5: #22d3ee;
+  --sidebar: #0a0a0c;
+  --sidebar-foreground: #ededef;
+  --sidebar-primary: #5e6ad2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #22c55e;
+  --sidebar-accent-foreground: #050506;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #5e6ad2;
+}
+
+/* Terminal-specific semantic tokens, kept in sync with the theme preset. */
+:root,
+[data-theme='kenvo'] {
+  --term-prompt-user: var(--primary);
+  --term-prompt-path: var(--accent);
+  --term-cursor: var(--foreground);
+  --term-cursor-bg: var(--foreground);
+  --term-error: var(--destructive);
+  --term-output: var(--foreground);
+  --term-system: var(--muted-foreground);
+  --term-command: var(--foreground);
+}
+
+.dark,
+[data-theme='kenvo'].dark {
+  --term-prompt-user: var(--primary);
+  --term-prompt-path: var(--accent);
+  --term-cursor: var(--foreground);
+  --term-cursor-bg: var(--foreground);
+  --term-error: var(--destructive);
+  --term-output: var(--foreground);
+  --term-system: var(--muted-foreground);
+  --term-command: var(--foreground);
+}

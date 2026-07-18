@@ -12,7 +12,7 @@ impl Default for ThemeSettings {
     fn default() -> Self {
         Self {
             mode: "dark".to_string(),
-            preset: "terminal".to_string(),
+            preset: "kenvo".to_string(),
         }
     }
 }
@@ -29,10 +29,12 @@ pub fn get_theme_settings(app: &AppHandle) -> Result<ThemeSettings, String> {
         .get("theme.mode")
         .and_then(|v| v.as_str().map(|s| s.to_string()))
         .unwrap_or_else(|| "dark".to_string());
+    let valid_presets = ["kenvo", "ayu", "catppuccin"];
     let preset = store
         .get("theme.preset")
         .and_then(|v| v.as_str().map(|s| s.to_string()))
-        .unwrap_or_else(|| "terminal".to_string());
+        .filter(|p| valid_presets.contains(&p.as_str()))
+        .unwrap_or_else(|| "kenvo".to_string());
     Ok(ThemeSettings { mode, preset })
 }
 

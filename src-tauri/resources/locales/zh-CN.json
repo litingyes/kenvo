@@ -15,9 +15,9 @@
         "system": "跟随系统"
       },
       "presets": {
-        "terminal": "终端",
-        "ocean": "海洋",
-        "midnight": "午夜"
+        "kenvo": "Kenvo",
+        "ayu": "Ayu",
+        "catppuccin": "Catppuccin"
       }
     },
     "language": {

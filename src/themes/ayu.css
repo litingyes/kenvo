@@ -1,0 +1,100 @@
+/**
+ * Kenvo Theme: Ayu
+ *
+ * Aligned with the Ayu editor theme community palette.
+ * Light mode uses Ayu Light; dark mode uses Ayu Mirage.
+ */
+
+[data-theme='ayu'] {
+  --background: #fcfcfc;
+  --foreground: #5c6166;
+  --card: #f8f9fa;
+  --card-foreground: #5c6166;
+  --popover: #f8f9fa;
+  --popover-foreground: #5c6166;
+  --primary: #ff9940;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f1f2;
+  --secondary-foreground: #5c6166;
+  --muted: #f0f1f2;
+  --muted-foreground: #8e959b;
+  --accent: #86b300;
+  --accent-foreground: #ffffff;
+  --destructive: #f07171;
+  --destructive-foreground: #ffffff;
+  --border: #e6e7e9;
+  --input: #e6e7e9;
+  --ring: #ff9940;
+  --radius: 0.875rem;
+  --chart-1: #ff9940;
+  --chart-2: #86b300;
+  --chart-3: #55b4d4;
+  --chart-4: #fa8532;
+  --chart-5: #eba400;
+  --sidebar: #f0f1f2;
+  --sidebar-foreground: #5c6166;
+  --sidebar-primary: #ff9940;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #86b300;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e6e7e9;
+  --sidebar-ring: #ff9940;
+}
+
+[data-theme='ayu'].dark {
+  --background: #1f2430;
+  --foreground: #cccac2;
+  --card: #242936;
+  --card-foreground: #cccac2;
+  --popover: #242936;
+  --popover-foreground: #cccac2;
+  --primary: #ffcc66;
+  --primary-foreground: #1f2430;
+  --secondary: #1a1f29;
+  --secondary-foreground: #cccac2;
+  --muted: #1a1f29;
+  --muted-foreground: #707a8c;
+  --accent: #d5ff80;
+  --accent-foreground: #1f2430;
+  --destructive: #f28779;
+  --destructive-foreground: #1f2430;
+  --border: #171b24;
+  --input: #171b24;
+  --ring: #ffcc66;
+  --chart-1: #ffcc66;
+  --chart-2: #d5ff80;
+  --chart-3: #5ccfe6;
+  --chart-4: #ffa659;
+  --chart-5: #ffcd66;
+  --sidebar: #242936;
+  --sidebar-foreground: #cccac2;
+  --sidebar-primary: #ffcc66;
+  --sidebar-primary-foreground: #1f2430;
+  --sidebar-accent: #d5ff80;
+  --sidebar-accent-foreground: #1f2430;
+  --sidebar-border: #171b24;
+  --sidebar-ring: #ffcc66;
+}
+
+/* Ayu-specific terminal semantic tokens. */
+[data-theme='ayu'] {
+  --term-prompt-user: var(--primary);
+  --term-prompt-path: #55b4d4;
+  --term-cursor: var(--foreground);
+  --term-cursor-bg: var(--foreground);
+  --term-error: var(--destructive);
+  --term-output: var(--foreground);
+  --term-system: var(--muted-foreground);
+  --term-command: var(--foreground);
+}
+
+[data-theme='ayu'].dark {
+  --term-prompt-user: var(--primary);
+  --term-prompt-path: #5ccfe6;
+  --term-cursor: var(--foreground);
+  --term-cursor-bg: var(--foreground);
+  --term-error: var(--destructive);
+  --term-output: var(--foreground);
+  --term-system: var(--muted-foreground);
+  --term-command: var(--foreground);
+}

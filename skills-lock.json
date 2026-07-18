@@ -7,12 +7,6 @@
       "skillPath": "skills/use-ai-sdk/SKILL.md",
       "computedHash": "0883204d11b055e968dee697c5858e68064c27dfd4deb6310212895daa65c5ad"
     },
-    "design-taste-frontend": {
-      "source": "Leonxlnx/taste-skill",
-      "sourceType": "github",
-      "skillPath": "skills/taste-skill/SKILL.md",
-      "computedHash": "6d838b246d0e35d0b53f4f23f98ba7a1dd561937e64f7d0c7553b0928e376c3e"
-    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
@@ -42,6 +36,12 @@
       "sourceType": "github",
       "skillPath": "SKILL.md",
       "computedHash": "326b1333a18b08ef9390ec31ac5fad7b4393a65f49e9f8b4c17f4f37718888ca"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "f0916ca326ad6dbde1d0770b46956a213406b8ea4a19ed931bb4f2dc7d04c16d"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",

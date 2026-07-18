@@ -47,7 +47,20 @@ function getAppLogDir(identifier: string): string {
   }
 }
 
-const logDir = getAppLogDir(getAppIdentifier())
+function getAppDataDir(identifier: string): string {
+  switch (platform()) {
+    case 'darwin':
+      return join(homedir(), 'Library', 'Application Support', identifier)
+    case 'win32':
+      return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), identifier)
+    default:
+      return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), identifier)
+  }
+}
+
+const appIdentifier = getAppIdentifier()
+const logDir = getAppLogDir(appIdentifier)
+const dataDir = getAppDataDir(appIdentifier)
 
 function waitForAgentServer(port: number): Promise<void> {
   const deadline = Date.now() + HEALTH_TIMEOUT_MS
@@ -113,7 +126,7 @@ function cleanup() {
 const agent = spawnInherit(
   'pnpm',
   ['--filter', '@kenvo/agent-server', 'dev', '--', '--port', String(DEFAULT_AGENT_PORT)],
-  { KENVO_LOG_DIR: logDir },
+  { KENVO_LOG_DIR: logDir, KENVO_DATA_DIR: dataDir },
 )
 
 await waitForAgentServer(DEFAULT_AGENT_PORT)

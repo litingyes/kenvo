@@ -1,43 +1,71 @@
-import { appendFileSync, mkdirSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 const AI_LOG_FILE = 'ai-conversations.jsonl'
 const SERVER_LOG_FILE = 'agent-server.log'
 
-let logDir: string | null = null
-let dirReady = false
+const MAX_FILE_BYTES = 10 * 1024 * 1024
+const MAX_ROTATED_FILES = 2
 
-export function getLogDir(): string | null {
-  if (logDir !== null) {
-    return logDir || null
+const readyDirs = new Set<string>()
+
+function createEnvDirResolver(name: string): () => string | null {
+  let cached: string | null | undefined
+  return () => {
+    if (cached !== undefined) {
+      return cached
+    }
+    const fromEnv = process.env[name]?.trim()
+    cached = fromEnv && fromEnv.length > 0 ? fromEnv : null
+    return cached
   }
-  const fromEnv = process.env.KENVO_LOG_DIR?.trim()
-  logDir = fromEnv && fromEnv.length > 0 ? fromEnv : ''
-  return logDir || null
 }
 
+export const getLogDir = createEnvDirResolver('KENVO_LOG_DIR')
+export const getDataDir = createEnvDirResolver('KENVO_DATA_DIR')
+
 function ensureDir(dir: string): boolean {
-  if (dirReady) {
+  if (readyDirs.has(dir)) {
     return true
   }
   try {
     mkdirSync(dir, { recursive: true })
-    dirReady = true
+    readyDirs.add(dir)
     return true
   } catch {
     return false
   }
 }
 
-function appendLine(fileName: string, line: string): void {
-  const dir = getLogDir()
+function rotateIfNeeded(filePath: string): void {
+  try {
+    if (!existsSync(filePath) || statSync(filePath).size < MAX_FILE_BYTES) {
+      return
+    }
+    const oldest = `${filePath}.${MAX_ROTATED_FILES}`
+    rmSync(oldest, { force: true })
+    for (let i = MAX_ROTATED_FILES - 1; i >= 1; i--) {
+      const src = `${filePath}.${i}`
+      if (existsSync(src)) {
+        renameSync(src, `${filePath}.${i + 1}`)
+      }
+    }
+    renameSync(filePath, `${filePath}.1`)
+  } catch {
+    // Rotation is best-effort; never block logging on it.
+  }
+}
+
+function appendLine(dir: string | null, fileName: string, line: string): void {
   if (!dir || !ensureDir(dir)) {
     return
   }
+  const filePath = join(dir, fileName)
+  rotateIfNeeded(filePath)
   try {
-    appendFileSync(join(dir, fileName), `${line}\n`, 'utf8')
+    appendFileSync(filePath, `${line}\n`, 'utf8')
   } catch {
-    dirReady = false
+    readyDirs.delete(dir)
   }
 }
 
@@ -52,7 +80,7 @@ export function writeAiRecord(record: Record<string, unknown>): void {
       serializationError: true,
     })
   }
-  appendLine(AI_LOG_FILE, line)
+  appendLine(getDataDir() ?? getLogDir(), AI_LOG_FILE, line)
 }
 
 export function serverLog(
@@ -68,7 +96,7 @@ export function serverLog(
   } else {
     console.log(line)
   }
-  appendLine(SERVER_LOG_FILE, line)
+  appendLine(getLogDir(), SERVER_LOG_FILE, line)
 }
 
 function safeJson(value: unknown): string {

@@ -29,7 +29,10 @@
       "description": "版本信息与更新。",
       "version": "版本",
       "checkForUpdates": "检查更新",
-      "checking": "正在检查…"
+      "checking": "正在检查…",
+      "openLogFolder": "打开日志目录",
+      "openDataFolder": "打开数据目录",
+      "openFolderFailed": "打开目录失败"
     },
     "aiCapabilities": {
       "title": "AI 能力",

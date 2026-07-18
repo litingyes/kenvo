@@ -3,6 +3,7 @@
 
 mod agent_server;
 mod ai_settings;
+mod app_paths;
 mod language;
 mod theme;
 
@@ -39,6 +40,7 @@ fn main() {
                 .build(),
         )
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_opener::init())
         .manage(agent_server::AgentServerState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_sql::Builder::new().build())
@@ -60,6 +62,8 @@ fn main() {
             agent_server::agent_server_status,
             ai_settings::get_ai_settings_command,
             ai_settings::set_ai_settings_command,
+            app_paths::get_app_paths,
+            app_paths::open_app_folder,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

@@ -54,13 +54,15 @@ pub async fn agent_server_start<R: Runtime>(
     let port = get_desired_port(&app);
 
     let log_dir = app.path().app_log_dir().unwrap_or_default();
+    let data_dir = app.path().app_data_dir().unwrap_or_default();
 
     let sidecar_command = app
         .shell()
         .sidecar("agent-server")
         .map_err(|e| e.to_string())?
         .args(["--port", &port.to_string()])
-        .env("KENVO_LOG_DIR", log_dir.to_string_lossy().to_string());
+        .env("KENVO_LOG_DIR", log_dir.to_string_lossy().to_string())
+        .env("KENVO_DATA_DIR", data_dir.to_string_lossy().to_string());
 
     let (mut rx, child) = sidecar_command.spawn().map_err(|e| {
         log::error!("failed to spawn agent-server sidecar: {e}");

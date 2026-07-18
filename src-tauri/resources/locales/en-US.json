@@ -29,7 +29,10 @@
       "description": "Version information and updates.",
       "version": "Version",
       "checkForUpdates": "Check for updates",
-      "checking": "Checking…"
+      "checking": "Checking…",
+      "openLogFolder": "Open log folder",
+      "openDataFolder": "Open data folder",
+      "openFolderFailed": "Failed to open folder"
     },
     "aiCapabilities": {
       "title": "AI Capabilities",

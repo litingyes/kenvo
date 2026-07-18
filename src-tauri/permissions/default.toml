@@ -17,3 +17,8 @@ commands.allow = ["get_ai_settings_command", "set_ai_settings_command"]
 identifier = "allow-agent-server"
 description = "Allows starting, stopping, and querying the agent server."
 commands.allow = ["agent_server_start", "agent_server_stop", "agent_server_status"]
+
+[[permission]]
+identifier = "allow-app-paths"
+description = "Allows reading the application log and data directory paths."
+commands.allow = ["get_app_paths", "open_app_folder"]

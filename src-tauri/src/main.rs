@@ -9,9 +9,35 @@ mod theme;
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 use tauri::webview::WebviewWindowBuilder;
 use tauri::{Listener, Manager, WebviewUrl};
+use tauri_plugin_log::{RotationStrategy, Target, TargetKind, TimezoneStrategy};
 
 fn main() {
+    let log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
     let builder = tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(tauri_plugin_log::log::LevelFilter::Info)
+                .build(),
+        )
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::LogDir {
+                        file_name: Some("kenvo".into()),
+                    }),
+                    Target::new(TargetKind::Webview),
+                ])
+                .level(log_level)
+                .timezone_strategy(TimezoneStrategy::UseLocal)
+                .rotation_strategy(RotationStrategy::KeepSome(10))
+                .build(),
+        )
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(agent_server::AgentServerState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -46,7 +72,7 @@ fn main() {
 
             app.listen("language-changed", move |_event| {
                 if let Err(e) = setup_menu(&app_handle) {
-                    eprintln!("failed to rebuild menu: {}", e);
+                    log::error!("failed to rebuild menu: {}", e);
                 }
             });
 
@@ -105,7 +131,7 @@ fn setup_menu(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>> 
         match event.id().0.as_str() {
             "settings" => {
                 if let Err(e) = open_settings_window(&app_handle, &menu_language) {
-                    eprintln!("failed to open settings window: {}", e);
+                    log::error!("failed to open settings window: {}", e);
                 }
             }
             "about" => {

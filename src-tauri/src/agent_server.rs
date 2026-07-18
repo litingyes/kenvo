@@ -53,13 +53,21 @@ pub async fn agent_server_start<R: Runtime>(
 
     let port = get_desired_port(&app);
 
+    let log_dir = app.path().app_log_dir().unwrap_or_default();
+
     let sidecar_command = app
         .shell()
         .sidecar("agent-server")
         .map_err(|e| e.to_string())?
-        .args(["--port", &port.to_string()]);
+        .args(["--port", &port.to_string()])
+        .env("KENVO_LOG_DIR", log_dir.to_string_lossy().to_string());
 
-    let (mut rx, child) = sidecar_command.spawn().map_err(|e| e.to_string())?;
+    let (mut rx, child) = sidecar_command.spawn().map_err(|e| {
+        log::error!("failed to spawn agent-server sidecar: {e}");
+        e.to_string()
+    })?;
+
+    log::info!("agent-server sidecar spawned (desired port {port})");
 
     let app_handle = app.clone();
     let state_for_task = Arc::clone(state.inner());
@@ -76,10 +84,10 @@ pub async fn agent_server_start<R: Runtime>(
                     }
                 }
                 CommandEvent::Stderr(line) => {
-                    eprintln!("agent-server stderr: {}", String::from_utf8_lossy(&line));
+                    log::warn!("agent-server stderr: {}", String::from_utf8_lossy(&line));
                 }
                 CommandEvent::Terminated(payload) => {
-                    eprintln!("agent-server terminated: {:?}", payload);
+                    log::info!("agent-server terminated: {:?}", payload);
                     let _ = app_handle.emit("agent-server-stopped", ());
                     break;
                 }

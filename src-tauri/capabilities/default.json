@@ -93,6 +93,7 @@
     "os:default",
     "updater:default",
     "process:allow-restart",
-    "fs:allow-resource-read-recursive"
+    "fs:allow-resource-read-recursive",
+    "log:default"
   ]
 }

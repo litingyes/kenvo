@@ -124,6 +124,7 @@ export const commitMessageTask = defineTask<CommitMessageInput, CommitMessageOut
       output: Output.object({ schema: commitMessageObjectSchema }),
       system: SYSTEM_PROMPT,
       prompt: buildUserPrompt(input),
+      telemetry: { functionId: 'coder.commit-message' },
     })
 
     return { message: formatConventionalCommit(output) }

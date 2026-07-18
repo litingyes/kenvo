@@ -2,6 +2,7 @@ import { RouterProvider, createRouter, createBrowserHistory } from '@tanstack/re
 import ReactDOM from 'react-dom/client'
 
 import { initializeI18n } from '@/lib/i18n'
+import { initErrorLogging } from '@/lib/logger'
 
 import { routeTree } from './routeTree.gen'
 
@@ -21,6 +22,7 @@ declare module '@tanstack/react-router' {
 }
 
 async function bootstrap() {
+  initErrorLogging()
   await initializeI18n()
 
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

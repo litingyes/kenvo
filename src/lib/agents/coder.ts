@@ -5,6 +5,7 @@ import {
   resolveAgentModel,
   startAgentServer,
 } from '@/lib/ai/settings-bridge'
+import { logger } from '@/lib/logger'
 import { runExternalQuiet } from '@/lib/terminal/external-runner'
 
 const MAX_DIFF_CHARS = 20000
@@ -36,16 +37,25 @@ export async function collectCommitContext(cwd: string): Promise<CommitContext> 
 export type GenerateCommitMessageError = 'no-model' | 'provider-not-configured' | 'run-failed'
 
 export async function generateCommitMessage(cwd: string): Promise<string> {
+  const startedAt = Date.now()
   const settings = await getAiSettings()
   const assignment = resolveAgentModel(settings, 'coder')
   if (!assignment) {
+    void logger.error('[coder] generate commit message failed: no-model')
     throw new Error('no-model')
   }
 
   const provider = settings.providers.find((p) => p.id === assignment.providerId)
   if (!provider?.apiKey) {
+    void logger.error(
+      `[coder] generate commit message failed: provider-not-configured (${assignment.providerId})`,
+    )
     throw new Error('provider-not-configured')
   }
+
+  void logger.info(
+    `[coder] generate commit message started (provider=${assignment.providerId}, model=${assignment.modelId})`,
+  )
 
   const status = await getAgentServerStatus()
   let port: number
@@ -76,13 +86,19 @@ export async function generateCommitMessage(cwd: string): Promise<string> {
     })) as { message?: string }
 
     if (!output.message) {
+      void logger.error('[coder] generate commit message failed: empty output')
       throw new Error('run-failed')
     }
+    void logger.info(
+      `[coder] generate commit message succeeded in ${Date.now() - startedAt}ms (provider=${assignment.providerId}, model=${assignment.modelId})`,
+    )
     return output.message
   } catch (error) {
     if (error instanceof Error && error.message === 'run-failed') {
       throw error
     }
-    throw new Error(error instanceof Error ? error.message : 'run-failed')
+    const reason = error instanceof Error ? error.message : 'run-failed'
+    void logger.error(`[coder] generate commit message failed: ${reason}`)
+    throw new Error(reason)
   }
 }

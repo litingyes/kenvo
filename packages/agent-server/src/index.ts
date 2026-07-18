@@ -1,6 +1,11 @@
 import { serve } from '@hono/node-server'
+import { registerTelemetry } from 'ai'
 
+import { getLogDir, serverLog } from './logging.js'
 import { createApp } from './routes.js'
+import { LocalFileTelemetry } from './telemetry.js'
+
+registerTelemetry(new LocalFileTelemetry())
 
 const DEFAULT_PORT = 32420
 const MAX_PORT_ATTEMPTS = 20
@@ -57,10 +62,13 @@ async function findAvailablePort(startPort: number): Promise<number> {
 
 async function main() {
   const desiredPort = getDesiredPort()
-  await findAvailablePort(desiredPort)
+  const port = await findAvailablePort(desiredPort)
+  serverLog('info', 'agent-server started', { port, logDir: getLogDir() })
 }
 
 main().catch((error) => {
-  console.error('Failed to start agent server:', error)
+  serverLog('error', 'failed to start agent server', {
+    error: error instanceof Error ? error.message : String(error),
+  })
   process.exit(1)
 })

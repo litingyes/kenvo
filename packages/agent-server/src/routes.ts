@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 import { z } from 'zod'
 
 import { getAgent, listAgents } from './agents/registry.js'
+import { serverLog } from './logging.js'
 import {
   createLanguageModel,
   fetchModels,
@@ -157,11 +158,34 @@ export function createApp() {
       return c.json({ error: inputParsed.error.errors }, 400)
     }
 
+    const startedAt = Date.now()
+    serverLog('info', 'agent run started', {
+      agentId: agent.id,
+      task: taskId,
+      providerId,
+      modelId,
+    })
+
     try {
       const model = createLanguageModel(instance, modelId)
       const output = await task.run(model, inputParsed.data)
+      serverLog('info', 'agent run succeeded', {
+        agentId: agent.id,
+        task: taskId,
+        providerId,
+        modelId,
+        durationMs: Date.now() - startedAt,
+      })
       return c.json({ output })
     } catch (error) {
+      serverLog('error', 'agent run failed', {
+        agentId: agent.id,
+        task: taskId,
+        providerId,
+        modelId,
+        durationMs: Date.now() - startedAt,
+        error: error instanceof Error ? error.message : String(error),
+      })
       return c.json({ error: error instanceof Error ? error.message : String(error) }, 500)
     }
   })

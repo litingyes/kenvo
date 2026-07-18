@@ -5,7 +5,6 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { touchSession } from '@/lib/db/terminal-repo'
 import type { TerminalSession } from '@/lib/terminal/types'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +24,6 @@ export function TabsTree({ sessions, activeSessionId, onClose }: TabsTreeProps) 
   const navigate = useNavigate()
 
   const handleClick = (session: TerminalSession) => {
-    void touchSession(session.id)
     void navigate({ to: '/terminal/$sessionId', params: { sessionId: session.id } })
   }
 

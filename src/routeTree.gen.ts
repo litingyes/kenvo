@@ -13,6 +13,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TerminalIndexRouteImport } from './routes/terminal/index'
 import { Route as TerminalSessionIdRouteImport } from './routes/terminal/$sessionId'
+import { Route as SettingsLogsRouteImport } from './routes/settings/logs'
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsAboutRouteImport } from './routes/settings/about'
@@ -41,6 +42,11 @@ const TerminalSessionIdRoute = TerminalSessionIdRouteImport.update({
   id: '/terminal/$sessionId',
   path: '/terminal/$sessionId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsLogsRoute = SettingsLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
   id: '/language',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/language': typeof SettingsLanguageRoute
+  '/settings/logs': typeof SettingsLogsRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/language': typeof SettingsLanguageRoute
+  '/settings/logs': typeof SettingsLogsRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal': typeof TerminalIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/language': typeof SettingsLanguageRoute
+  '/settings/logs': typeof SettingsLogsRoute
   '/terminal/$sessionId': typeof TerminalSessionIdRoute
   '/terminal/': typeof TerminalIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/language'
+    | '/settings/logs'
     | '/terminal/$sessionId'
     | '/terminal/'
     | '/settings/ai/agents'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/language'
+    | '/settings/logs'
     | '/terminal/$sessionId'
     | '/terminal'
     | '/settings/ai/agents'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/language'
+    | '/settings/logs'
     | '/terminal/$sessionId'
     | '/terminal/'
     | '/settings/ai/agents'
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/terminal/$sessionId'
       preLoaderRoute: typeof TerminalSessionIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/settings/logs': {
+      id: '/settings/logs'
+      path: '/logs'
+      fullPath: '/settings/logs'
+      preLoaderRoute: typeof SettingsLogsRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/settings/language': {
       id: '/settings/language'
@@ -271,6 +290,7 @@ interface SettingsRouteChildren {
   SettingsAboutRoute: typeof SettingsAboutRoute
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsLanguageRoute: typeof SettingsLanguageRoute
+  SettingsLogsRoute: typeof SettingsLogsRoute
   SettingsAiAgentsRoute: typeof SettingsAiAgentsRoute
   SettingsAiBasicRoute: typeof SettingsAiBasicRoute
   SettingsAiModelsRoute: typeof SettingsAiModelsRoute
@@ -282,6 +302,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAboutRoute: SettingsAboutRoute,
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsLogsRoute: SettingsLogsRoute,
   SettingsAiAgentsRoute: SettingsAiAgentsRoute,
   SettingsAiBasicRoute: SettingsAiBasicRoute,
   SettingsAiModelsRoute: SettingsAiModelsRoute,

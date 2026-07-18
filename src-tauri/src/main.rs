@@ -5,6 +5,7 @@ mod agent_server;
 mod ai_settings;
 mod app_paths;
 mod language;
+mod log_viewer;
 mod theme;
 
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
@@ -42,6 +43,7 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .manage(agent_server::AgentServerState::new())
+        .manage(log_viewer::LogStreamState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::new().build())
@@ -64,6 +66,9 @@ fn main() {
             ai_settings::set_ai_settings_command,
             app_paths::get_app_paths,
             app_paths::open_app_folder,
+            log_viewer::stream_log,
+            log_viewer::stop_log_stream,
+            log_viewer::export_log,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

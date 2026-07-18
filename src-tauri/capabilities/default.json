@@ -12,6 +12,7 @@
     "allow-ai-settings",
     "allow-agent-server",
     "allow-app-paths",
+    "allow-log-viewer",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-close",

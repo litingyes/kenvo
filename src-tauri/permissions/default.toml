@@ -22,3 +22,8 @@ commands.allow = ["agent_server_start", "agent_server_stop", "agent_server_statu
 identifier = "allow-app-paths"
 description = "Allows reading the application log and data directory paths."
 commands.allow = ["get_app_paths", "open_app_folder"]
+
+[[permission]]
+identifier = "allow-log-viewer"
+description = "Allows streaming, stopping and exporting application logs."
+commands.allow = ["stream_log", "stop_log_stream", "export_log"]

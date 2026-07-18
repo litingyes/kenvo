@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter, Runtime};
+use tauri::{AppHandle, Emitter, Manager, Runtime};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_store::StoreExt;
@@ -125,14 +125,15 @@ pub async fn agent_server_status(
     })
 }
 
-pub async fn maybe_start_agent_server<R: Runtime>(_app: &AppHandle<R>) {
+pub async fn maybe_start_agent_server(app: &AppHandle) {
     #[cfg(not(debug_assertions))]
     {
-        if let Ok(settings) = crate::ai_settings::get_ai_settings(_app) {
+        if let Ok(settings) = crate::ai_settings::get_ai_settings(app) {
             if settings.server_auto_start {
-                let state = _app.state::<Arc<AgentServerState>>();
-                let _ = agent_server_start(_app.clone(), state).await;
+                let state = app.state::<Arc<AgentServerState>>();
+                let _ = agent_server_start(app.clone(), state).await;
             }
         }
     }
+    let _ = app;
 }

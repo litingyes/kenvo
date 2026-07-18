@@ -11,7 +11,7 @@ use tauri::webview::WebviewWindowBuilder;
 use tauri::{Listener, Manager, WebviewUrl};
 
 fn main() {
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(agent_server::AgentServerState::new())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -54,9 +54,7 @@ fn main() {
         });
 
     #[cfg(debug_assertions)]
-    {
-        builder = builder.plugin(tauri_plugin_pilot::init());
-    }
+    let builder = builder.plugin(tauri_plugin_pilot::init());
 
     builder
         .run(tauri::generate_context!())

@@ -48,7 +48,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IHJzaWduIGVuY3J5cHRlZCBzZWNyZXQga2V5ClJXUlRZMEl5MWVoazRBRXFHYkhSTnRxQ1RiZDByMVZXRWZMMEl6bHFxeTYvNyt2VkI0RUFBQkFBQUFBQUFBQUFBQUlBQUFBQXAvNkxWVmlWVGVWTUc1UXhVaWhraWNEbS9tcWs3dzB6eHRZejRUMmJ5aWx4Yk9ZaVZCSitOdjRDWDh3OXorZDJKUUd3ZjBUTS90QmVaRmlVTTdhVTVnUU42MDlLbklTNVNuT2QyN0xnSGlPVkpmT2hDbTlWc1ZPeHcyby9WblVjYXdZaUQ1bmcvcHM9Cg==",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE2OTE0QUE4QzBERDMwN0YKUldSL01OM0FxRXFScGxCYnFhb1dXbjM3WXE4ZU1VbXhDQzRpNmZIbHNWTmR6dGRVWWh2Y0NSWUIK",
       "endpoints": ["https://github.com/litingyes/kenvo/releases/latest/download/latest.json"]
     }
   }

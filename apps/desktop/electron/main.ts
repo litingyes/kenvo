@@ -1,0 +1,254 @@
+import fs from 'fs/promises'
+import path from 'path'
+
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
+
+import {
+  broadcastAgentServerStopped,
+  getAgentServerPort,
+  getAgentServerStatus,
+  setupAgentServerStopped,
+  startAgentServer,
+  stopAgentServer,
+} from './agent-server'
+import { dbExecute, dbSelect, initDatabase as initDb } from './db'
+import {
+  copyFile,
+  cp,
+  exists,
+  lstat,
+  mkdir,
+  readDir,
+  readFile,
+  readTextFile,
+  remove,
+  rename,
+  stat,
+  writeFile,
+  writeTextFile,
+} from './fs'
+import { IPC_CHANNELS } from './ipc-channels'
+import { exportLog, startLogStream, stopLogStream } from './log-viewer'
+import { initLogger, logMessage } from './logger'
+import { sendLanguageChangedToAllWindows, setupMenu } from './menu'
+import { getAppPaths, homeDir, setTauriPaths } from './paths'
+import { executeProcess, openExternal, openPath, spawnProcess } from './shell'
+import { getAiSettings, getLanguage, getTheme, setAiSettings, setLanguage, setTheme } from './store'
+import {
+  checkForUpdates,
+  downloadAndInstall,
+  quitAndInstall,
+  relaunchApp,
+  setupUpdater,
+} from './updater'
+import { createMainWindow, getMainWindow } from './window'
+
+setTauriPaths()
+
+app
+  .whenReady()
+  .then(async () => {
+    await initLogger()
+    initDb()
+    setupMenu(getLanguage())
+    const mainWindow = createMainWindow()
+    setupUpdater(mainWindow)
+    setupAgentServerStopped(() => {
+      BrowserWindow.getAllWindows().forEach((win) => {
+        broadcastAgentServerStopped(win.webContents)
+      })
+    })
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createMainWindow()
+      }
+    })
+  })
+  .catch((err) => {
+    console.error('Failed to initialize app:', err)
+    process.exit(1)
+  })
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+// App / OS / Path / Window
+ipcMain.handle(IPC_CHANNELS.APP_GET_VERSION, () => app.getVersion())
+ipcMain.handle(IPC_CHANNELS.APP_RELAUNCH, () => {
+  relaunchApp()
+})
+ipcMain.handle(IPC_CHANNELS.OS_GET_TYPE, () => process.platform)
+ipcMain.handle(IPC_CHANNELS.OS_GET_LOCALE, () => app.getLocale())
+ipcMain.handle(IPC_CHANNELS.PATH_GET_HOME_DIR, () => homeDir())
+ipcMain.handle(IPC_CHANNELS.WINDOW_GET_LABEL, (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win === getMainWindow()) return 'main'
+  return 'unknown'
+})
+
+// Resources
+ipcMain.handle(IPC_CHANNELS.RESOURCES_READ_LOCALE, async (_event, language: string) => {
+  const localePath = path.join(__dirname, '../../resources/locales', `${language}.json`)
+  return fs.readFile(localePath, 'utf-8')
+})
+
+// App paths
+ipcMain.handle(IPC_CHANNELS.GET_APP_PATHS, () => getAppPaths())
+ipcMain.handle(IPC_CHANNELS.OPEN_APP_FOLDER, async (_event, kind: 'log' | 'data') => {
+  const { logDir, dataDir } = getAppPaths()
+  const dir = kind === 'log' ? logDir : dataDir
+  await shell.openPath(dir)
+})
+
+// Clipboard / Dialog
+ipcMain.handle(IPC_CHANNELS.CLIPBOARD_WRITE_TEXT, async (_event, text: string) => {
+  const { clipboard } = await import('electron')
+  clipboard.writeText(text)
+})
+
+ipcMain.handle(
+  IPC_CHANNELS.DIALOG_SHOW_SAVE,
+  async (_event, options: Electron.SaveDialogOptions) => {
+    const result = await dialog.showSaveDialog(options)
+    return result
+  },
+)
+
+ipcMain.handle(
+  IPC_CHANNELS.DIALOG_SHOW_MESSAGE,
+  async (_event, options: Electron.MessageBoxOptions) => {
+    const result = await dialog.showMessageBox(options)
+    return result
+  },
+)
+
+// Theme / Language / AI settings
+ipcMain.handle(IPC_CHANNELS.GET_THEME, () => getTheme())
+ipcMain.handle(IPC_CHANNELS.SET_THEME, (_event, mode: string, preset: string) => {
+  setTheme({ mode, preset })
+  const settings = getTheme()
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send(IPC_CHANNELS.THEME_CHANGED, settings)
+  })
+})
+
+ipcMain.handle(IPC_CHANNELS.GET_LANGUAGE, () => getLanguage())
+ipcMain.handle(IPC_CHANNELS.SET_LANGUAGE, (_event, language: string) => {
+  setLanguage(language)
+  setupMenu(language)
+  sendLanguageChangedToAllWindows(language)
+})
+
+ipcMain.handle(IPC_CHANNELS.GET_AI_SETTINGS, () => getAiSettings())
+ipcMain.handle(
+  IPC_CHANNELS.SET_AI_SETTINGS,
+  (_event, settings: ReturnType<typeof getAiSettings>) => {
+    setAiSettings(settings)
+    BrowserWindow.getAllWindows().forEach((win) => {
+      win.webContents.send(IPC_CHANNELS.AI_SETTINGS_CHANGED, settings)
+    })
+  },
+)
+
+// DB
+ipcMain.handle(IPC_CHANNELS.DB_SELECT, (_event, sql: string, params?: unknown[]) =>
+  dbSelect(sql, params),
+)
+ipcMain.handle(IPC_CHANNELS.DB_EXECUTE, (_event, sql: string, params?: unknown[]) =>
+  dbExecute(sql, params),
+)
+
+// FS
+ipcMain.handle(IPC_CHANNELS.FS_READ_DIR, (_event, filePath: string) => readDir(filePath))
+ipcMain.handle(IPC_CHANNELS.FS_STAT, (_event, filePath: string) => stat(filePath))
+ipcMain.handle(IPC_CHANNELS.FS_LSTAT, (_event, filePath: string) => lstat(filePath))
+ipcMain.handle(IPC_CHANNELS.FS_READ_TEXT_FILE, (_event, filePath: string) => readTextFile(filePath))
+ipcMain.handle(IPC_CHANNELS.FS_READ_FILE, (_event, filePath: string) => readFile(filePath))
+ipcMain.handle(
+  IPC_CHANNELS.FS_WRITE_TEXT_FILE,
+  (_event, filePath: string, content: string, options?: { append?: boolean }) =>
+    writeTextFile(filePath, content, options),
+)
+ipcMain.handle(
+  IPC_CHANNELS.FS_WRITE_FILE,
+  (_event, filePath: string, content: Uint8Array, options?: { append?: boolean }) =>
+    writeFile(filePath, content, options),
+)
+ipcMain.handle(IPC_CHANNELS.FS_EXISTS, (_event, filePath: string) => exists(filePath))
+ipcMain.handle(IPC_CHANNELS.FS_MKDIR, (_event, filePath: string, recursive?: boolean) =>
+  mkdir(filePath, recursive),
+)
+ipcMain.handle(IPC_CHANNELS.FS_REMOVE, (_event, filePath: string, recursive?: boolean) =>
+  remove(filePath, recursive),
+)
+ipcMain.handle(IPC_CHANNELS.FS_COPY_FILE, (_event, src: string, dest: string) =>
+  copyFile(src, dest),
+)
+ipcMain.handle(IPC_CHANNELS.FS_RENAME, (_event, src: string, dest: string) => rename(src, dest))
+
+// Shell
+ipcMain.handle(
+  IPC_CHANNELS.SHELL_SPAWN,
+  (
+    event,
+    command: string,
+    args: string[],
+    options: { cwd?: string; env?: Record<string, string> },
+  ) => {
+    return spawnProcess(event.sender, command, args, options)
+  },
+)
+ipcMain.handle(IPC_CHANNELS.SHELL_OPEN_EXTERNAL, (_event, url: string) => openExternal(url))
+ipcMain.handle(IPC_CHANNELS.SHELL_OPEN_PATH, (_event, filePath: string) => openPath(filePath))
+ipcMain.handle(
+  IPC_CHANNELS.SHELL_EXECUTE,
+  (_event, command: string, args: string[], options: { cwd?: string }) =>
+    executeProcess(command, args, options),
+)
+ipcMain.handle(IPC_CHANNELS.SHELL_CP, (_event, src: string, dest: string) => cp(src, dest))
+
+// Agent server
+ipcMain.handle(IPC_CHANNELS.AGENT_SERVER_START, () => startAgentServer())
+ipcMain.handle(IPC_CHANNELS.AGENT_SERVER_STOP, () => stopAgentServer())
+ipcMain.handle(IPC_CHANNELS.AGENT_SERVER_STATUS, () => getAgentServerStatus())
+ipcMain.handle(IPC_CHANNELS.AGENT_SERVER_PORT, () => getAgentServerPort())
+
+// Logger
+ipcMain.handle(
+  IPC_CHANNELS.LOG,
+  (_event, level: 'trace' | 'debug' | 'info' | 'warn' | 'error', message: string) => {
+    logMessage(level, message)
+  },
+)
+
+// Log viewer
+ipcMain.handle(
+  IPC_CHANNELS.STREAM_LOG,
+  (
+    event,
+    {
+      sources,
+      options,
+    }: {
+      sources: import('./log-viewer').LogSource[]
+      options: import('./log-viewer').StreamOptions
+    },
+  ) => startLogStream(event.sender, sources, options),
+)
+ipcMain.handle(IPC_CHANNELS.STOP_LOG_STREAM, (_event, streamId: string) => stopLogStream(streamId))
+ipcMain.handle(
+  IPC_CHANNELS.EXPORT_LOG,
+  (_event, source: import('./log-viewer').LogSource, destPath: string) =>
+    exportLog(source, destPath),
+)
+
+// Updater
+ipcMain.handle(IPC_CHANNELS.UPDATER_CHECK, () => checkForUpdates())
+ipcMain.handle(IPC_CHANNELS.UPDATER_DOWNLOAD_INSTALL, async () => {
+  await downloadAndInstall()
+  quitAndInstall()
+})

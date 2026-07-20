@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @ts-nocheck
 import { execSync, spawnSync } from 'node:child_process'
 
 import { versionBump } from 'bumpp'
@@ -26,12 +27,7 @@ async function main(): Promise<void> {
   run('pnpm', ['lint'])
 
   await versionBump({
-    files: [
-      'package.json',
-      'packages/agent-server/package.json',
-      'src-tauri/tauri.conf.json',
-      'src-tauri/Cargo.toml',
-    ],
+    files: ['package.json', 'packages/agent-server/package.json', 'apps/desktop/package.json'],
     commit: 'chore(release): v%s',
     tag: 'v%s',
     push: true,
@@ -40,22 +36,6 @@ async function main(): Promise<void> {
     execute: async (operation) => {
       const version = operation.state.newVersion
       run('pnpm', ['exec', 'changelogen', '--output', 'CHANGELOG.md', '-r', version])
-
-      const cargo = spawnSync(
-        'cargo',
-        [
-          'metadata',
-          '--format-version',
-          '1',
-          '--offline',
-          '--manifest-path',
-          'src-tauri/Cargo.toml',
-        ],
-        { stdio: ['inherit', 'ignore', 'inherit'] },
-      )
-      if (cargo.status !== 0) {
-        console.warn('Warning: failed to sync Cargo.lock, continuing anyway')
-      }
     },
   })
 }

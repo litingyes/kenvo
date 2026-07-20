@@ -1,0 +1,35 @@
+appId: app.vercel.kenvo
+productName: Kenvo
+copyright: Copyright © 2026 Kenvo
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist
+  - dist-electron
+  - resources
+extraResources:
+  - from: ../../packages/agent-server/dist
+    to: agent-server
+    filter:
+      - '**/*'
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+    - deb
+publish:
+  provider: github
+  owner: litingyes
+  repo: kenvo

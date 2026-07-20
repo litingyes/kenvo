@@ -1,66 +1,54 @@
 #!/usr/bin/env tsx
 // @ts-nocheck
 /**
- * Starts the agent server before Vite during `pnpm tauri dev`.
+ * Starts the agent server before the Electron desktop app during `pnpm dev`.
  *
  * The agent server is spawned with the default port (32420). Once its
- * `/health` endpoint responds, Vite is started. Both processes are cleaned
- * up when the script receives SIGINT/SIGTERM or when Vite exits.
+ * `/health` endpoint responds, the Electron dev server is started. Both
+ * processes are cleaned up when the script receives SIGINT/SIGTERM or when
+ * either process exits.
  */
 import { spawn } from 'child_process'
-import { readFileSync } from 'fs'
 import { homedir, platform } from 'os'
 import { join } from 'path'
-import { fileURLToPath } from 'url'
 
+const APP_IDENTIFIER = 'app.vercel.kenvo'
 const DEFAULT_AGENT_PORT = 32420
 const HEALTH_TIMEOUT_MS = 30000
 const HEALTH_POLL_INTERVAL_MS = 100
 
-const repoRoot = fileURLToPath(new URL('..', import.meta.url))
-
-function getAppIdentifier(): string {
-  const confPath = join(repoRoot, 'src-tauri', 'tauri.conf.json')
-  const conf = JSON.parse(readFileSync(confPath, 'utf-8')) as { identifier?: string }
-  if (!conf.identifier) {
-    throw new Error('Could not resolve app identifier from tauri.conf.json')
-  }
-  return conf.identifier
-}
-
-function getAppLogDir(identifier: string): string {
+function getAppLogDir(): string {
   switch (platform()) {
     case 'darwin':
-      return join(homedir(), 'Library', 'Logs', identifier)
+      return join(homedir(), 'Library', 'Logs', APP_IDENTIFIER)
     case 'win32':
       return join(
         process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'),
-        identifier,
+        APP_IDENTIFIER,
         'logs',
       )
     default:
       return join(
         process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'),
-        identifier,
+        APP_IDENTIFIER,
         'logs',
       )
   }
 }
 
-function getAppDataDir(identifier: string): string {
+function getAppDataDir(): string {
   switch (platform()) {
     case 'darwin':
-      return join(homedir(), 'Library', 'Application Support', identifier)
+      return join(homedir(), 'Library', 'Application Support', APP_IDENTIFIER)
     case 'win32':
-      return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), identifier)
+      return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), APP_IDENTIFIER)
     default:
-      return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), identifier)
+      return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), APP_IDENTIFIER)
   }
 }
 
-const appIdentifier = getAppIdentifier()
-const logDir = getAppLogDir(appIdentifier)
-const dataDir = getAppDataDir(appIdentifier)
+const logDir = getAppLogDir()
+const dataDir = getAppDataDir()
 
 function waitForAgentServer(port: number): Promise<void> {
   const deadline = Date.now() + HEALTH_TIMEOUT_MS
@@ -91,10 +79,13 @@ function waitForAgentServer(port: number): Promise<void> {
 }
 
 function spawnInherit(command: string, args: string[], extraEnv?: Record<string, string>) {
+  const env = extraEnv ? { ...process.env, ...extraEnv } : { ...process.env }
+  // Electron must not run in Node mode; some local shell configs set this.
+  delete env.ELECTRON_RUN_AS_NODE
   return spawn(command, args, {
     stdio: 'inherit',
     detached: true,
-    env: extraEnv ? { ...process.env, ...extraEnv } : process.env,
+    env,
   })
 }
 
@@ -112,9 +103,9 @@ function cleanup() {
     }
   }
 
-  if (vite.pid) {
+  if (desktop.pid) {
     try {
-      process.kill(-vite.pid, 'SIGTERM')
+      process.kill(-desktop.pid, 'SIGTERM')
     } catch {
       // Process may have already exited.
     }
@@ -132,10 +123,10 @@ const agent = spawnInherit(
 await waitForAgentServer(DEFAULT_AGENT_PORT)
 console.log(`Agent server ready on port ${DEFAULT_AGENT_PORT}`)
 
-const vite = spawnInherit('pnpm', ['vite'])
+const desktop = spawnInherit('pnpm', ['--filter', '@kenvo/desktop', 'dev'])
 
 process.on('SIGINT', cleanup)
 process.on('SIGTERM', cleanup)
 
-vite.on('exit', cleanup)
+desktop.on('exit', cleanup)
 agent.on('exit', cleanup)

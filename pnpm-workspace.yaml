@@ -1,7 +1,13 @@
 packages:
+  - 'apps/*'
   - 'packages/*'
 
 allowBuilds:
   '@mongodb-js/zstd': false
+  better-sqlite3: true
+  electron-winstaller: true
   esbuild: true
   node-liblzma: false
+
+catalog:
+  vite-plus: ^0.2.4

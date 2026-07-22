@@ -1,0 +1,8 @@
+{
+  "$schema": "https://agent-browser.dev/schema.json",
+  "headed": false,
+  "session": "kenvo",
+  "enable": ["react-devtools"],
+  "downloadPath": ".agent-browser/downloads",
+  "screenshotDir": ".agent-browser/screenshots"
+}

@@ -29,6 +29,7 @@ release
 # ai
 .agents/skills
 .claude/skills
+.agent-browser
 
 # tanstack
 .tanstack

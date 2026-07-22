@@ -6,9 +6,10 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  build:
+    name: Build (${{ matrix.platform }})
     permissions:
-      contents: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -36,15 +37,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Extract release notes
-        id: notes
+      - name: Set version
+        id: version
         shell: bash
-        run: |
-          {
-            echo 'body<<RELEASE_NOTES_EOF'
-            awk '/^## /{if (found) exit; found=1; next} found' CHANGELOG.md
-            echo 'RELEASE_NOTES_EOF'
-          } >> "$GITHUB_OUTPUT"
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Build agent server
         run: pnpm --filter @kenvo/agent-server build
@@ -52,14 +48,65 @@ jobs:
       - name: Build desktop
         run: pnpm --filter @kenvo/desktop build
 
-      - name: Build and publish Electron app
+      - name: Build Electron app (no publish)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: apps/desktop
-        run: pnpm dist -- --publish always
+        run: pnpm dist -- --publish never
 
-      - name: Update release notes
-        if: matrix.platform == 'macos-latest'
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-release-${{ matrix.platform }}
+          path: |
+            apps/desktop/release/*${{ steps.version.outputs.version }}*
+            apps/desktop/release/latest*.yml
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract release notes
+        id: notes
+        shell: bash
+        run: |
+          VERSION_TAG="${GITHUB_REF_NAME}"
+          VERSION_NO_V="${GITHUB_REF_NAME#v}"
+          {
+            echo 'body<<RELEASE_NOTES_EOF'
+            awk -v tag="$VERSION_TAG" -v tag_no_v="$VERSION_NO_V" '
+              /^## / {
+                if (found) exit
+                if ($2 == tag || $2 == tag_no_v) found = 1
+                next
+              }
+              found { print }
+            ' CHANGELOG.md
+            echo 'RELEASE_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          pattern: desktop-release-*
+          merge-multiple: true
+
+      - name: Flatten artifacts
+        shell: bash
+        run: |
+          find release-artifacts -mindepth 2 -type f -exec mv {} release-artifacts/ \;
+          find release-artifacts -mindepth 1 -type d -empty -delete
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.notes.outputs.body }}
+          files: release-artifacts/*

@@ -52,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: apps/desktop
-        run: pnpm dist -- --publish never
+        run: pnpm exec electron-builder --publish never
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4

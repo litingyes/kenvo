@@ -30,7 +30,3 @@ linux:
   target:
     - AppImage
     - deb
-publish:
-  provider: github
-  owner: litingyes
-  repo: kenvo

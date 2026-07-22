@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.0.2
+
+[compare changes](https://github.com/litingyes/kenvo/compare/v0.0.1...v0.0.2)
+
+### 📖 Documentation
+
+- Update readme ([c011e17](https://github.com/litingyes/kenvo/commit/c011e17))
+
+### 📦 Build
+
+- **desktop:** Configure macOS code signing and notarization ([bb86a5a](https://github.com/litingyes/kenvo/commit/bb86a5a))
+
+### 🤖 CI
+
+- **release:** Single release per tag with changelog ([3343ea7](https://github.com/litingyes/kenvo/commit/3343ea7))
+
+### ❤️ Contributors
+
+- Litingyes ([@litingyes](https://github.com/litingyes))
+
 ## v0.0.1
 
 ### 🚀 Enhancements

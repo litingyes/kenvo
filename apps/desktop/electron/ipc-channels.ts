@@ -36,6 +36,7 @@ export const IPC_CHANNELS = {
   OS_GET_LOCALE: 'os:get_locale',
   PATH_GET_HOME_DIR: 'path:get_home_dir',
   WINDOW_GET_LABEL: 'window:get_label',
+  WINDOW_GET_TRAFFIC_LIGHT_INSET: 'window:get-traffic-light-inset',
   RESOURCES_READ_LOCALE: 'resources:read_locale',
 
   // Clipboard / dialog

@@ -32,8 +32,10 @@ import { exportLog, startLogStream, stopLogStream } from './log-viewer'
 import { initLogger, logMessage } from './logger'
 import { sendLanguageChangedToAllWindows, setupMenu } from './menu'
 import { getAppPaths, homeDir, setTauriPaths } from './paths'
+import { normalizePlatform } from './platform'
 import { executeProcess, openExternal, openPath, spawnProcess } from './shell'
 import { getAiSettings, getLanguage, getTheme, setAiSettings, setLanguage, setTheme } from './store'
+import { getMainWindowTrafficLightInset } from './traffic-light'
 import {
   checkForUpdates,
   downloadAndInstall,
@@ -81,13 +83,20 @@ ipcMain.handle(IPC_CHANNELS.APP_GET_VERSION, () => app.getVersion())
 ipcMain.handle(IPC_CHANNELS.APP_RELAUNCH, () => {
   relaunchApp()
 })
-ipcMain.handle(IPC_CHANNELS.OS_GET_TYPE, () => process.platform)
+ipcMain.handle(IPC_CHANNELS.OS_GET_TYPE, () => normalizePlatform(process.platform))
 ipcMain.handle(IPC_CHANNELS.OS_GET_LOCALE, () => app.getLocale())
 ipcMain.handle(IPC_CHANNELS.PATH_GET_HOME_DIR, () => homeDir())
 ipcMain.handle(IPC_CHANNELS.WINDOW_GET_LABEL, (event) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   if (win === getMainWindow()) return 'main'
   return 'unknown'
+})
+ipcMain.handle(IPC_CHANNELS.WINDOW_GET_TRAFFIC_LIGHT_INSET, (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win === getMainWindow()) {
+    return getMainWindowTrafficLightInset()
+  }
+  return { x: 0, y: 0, width: 0, height: 0, spacing: 0, margin: 0, paddingLeft: 0 }
 })
 
 // Resources

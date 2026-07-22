@@ -20,6 +20,7 @@ export function listen<T = unknown>(channel: string, callback: (payload: T) => v
 }
 
 export const api = {
+  platform: electronAPI.platform,
   app: electronAPI.app,
   agentServer: electronAPI.agentServer,
   os: electronAPI.os,

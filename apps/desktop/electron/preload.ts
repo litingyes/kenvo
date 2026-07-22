@@ -1,8 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 import { IPC_CHANNELS } from './ipc-channels'
+import { normalizePlatform } from './platform'
+import type { TrafficLightInset } from './traffic-light'
 
 const api = {
+  platform: normalizePlatform(process.platform),
   invoke: (channel: string, ...args: unknown[]) => ipcRenderer.invoke(channel, ...args),
 
   listen: (channel: string, callback: (payload: unknown) => void) => {
@@ -39,6 +42,8 @@ const api = {
 
   window: {
     getLabel: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_GET_LABEL),
+    getTrafficLightInset: (): Promise<TrafficLightInset> =>
+      ipcRenderer.invoke(IPC_CHANNELS.WINDOW_GET_TRAFFIC_LIGHT_INSET),
   },
 
   path: {

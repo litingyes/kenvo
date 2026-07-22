@@ -3,6 +3,9 @@ import path from 'path'
 import { BrowserWindow, app, screen } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 
+import { isMacOS } from './platform'
+import { getTrafficLightPosition } from './traffic-light'
+
 const isDev = !app.isPackaged
 
 let mainWindow: BrowserWindow | null = null
@@ -32,8 +35,8 @@ export function createMainWindow(): BrowserWindow {
     minWidth: 800,
     minHeight: 500,
     title: 'Kenvo',
-    titleBarStyle: 'hidden',
-    trafficLightPosition: { x: 12, y: 20 },
+    titleBarStyle: isMacOS() ? 'hidden' : 'default',
+    trafficLightPosition: isMacOS() ? getTrafficLightPosition() : undefined,
     show: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),

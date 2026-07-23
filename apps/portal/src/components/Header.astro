@@ -1,0 +1,67 @@
+---
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import LocaleSwitcher from './LocaleSwitcher.astro';
+import type { Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  nav: {
+    docs: string;
+    github: string;
+    releases: string;
+  };
+  theme: {
+    light: string;
+    dark: string;
+    system: string;
+  };
+  localeLabels: {
+    switchToEn: string;
+    switchToZh: string;
+  };
+}
+
+const { locale, nav, theme, localeLabels } = Astro.props;
+---
+
+<header class="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
+  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <a href={locale === 'zh-CN' ? '/zh-CN/' : '/'} class="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
+      <Logo class="h-7 w-7" />
+      <span class="text-lg font-semibold tracking-tight text-foreground">Kenvo</span>
+    </a>
+
+    <nav class="hidden items-center gap-1 md:flex" aria-label="Main">
+      <a
+        href="https://github.com/litingyes/kenvo#readme"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {nav.docs}
+      </a>
+      <a
+        href="https://github.com/litingyes/kenvo"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {nav.github}
+      </a>
+      <a
+        href="https://github.com/litingyes/kenvo/releases"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {nav.releases}
+      </a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <ThemeToggle labels={theme} />
+      <LocaleSwitcher locale={locale} labels={localeLabels} />
+    </div>
+  </div>
+</header>

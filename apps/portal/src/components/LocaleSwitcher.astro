@@ -1,0 +1,23 @@
+---
+import type { Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  labels: {
+    switchToEn: string;
+    switchToZh: string;
+  };
+}
+
+const { locale, labels } = Astro.props;
+const targetHref = locale === 'zh-CN' ? '/' : '/zh-CN/';
+const label = locale === 'zh-CN' ? labels.switchToEn : labels.switchToZh;
+---
+
+<a
+  href={targetHref}
+  class="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+  aria-label={`Switch to ${label}`}
+>
+  {label}
+</a>

@@ -1,0 +1,85 @@
+---
+interface Props {
+  title: string;
+  copy: string;
+  copied: string;
+}
+
+const { title, copy, copied } = Astro.props;
+
+const commands = `git clone https://github.com/litingyes/kenvo.git
+cd kenvo
+pnpm install
+pnpm dev`;
+---
+
+<section class="py-12 md:py-20">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">{title}</h2>
+
+    <div class="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+      <div class="flex h-10 items-center justify-between border-b border-border bg-muted/50 px-4">
+        <span class="text-xs font-medium text-muted-foreground">bash</span>
+        <button
+          type="button"
+          data-copy-btn
+          class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          aria-label={copy}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+          </svg>
+          <span data-copy-default>{copy}</span>
+          <span data-copy-success class="hidden text-accent">{copied}</span>
+        </button>
+      </div>
+      <pre class="overflow-x-auto p-4 text-sm leading-relaxed">
+        <code data-copy-code class="font-mono text-foreground">{commands}</code>
+      </pre>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    const init = () => {
+      const btn = document.querySelector('[data-copy-btn]');
+      const code = document.querySelector('[data-copy-code]');
+      const defaultLabel = document.querySelector('[data-copy-default]');
+      const successLabel = document.querySelector('[data-copy-success]');
+      if (!btn || !code || !defaultLabel || !successLabel) return;
+
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code.textContent || '');
+          defaultLabel.classList.add('hidden');
+          successLabel.classList.remove('hidden');
+          setTimeout(() => {
+            defaultLabel.classList.remove('hidden');
+            successLabel.classList.add('hidden');
+          }, 2000);
+        } catch {
+          // ignore
+        }
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>

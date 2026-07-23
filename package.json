@@ -11,6 +11,10 @@
     "release": "tsx scripts/release.ts",
     "lint": "pnpm --filter @kenvo/desktop lint",
     "lint:fix": "pnpm --filter @kenvo/desktop lint:fix",
+    "portal:dev": "pnpm --filter @kenvo/portal dev",
+    "portal:build": "pnpm --filter @kenvo/portal build",
+    "portal:preview": "pnpm --filter @kenvo/portal preview",
+    "portal:check": "pnpm --filter @kenvo/portal check",
     "postinstall": "pnpm --filter @kenvo/desktop exec electron-builder install-app-deps"
   },
   "devDependencies": {

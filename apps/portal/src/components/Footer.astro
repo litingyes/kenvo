@@ -1,0 +1,49 @@
+---
+interface Props {
+  footer: {
+    license: string;
+    links: {
+      github: string;
+      releases: string;
+      issues: string;
+    };
+  };
+}
+
+const { footer } = Astro.props;
+---
+
+<footer class="border-t border-border bg-background">
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6 lg:px-8">
+    <p class="text-sm text-muted-foreground">
+      © 2026 Kenvo. {footer.license}
+    </p>
+
+    <nav class="flex items-center gap-4" aria-label="Footer">
+      <a
+        href="https://github.com/litingyes/kenvo"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {footer.links.github}
+      </a>
+      <a
+        href="https://github.com/litingyes/kenvo/releases"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {footer.links.releases}
+      </a>
+      <a
+        href="https://github.com/litingyes/kenvo/issues"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {footer.links.issues}
+      </a>
+    </nav>
+  </div>
+</footer>

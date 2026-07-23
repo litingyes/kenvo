@@ -1,0 +1,76 @@
+---
+interface Props {
+  hero: {
+    tagline: string;
+    description: string;
+    ctaPrimary: string;
+    ctaSecondary: string;
+  };
+}
+
+const { hero } = Astro.props;
+---
+
+<section class="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-16">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col items-center text-center">
+      <div class="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+        AGPL-3.0 · Open Source
+      </div>
+
+      <h1 class="mt-6 max-w-4xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl"
+      >
+        {hero.tagline}
+      </h1>
+
+      <p class="mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl">
+        {hero.description}
+      </p>
+
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+        <a
+          href="https://github.com/litingyes/kenvo/releases"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:translate-y-px"
+        >
+          {hero.ctaPrimary}
+        </a>
+        <a
+          href="https://github.com/litingyes/kenvo"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:translate-y-px"
+        >
+          {hero.ctaSecondary}
+        </a>
+      </div>
+    </div>
+
+    <div class="mt-16 flex justify-center">
+      <div class="w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div class="flex h-9 items-center gap-2 border-b border-border bg-muted/50 px-4">
+          <span class="h-3 w-3 rounded-full bg-destructive"></span>
+          <span class="h-3 w-3 rounded-full bg-chart-4"></span>
+          <span class="h-3 w-3 rounded-full bg-accent"></span>
+          <span class="ml-2 text-xs text-muted-foreground">Kenvo</span>
+        </div>
+        <div class="p-4 font-mono text-sm leading-relaxed text-foreground sm:p-6">
+          <div class="flex">
+            <span class="text-primary">~</span>
+            <span class="mx-1 text-muted-foreground">$</span>
+            <span class="text-foreground"> git status</span>
+          </div>
+          <div class="mt-2 text-muted-foreground">On branch main</div>
+          <div class="text-muted-foreground">Your branch is up to date with 'origin/main'.</div>
+          <div class="mt-2 text-accent">✓ feat: add AI-generated commit messages</div>
+          <div class="mt-4 flex">
+            <span class="text-primary">~</span>
+            <span class="mx-1 text-muted-foreground">$</span>
+            <span class="animate-pulse">_</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

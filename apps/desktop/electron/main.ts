@@ -137,8 +137,8 @@ ipcMain.handle(
 
 // Theme / Language / AI settings
 ipcMain.handle(IPC_CHANNELS.GET_THEME, () => getTheme())
-ipcMain.handle(IPC_CHANNELS.SET_THEME, (_event, mode: string, preset: string) => {
-  setTheme({ mode, preset })
+ipcMain.handle(IPC_CHANNELS.SET_THEME, (_event, mode: string) => {
+  setTheme({ mode })
   const settings = getTheme()
   BrowserWindow.getAllWindows().forEach((win) => {
     win.webContents.send(IPC_CHANNELS.THEME_CHANGED, settings)

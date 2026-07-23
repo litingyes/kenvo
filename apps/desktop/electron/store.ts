@@ -22,7 +22,6 @@ export interface AiSettings {
 
 export interface ThemeSettings {
   mode: string
-  preset: string
 }
 
 let store: Store | null = null
@@ -34,7 +33,7 @@ function getStore(): Store {
   return store
 }
 
-const DEFAULT_THEME: ThemeSettings = { mode: 'dark', preset: 'kenvo' }
+const DEFAULT_THEME: ThemeSettings = { mode: 'dark' }
 const DEFAULT_AI_SETTINGS: AiSettings = {
   serverPort: 32420,
   serverAutoStart: true,
@@ -46,18 +45,12 @@ const DEFAULT_AI_SETTINGS: AiSettings = {
 export function getTheme(): ThemeSettings {
   const s = getStore()
   const mode = s.get('theme.mode', DEFAULT_THEME.mode) as string
-  const preset = s.get('theme.preset', DEFAULT_THEME.preset) as string
-  const validPresets = ['kenvo', 'ayu', 'catppuccin']
-  return {
-    mode,
-    preset: validPresets.includes(preset) ? preset : DEFAULT_THEME.preset,
-  }
+  return { mode }
 }
 
 export function setTheme(settings: ThemeSettings): void {
   const s = getStore()
   s.set('theme.mode', settings.mode)
-  s.set('theme.preset', settings.preset)
 }
 
 export function getLanguage(): string {

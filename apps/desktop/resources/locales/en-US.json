@@ -8,16 +8,10 @@
       "title": "Appearance",
       "description": "Customize the appearance of Kenvo.",
       "theme": "Theme",
-      "themePreset": "Theme preset",
       "modes": {
         "light": "Light",
         "dark": "Dark",
         "system": "System"
-      },
-      "presets": {
-        "kenvo": "Kenvo",
-        "ayu": "Ayu",
-        "catppuccin": "Catppuccin"
       }
     },
     "language": {

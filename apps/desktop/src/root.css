@@ -4,10 +4,8 @@
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/geist-mono';
 
-/* Kenvo theme presets. Add one line per preset file here. */
+/* The single Kenvo theme. Edit themes/kenvo.css to customize it. */
 @import './themes/kenvo.css';
-@import './themes/ayu.css';
-@import './themes/catppuccin.css';
 
 @custom-variant dark (&:is(.dark *));
 

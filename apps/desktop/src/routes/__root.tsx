@@ -6,20 +6,14 @@ import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { api } from '@/lib/electron/api'
 import { useThemeBridge } from '@/lib/settings/theme-bridge'
-import { useThemeStore } from '@/lib/store/theme-store'
 import { checkForUpdate } from '@/lib/updater'
 
 export const Route = createRootRoute({
   component: RootComponent,
 })
 
-function ThemePresetSync() {
-  const { themePreset } = useThemeStore()
+function ThemeBridge() {
   useThemeBridge()
-
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', themePreset)
-  }, [themePreset])
 
   return null
 }
@@ -60,7 +54,7 @@ function RootComponent() {
   return (
     <React.Fragment>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-        <ThemePresetSync />
+        <ThemeBridge />
         <TooltipProvider>
           <Outlet />
           <Toaster />

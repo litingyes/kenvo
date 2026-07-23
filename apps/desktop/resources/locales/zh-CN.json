@@ -8,16 +8,10 @@
       "title": "外观",
       "description": "自定义 Kenvo 的外观。",
       "theme": "主题",
-      "themePreset": "主题预设",
       "modes": {
         "light": "浅色",
         "dark": "深色",
         "system": "跟随系统"
-      },
-      "presets": {
-        "kenvo": "Kenvo",
-        "ayu": "Ayu",
-        "catppuccin": "Catppuccin"
       }
     },
     "language": {

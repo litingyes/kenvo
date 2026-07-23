@@ -1,13 +1,15 @@
 /**
- * Kenvo Theme: Kenvo (default)
+ * Kenvo Theme (default & only)
  *
  * Kenvo's own brand palette. Light mode is a clean white canvas with an
  * indigo primary and green accent; dark mode is an OLED-friendly deep black
  * with the same indigo glow and green highlights.
+ *
+ * This is the single theme of the app — edit the CSS variables below to
+ * customize it.
  */
 
-:root,
-[data-theme='kenvo'] {
+:root {
   --background: #ffffff;
   --foreground: #0a0a0c;
   --card: #fafafa;
@@ -43,8 +45,7 @@
   --sidebar-ring: #5e6ad2;
 }
 
-.dark,
-[data-theme='kenvo'].dark {
+.dark {
   --background: #050506;
   --foreground: #ededef;
   --card: #0a0a0c;
@@ -79,9 +80,8 @@
   --sidebar-ring: #5e6ad2;
 }
 
-/* Terminal-specific semantic tokens, kept in sync with the theme preset. */
-:root,
-[data-theme='kenvo'] {
+/* Terminal-specific semantic tokens, kept in sync with the theme. */
+:root {
   --term-prompt-user: var(--primary);
   --term-prompt-path: var(--accent);
   --term-cursor: var(--foreground);
@@ -92,8 +92,7 @@
   --term-command: var(--foreground);
 }
 
-.dark,
-[data-theme='kenvo'].dark {
+.dark {
   --term-prompt-user: var(--primary);
   --term-prompt-path: var(--accent);
   --term-cursor: var(--foreground);

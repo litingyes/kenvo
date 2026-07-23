@@ -12,11 +12,9 @@
         "light": "Light",
         "dark": "Dark",
         "system": "System"
-      }
-    },
-    "language": {
-      "title": "Language",
-      "description": "Select your preferred language."
+      },
+      "language": "Language",
+      "languageDescription": "Select your preferred language."
     },
     "about": {
       "title": "About",

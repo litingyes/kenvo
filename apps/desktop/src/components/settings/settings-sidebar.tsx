@@ -4,7 +4,6 @@ import {
   BrainCircuitIcon,
   CpuIcon,
   FileTextIcon,
-  GlobeIcon,
   InfoIcon,
   PaletteIcon,
   ServerIcon,
@@ -50,7 +49,6 @@ export function SettingsSidebar() {
           icon={PaletteIcon}
           label={t('settings.appearance.title')}
         />
-        <NavItem to="/settings/language" icon={GlobeIcon} label={t('settings.language.title')} />
         <NavItem to="/settings/about" icon={InfoIcon} label={t('settings.about.title')} />
         <NavItem to="/settings/logs" icon={FileTextIcon} label={t('settings.logs.title')} />
       </nav>

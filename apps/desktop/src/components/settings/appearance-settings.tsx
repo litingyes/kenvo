@@ -1,21 +1,24 @@
-import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { SettingsRow, SettingsSection } from '@/components/settings/section'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { SUPPORTED_LANGUAGES, changeLanguage, type SupportedLanguage } from '@/lib/i18n'
 import { applyTheme, type ThemeMode } from '@/lib/settings/theme-bridge'
 
-const MODES: { value: ThemeMode; icon: React.ComponentType<{ className?: string }> }[] = [
-  { value: 'light', icon: SunIcon },
-  { value: 'dark', icon: MoonIcon },
-  { value: 'system', icon: MonitorIcon },
-]
+const THEME_OPTIONS: ThemeMode[] = ['light', 'dark', 'system']
 
 export function AppearanceSettings() {
   const { t } = useTranslation()
   const { theme: currentMode } = useTheme()
+  const { i18n } = useTranslation()
 
   const [mode, setMode] = React.useState<ThemeMode>((currentMode as ThemeMode) ?? 'dark')
 
@@ -29,30 +32,57 @@ export function AppearanceSettings() {
     void applyTheme(next)
   }
 
+  const currentLanguage = (i18n.resolvedLanguage ?? 'en-US') as SupportedLanguage
+  const currentLanguageName =
+    SUPPORTED_LANGUAGES.find((lang) => lang.code === currentLanguage)?.name ?? currentLanguage
+
+  const handleLanguageChange = async (value: string) => {
+    await changeLanguage(value as SupportedLanguage)
+  }
+
   return (
-    <div className="max-w-xl space-y-8">
-      <div className="space-y-3">
-        <Label>{t('settings.appearance.theme')}</Label>
-        <RadioGroup value={mode} onValueChange={handleModeChange}>
-          <div className="flex gap-3">
-            {MODES.map((m) => {
-              const Icon = m.icon
-              return (
-                <label
-                  key={m.value}
-                  className="flex flex-1 cursor-pointer flex-col items-center gap-2 rounded-lg border border-border p-4 transition-colors hover:bg-accent/50 has-[[data-checked]]:border-primary has-[[data-checked]]:bg-accent"
-                >
-                  <RadioGroupItem value={m.value} className="sr-only" />
-                  <Icon className="size-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">
-                    {t(`settings.appearance.modes.${m.value}`)}
-                  </span>
-                </label>
-              )
-            })}
-          </div>
-        </RadioGroup>
-      </div>
+    <div className="max-w-xl">
+      <SettingsSection
+        title={t('settings.appearance.title')}
+        description={t('settings.appearance.description')}
+      >
+        <SettingsRow label={t('settings.appearance.theme')} htmlFor="theme">
+          <Select value={mode} onValueChange={(value) => value && handleModeChange(value)}>
+            <SelectTrigger id="theme" className="w-40">
+              <SelectValue>{t(`settings.appearance.modes.${mode}`)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {THEME_OPTIONS.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {t(`settings.appearance.modes.${value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SettingsRow>
+
+        <SettingsRow
+          label={t('settings.appearance.language')}
+          description={t('settings.appearance.languageDescription')}
+          htmlFor="language"
+        >
+          <Select
+            value={currentLanguage}
+            onValueChange={(value) => value && void handleLanguageChange(value)}
+          >
+            <SelectTrigger id="language" className="w-40">
+              <SelectValue>{currentLanguageName}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.code} value={lang.code}>
+                  {lang.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SettingsRow>
+      </SettingsSection>
     </div>
   )
 }

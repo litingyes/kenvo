@@ -12,11 +12,9 @@
         "light": "浅色",
         "dark": "深色",
         "system": "跟随系统"
-      }
-    },
-    "language": {
-      "title": "语言",
-      "description": "选择你的首选语言。"
+      },
+      "language": "语言",
+      "languageDescription": "选择你的首选语言。"
     },
     "about": {
       "title": "关于",

@@ -1,10 +1,34 @@
 import path from 'path'
 
-import { BrowserWindow, app, screen } from 'electron'
+import { BrowserWindow, Menu, app, screen } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 
 import { isMacOS } from './platform'
 import { getTrafficLightPosition } from './traffic-light'
+
+function setupDevContextMenu(contents: Electron.WebContents): void {
+  contents.on('context-menu', (_event, params) => {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: 'Inspect Element',
+        click: () => {
+          if (!contents.isDevToolsOpened()) {
+            contents.openDevTools({ mode: 'detach' })
+          }
+          contents.inspectElement(params.x, params.y)
+        },
+      },
+      { type: 'separator' },
+      { role: 'reload' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'selectAll' },
+    ])
+    menu.popup()
+  })
+}
 
 const isDev = !app.isPackaged
 
@@ -58,6 +82,7 @@ export function createMainWindow(): BrowserWindow {
   if (isDev && rendererUrl) {
     void mainWindow.loadURL(rendererUrl)
     mainWindow.webContents.openDevTools()
+    setupDevContextMenu(mainWindow.webContents)
   } else {
     void mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))
   }
@@ -100,6 +125,7 @@ export function createSettingsWindow(): BrowserWindow {
 
   if (isDev && rendererUrl) {
     void settingsWindow.loadURL(`${rendererUrl}#/settings`)
+    setupDevContextMenu(settingsWindow.webContents)
   } else {
     void settingsWindow.loadFile(path.join(__dirname, '../../dist/index.html'), {
       hash: 'settings',

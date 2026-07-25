@@ -2,8 +2,8 @@
  * Kenvo Theme (default & only)
  *
  * Kenvo's own brand palette. Light mode is a clean white canvas with an
- * indigo primary and green accent; dark mode is an OLED-friendly deep black
- * with the same indigo glow and green highlights.
+ * indigo primary and a soft indigo accent surface; dark mode is an
+ * OLED-friendly deep black with the same indigo glow.
  *
  * This is the single theme of the app — edit the CSS variables below to
  * customize it.
@@ -21,26 +21,26 @@
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #22c55e;
-  --accent-foreground: #0a0a0c;
-  --destructive: #f43f5e;
+  --muted-foreground: #6b6b76;
+  --accent: #eceefa;
+  --accent-foreground: #3d49a8;
+  --destructive: #e11d48;
   --destructive-foreground: #ffffff;
   --border: #e4e4e7;
   --input: #e4e4e7;
   --ring: #5e6ad2;
   --radius: 0.875rem;
   --chart-1: #5e6ad2;
-  --chart-2: #22c55e;
-  --chart-3: #f43f5e;
+  --chart-2: #0891b2;
+  --chart-3: #e11d48;
   --chart-4: #f59e0b;
-  --chart-5: #06b6d4;
-  --sidebar: #f4f4f5;
+  --chart-5: #8b5cf6;
+  --sidebar: #f6f7fb;
   --sidebar-foreground: #0a0a0c;
   --sidebar-primary: #5e6ad2;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #22c55e;
-  --sidebar-accent-foreground: #0a0a0c;
+  --sidebar-accent: #eceefa;
+  --sidebar-accent-foreground: #3d49a8;
   --sidebar-border: #e4e4e7;
   --sidebar-ring: #5e6ad2;
 }
@@ -57,33 +57,35 @@
   --secondary: #141416;
   --secondary-foreground: #ededef;
   --muted: #141416;
-  --muted-foreground: #a1a1aa;
-  --accent: #22c55e;
-  --accent-foreground: #050506;
-  --destructive: #f43f5e;
+  --muted-foreground: #9a9aa3;
+  --accent: #1b1e38;
+  --accent-foreground: #aab1f8;
+  --destructive: #e11d48;
   --destructive-foreground: #ffffff;
   --border: #27272a;
   --input: #27272a;
   --ring: #5e6ad2;
   --chart-1: #5e6ad2;
-  --chart-2: #22c55e;
+  --chart-2: #22d3ee;
   --chart-3: #f43f5e;
   --chart-4: #fbbf24;
-  --chart-5: #22d3ee;
+  --chart-5: #a78bfa;
   --sidebar: #0a0a0c;
   --sidebar-foreground: #ededef;
   --sidebar-primary: #5e6ad2;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #22c55e;
-  --sidebar-accent-foreground: #050506;
+  --sidebar-accent: #1b1e38;
+  --sidebar-accent-foreground: #aab1f8;
   --sidebar-border: #27272a;
   --sidebar-ring: #5e6ad2;
 }
 
-/* Terminal-specific semantic tokens, kept in sync with the theme. */
+/* Terminal-specific semantic tokens, kept in sync with the theme.
+   The accent surface tint is unsuitable for path text, so the prompt path
+   uses a dedicated cyan that stays legible on both light and dark backgrounds. */
 :root {
   --term-prompt-user: var(--primary);
-  --term-prompt-path: var(--accent);
+  --term-prompt-path: #0e7490;
   --term-cursor: var(--foreground);
   --term-cursor-bg: var(--foreground);
   --term-error: var(--destructive);
@@ -94,7 +96,7 @@
 
 .dark {
   --term-prompt-user: var(--primary);
-  --term-prompt-path: var(--accent);
+  --term-prompt-path: #22d3ee;
   --term-cursor: var(--foreground);
   --term-cursor-bg: var(--foreground);
   --term-error: var(--destructive);

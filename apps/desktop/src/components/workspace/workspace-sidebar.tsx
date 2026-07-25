@@ -131,7 +131,13 @@ function WorkspaceRow({ workspace, active }: { workspace: Workspace; active: boo
         >
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="truncate text-xs font-medium text-foreground">{title}</span>
-            <span className="truncate text-[11px] text-muted-foreground/70" title={workspace.path}>
+            <span
+              className={cn(
+                'truncate text-[11px] text-muted-foreground/70',
+                active && 'text-accent-foreground/70',
+              )}
+              title={workspace.path}
+            >
               {workspace.path}
             </span>
           </div>

@@ -39,6 +39,7 @@ export class ShellAdapter {
   private busy = false
   private buffer = ''
   private destroyed = false
+  private currentPid: number | null = null
 
   constructor(opts: {
     cwd: string
@@ -75,6 +76,11 @@ export class ShellAdapter {
   destroy(): void {
     this.destroyed = true
     this.bash = null
+    if (this.currentPid !== null) {
+      const pid = this.currentPid
+      this.currentPid = null
+      void api.shell.kill(pid).catch(() => {})
+    }
   }
 
   private get isDestroyed(): boolean {
@@ -333,9 +339,17 @@ export class ShellAdapter {
         exitCode = 1
       }
     } else {
-      const result = await runExternal(cmd, this.cwd, (line, stream) => {
-        this.emitOutput(stream === 'stderr' ? 'error' : 'output', line)
-      })
+      const result = await runExternal(
+        cmd,
+        this.cwd,
+        (line, stream) => {
+          this.emitOutput(stream === 'stderr' ? 'error' : 'output', line)
+        },
+        (pid) => {
+          this.currentPid = pid
+        },
+      )
+      this.currentPid = null
       exitCode = result.exitCode
     }
 

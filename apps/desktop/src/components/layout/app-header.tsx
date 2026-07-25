@@ -4,23 +4,12 @@ import { useIsMacOS } from '@/hooks/use-platform'
 import { useTrafficLightInset } from '@/hooks/use-traffic-light-inset'
 import { cn } from '@/lib/utils'
 
-import { ViewSwitcher } from './view-switcher'
-
 interface AppHeaderProps {
+  leftContent?: React.ReactNode
   rightContent?: React.ReactNode
-  leftSidebarOpen?: boolean
-  rightSidebarOpen?: boolean
-  onToggleLeftSidebar?: () => void
-  onToggleRightSidebar?: () => void
 }
 
-export function AppHeader({
-  rightContent,
-  leftSidebarOpen,
-  rightSidebarOpen,
-  onToggleLeftSidebar,
-  onToggleRightSidebar,
-}: AppHeaderProps) {
+export function AppHeader({ leftContent, rightContent }: AppHeaderProps) {
   const isMacOS = useIsMacOS()
   const trafficLightInset = useTrafficLightInset()
 
@@ -42,12 +31,7 @@ export function AppHeader({
           isMacOS && 'pl-(--traffic-light-inset)',
         )}
       >
-        <ViewSwitcher
-          leftSidebarOpen={leftSidebarOpen}
-          rightSidebarOpen={rightSidebarOpen}
-          onToggleLeftSidebar={onToggleLeftSidebar}
-          onToggleRightSidebar={onToggleRightSidebar}
-        />
+        {leftContent}
       </div>
 
       <div className="min-w-2 flex-1 self-stretch" />

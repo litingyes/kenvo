@@ -11,8 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TerminalIndexRouteImport } from './routes/terminal/index'
-import { Route as TerminalSessionIdRouteImport } from './routes/terminal/$sessionId'
+import { Route as WorkspaceIndexRouteImport } from './routes/workspace/index'
+import { Route as WorkspaceWorkspaceIdRouteImport } from './routes/workspace/$workspaceId'
 import { Route as SettingsLogsRouteImport } from './routes/settings/logs'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsAboutRouteImport } from './routes/settings/about'
@@ -32,14 +32,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TerminalIndexRoute = TerminalIndexRouteImport.update({
-  id: '/terminal/',
-  path: '/terminal/',
+const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
+  id: '/workspace/',
+  path: '/workspace/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TerminalSessionIdRoute = TerminalSessionIdRouteImport.update({
-  id: '/terminal/$sessionId',
-  path: '/terminal/$sessionId',
+const WorkspaceWorkspaceIdRoute = WorkspaceWorkspaceIdRouteImport.update({
+  id: '/workspace/$workspaceId',
+  path: '/workspace/$workspaceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsLogsRoute = SettingsLogsRouteImport.update({
@@ -89,8 +89,8 @@ export interface FileRoutesByFullPath {
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
-  '/terminal/$sessionId': typeof TerminalSessionIdRoute
-  '/terminal/': typeof TerminalIndexRoute
+  '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRoute
+  '/workspace/': typeof WorkspaceIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
   '/settings/ai/models': typeof SettingsAiModelsRoute
@@ -103,8 +103,8 @@ export interface FileRoutesByTo {
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
-  '/terminal/$sessionId': typeof TerminalSessionIdRoute
-  '/terminal': typeof TerminalIndexRoute
+  '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRoute
+  '/workspace': typeof WorkspaceIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
   '/settings/ai/models': typeof SettingsAiModelsRoute
@@ -118,8 +118,8 @@ export interface FileRoutesById {
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
-  '/terminal/$sessionId': typeof TerminalSessionIdRoute
-  '/terminal/': typeof TerminalIndexRoute
+  '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRoute
+  '/workspace/': typeof WorkspaceIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
   '/settings/ai/models': typeof SettingsAiModelsRoute
@@ -134,8 +134,8 @@ export interface FileRouteTypes {
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
-    | '/terminal/$sessionId'
-    | '/terminal/'
+    | '/workspace/$workspaceId'
+    | '/workspace/'
     | '/settings/ai/agents'
     | '/settings/ai/basic'
     | '/settings/ai/models'
@@ -148,8 +148,8 @@ export interface FileRouteTypes {
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
-    | '/terminal/$sessionId'
-    | '/terminal'
+    | '/workspace/$workspaceId'
+    | '/workspace'
     | '/settings/ai/agents'
     | '/settings/ai/basic'
     | '/settings/ai/models'
@@ -162,8 +162,8 @@ export interface FileRouteTypes {
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
-    | '/terminal/$sessionId'
-    | '/terminal/'
+    | '/workspace/$workspaceId'
+    | '/workspace/'
     | '/settings/ai/agents'
     | '/settings/ai/basic'
     | '/settings/ai/models'
@@ -174,8 +174,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRouteWithChildren
-  TerminalSessionIdRoute: typeof TerminalSessionIdRoute
-  TerminalIndexRoute: typeof TerminalIndexRoute
+  WorkspaceWorkspaceIdRoute: typeof WorkspaceWorkspaceIdRoute
+  WorkspaceIndexRoute: typeof WorkspaceIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -194,18 +194,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terminal/': {
-      id: '/terminal/'
-      path: '/terminal'
-      fullPath: '/terminal/'
-      preLoaderRoute: typeof TerminalIndexRouteImport
+    '/workspace/': {
+      id: '/workspace/'
+      path: '/workspace'
+      fullPath: '/workspace/'
+      preLoaderRoute: typeof WorkspaceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terminal/$sessionId': {
-      id: '/terminal/$sessionId'
-      path: '/terminal/$sessionId'
-      fullPath: '/terminal/$sessionId'
-      preLoaderRoute: typeof TerminalSessionIdRouteImport
+    '/workspace/$workspaceId': {
+      id: '/workspace/$workspaceId'
+      path: '/workspace/$workspaceId'
+      fullPath: '/workspace/$workspaceId'
+      preLoaderRoute: typeof WorkspaceWorkspaceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/logs': {
@@ -296,8 +296,8 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRouteWithChildren,
-  TerminalSessionIdRoute: TerminalSessionIdRoute,
-  TerminalIndexRoute: TerminalIndexRoute,
+  WorkspaceWorkspaceIdRoute: WorkspaceWorkspaceIdRoute,
+  WorkspaceIndexRoute: WorkspaceIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

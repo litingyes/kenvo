@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 interface FileTreePanelProps {
   cwd: string
   homeDir: string
+  onOpenFile?: (filePath: string) => void
 }
 
 interface TreeNode {
@@ -29,7 +30,7 @@ interface TreeNode {
   loaded?: boolean
 }
 
-export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
+export function FileTreePanel({ cwd, homeDir, onOpenFile }: FileTreePanelProps) {
   const { t } = useTranslation()
   const [tree, setTree] = React.useState<TreeNode[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -97,6 +98,7 @@ export function FileTreePanel({ cwd, homeDir }: FileTreePanelProps) {
                 depth={0}
                 showHidden={showHidden}
                 filter={filterLc}
+                onOpenFile={onOpenFile}
               />
             ))}
         </div>
@@ -110,18 +112,23 @@ function TreeItem({
   depth,
   showHidden,
   filter,
+  onOpenFile,
 }: {
   node: TreeNode
   depth: number
   showHidden: boolean
   filter: string
+  onOpenFile?: (filePath: string) => void
 }) {
   const [expanded, setExpanded] = React.useState(false)
   const [children, setChildren] = React.useState<TreeNode[] | null>(null)
   const [loading, setLoading] = React.useState(false)
 
   const handleToggle = async () => {
-    if (!node.isDir) return
+    if (!node.isDir) {
+      onOpenFile?.(node.path)
+      return
+    }
     if (!expanded && !children) {
       setLoading(true)
       const nodes = await loadChildren(node.path, showHidden)
@@ -177,6 +184,7 @@ function TreeItem({
               depth={depth + 1}
               showHidden={showHidden}
               filter={filter}
+              onOpenFile={onOpenFile}
             />
           ))}
         </div>

@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import type { TFunction } from 'i18next'
 import {
   CopyIcon,
@@ -13,7 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { useTerminalStore } from '@/lib/store/terminal-store'
+import { useWorkspaceStore } from '@/lib/store/workspace-store'
 import { copyToClipboard, openInEditor, revealInFinder } from '@/lib/terminal/opener-helpers'
 
 import { formatBytes, formatDate, formatMode, getParentDirs, usePathInfo } from './use-path-info'
@@ -21,18 +20,19 @@ import { formatBytes, formatDate, formatMode, getParentDirs, usePathInfo } from 
 export function PathInfoPanel({ cwd }: { cwd: string }) {
   const { t } = useTranslation()
   const { info, loading, error } = usePathInfo(cwd)
-  const activeId = useTerminalStore((s) => s.activeId)
-  const updateSessionCwd = useTerminalStore((s) => s.updateSessionCwd)
-  const refreshSessions = useTerminalStore((s) => s.refreshSessions)
-  const navigate = useNavigate()
+  const tabs = useWorkspaceStore((s) => s.tabs)
+  const sessions = useWorkspaceStore((s) => s.sessions)
+  const activeTabId = useWorkspaceStore((s) => s.activeTabId)
+  const updateSessionCwd = useWorkspaceStore((s) => s.updateSessionCwd)
 
   const parents = getParentDirs(cwd)
 
   const handleSwitchCwd = async (path: string) => {
-    if (!activeId) return
-    await updateSessionCwd(activeId, path)
-    await refreshSessions()
-    void navigate({ to: '/terminal/$sessionId', params: { sessionId: activeId } })
+    const activeTab = tabs.find((tab) => tab.id === activeTabId && tab.type === 'terminal')
+    if (!activeTab) return
+    const session = sessions.find((s) => s.id === activeTab.ref)
+    if (!session) return
+    await updateSessionCwd(session.id, path)
   }
 
   const handleCopy = async () => {

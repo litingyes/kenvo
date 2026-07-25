@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useTerminalStore } from '@/lib/store/terminal-store'
+import { useWorkspaceStore } from '@/lib/store/workspace-store'
 import type { RightView } from '@/lib/terminal/types'
 import { cn } from '@/lib/utils'
 
@@ -20,17 +20,16 @@ import { HistoryPanel } from './panels/history-panel'
 import { PathInfoPanel } from './panels/path-info-panel'
 
 interface InfoPanelProps {
-  sessionId: string
-  cwd: string
+  workspaceId: string
+  workspacePath: string
   homeDir: string
-  onInsertCommand: (cmd: string) => void
 }
 
 const VIEWS: { id: RightView; icon: React.ElementType }[] = [
-  { id: 'path', icon: InfoIcon },
-  { id: 'history', icon: HistoryIcon },
-  { id: 'git', icon: GitBranchIcon },
   { id: 'files', icon: FolderTreeIcon },
+  { id: 'git', icon: GitBranchIcon },
+  { id: 'history', icon: HistoryIcon },
+  { id: 'path', icon: InfoIcon },
 ]
 
 const ViewTab = React.memo(function ViewTab({
@@ -60,11 +59,13 @@ const ViewTab = React.memo(function ViewTab({
   )
 })
 
-export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPanelProps) {
+export function InfoPanel({ workspaceId, workspacePath, homeDir }: InfoPanelProps) {
   const { t } = useTranslation()
-  const rightView = useTerminalStore((s) => s.rightView)
-  const setRightView = useTerminalStore((s) => s.setRightView)
-  const toggleRightSidebar = useTerminalStore((s) => s.toggleRightSidebar)
+  const rightView = useWorkspaceStore((s) => s.rightView)
+  const setRightView = useWorkspaceStore((s) => s.setRightView)
+  const toggleRightSidebar = useWorkspaceStore((s) => s.toggleRightSidebar)
+  const onInsertCommand = useWorkspaceStore((s) => s.insertCommandIntoActiveTerminal)
+  const openFileTab = useWorkspaceStore((s) => s.openFileTab)
 
   const handleSelectView = React.useCallback((id: RightView) => setRightView(id), [setRightView])
 
@@ -92,12 +93,18 @@ export function InfoPanel({ sessionId, cwd, homeDir, onInsertCommand }: InfoPane
       </div>
       <ScrollArea className="flex-1">
         <div className="p-3">
-          {rightView === 'path' && <PathInfoPanel cwd={cwd} />}
+          {rightView === 'path' && <PathInfoPanel cwd={workspacePath} />}
           {rightView === 'history' && (
-            <HistoryPanel sessionId={sessionId} onInsertCommand={onInsertCommand} />
+            <HistoryPanel workspaceId={workspaceId} onInsertCommand={onInsertCommand} />
           )}
-          {rightView === 'git' && <GitPanel cwd={cwd} />}
-          {rightView === 'files' && <FileTreePanel cwd={cwd} homeDir={homeDir} />}
+          {rightView === 'git' && <GitPanel cwd={workspacePath} />}
+          {rightView === 'files' && (
+            <FileTreePanel
+              cwd={workspacePath}
+              homeDir={homeDir}
+              onOpenFile={(p) => void openFileTab(p)}
+            />
+          )}
         </div>
       </ScrollArea>
     </div>

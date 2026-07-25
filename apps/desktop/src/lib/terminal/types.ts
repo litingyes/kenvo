@@ -1,5 +1,14 @@
+export interface Workspace {
+  id: string
+  path: string
+  title: string | null
+  created_at: number
+  last_active_at: number
+}
+
 export interface TerminalSession {
   id: string
+  workspace_id: string
   title: string | null
   cwd: string
   created_at: number
@@ -39,4 +48,17 @@ export interface SessionGroup {
 export interface EditorApp {
   cli: string
   name: string
+}
+
+export type WorkspaceTabType = 'terminal' | 'file'
+
+export interface WorkspaceTab {
+  id: string
+  workspace_id: string
+  type: WorkspaceTabType
+  ref: string
+  title: string | null
+  position: number
+  created_at: number
+  last_active_at: number
 }

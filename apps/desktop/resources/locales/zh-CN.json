@@ -251,7 +251,26 @@
     "showDotfiles": "显示 dotfiles",
     "hideDotfiles": "隐藏 dotfiles",
     "loading": "加载中…",
-    "emptyDirectory": "空目录"
+    "emptyDirectory": "空目录",
+    "tooLarge": "文件过大 ({{size}}MB)，请使用外部编辑器打开",
+    "binaryFile": "二进制文件，请使用外部编辑器打开"
+  },
+  "workspace": {
+    "addFolder": "添加文件夹",
+    "empty": "还没有工作区",
+    "rename": "重命名",
+    "delete": "删除工作区",
+    "actions": "工作区操作",
+    "noTabs": "没有打开的标签页",
+    "dialogs": {
+      "rename": {
+        "title": "重命名工作区"
+      },
+      "delete": {
+        "title": "删除此工作区？",
+        "description": "此操作无法撤销。该工作区及其所有终端会话、历史记录将被移除。"
+      }
+    }
   },
   "toast": {
     "copyPath": "路径已复制到剪贴板",

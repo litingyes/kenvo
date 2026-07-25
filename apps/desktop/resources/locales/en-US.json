@@ -251,7 +251,26 @@
     "showDotfiles": "Show dotfiles",
     "hideDotfiles": "Hide dotfiles",
     "loading": "Loading…",
-    "emptyDirectory": "Empty directory"
+    "emptyDirectory": "Empty directory",
+    "tooLarge": "File too large ({{size}}MB), open externally",
+    "binaryFile": "Binary file, open externally"
+  },
+  "workspace": {
+    "addFolder": "Add folder",
+    "empty": "No workspaces yet",
+    "rename": "Rename",
+    "delete": "Delete workspace",
+    "actions": "Workspace actions",
+    "noTabs": "No open tabs",
+    "dialogs": {
+      "rename": {
+        "title": "Rename workspace"
+      },
+      "delete": {
+        "title": "Delete this workspace?",
+        "description": "This action cannot be undone. The workspace and all its terminal sessions and history will be removed."
+      }
+    }
   },
   "toast": {
     "copyPath": "Path copied to clipboard",

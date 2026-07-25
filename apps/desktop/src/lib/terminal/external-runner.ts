@@ -8,8 +8,10 @@ export async function runExternal(
   cmd: string,
   cwd: string,
   onLine: (line: string, stream: 'stdout' | 'stderr') => void,
+  onPid?: (pid: number) => void,
 ): Promise<ExternalRunResult> {
   const { pid } = await api.shell.spawn('/bin/sh', ['-c', cmd], { cwd })
+  if (onPid && typeof pid === 'number') onPid(pid)
 
   const unsubscribe = api.shell.onSpawnEvent((payload) => {
     if (payload.pid !== pid) return

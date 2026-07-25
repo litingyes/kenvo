@@ -33,7 +33,7 @@ import { initLogger, logMessage } from './logger'
 import { sendLanguageChangedToAllWindows, setupMenu } from './menu'
 import { getAppPaths, homeDir, setTauriPaths } from './paths'
 import { normalizePlatform } from './platform'
-import { executeProcess, openExternal, openPath, spawnProcess } from './shell'
+import { executeProcess, killProcess, openExternal, openPath, spawnProcess } from './shell'
 import { getAiSettings, getLanguage, getTheme, setAiSettings, setLanguage, setTheme } from './store'
 import { getMainWindowTrafficLightInset } from './traffic-light'
 import {
@@ -123,6 +123,14 @@ ipcMain.handle(
   IPC_CHANNELS.DIALOG_SHOW_SAVE,
   async (_event, options: Electron.SaveDialogOptions) => {
     const result = await dialog.showSaveDialog(options)
+    return result
+  },
+)
+
+ipcMain.handle(
+  IPC_CHANNELS.DIALOG_SHOW_OPEN,
+  async (_event, options: Electron.OpenDialogOptions) => {
+    const result = await dialog.showOpenDialog(options)
     return result
   },
 )
@@ -219,6 +227,7 @@ ipcMain.handle(
     executeProcess(command, args, options),
 )
 ipcMain.handle(IPC_CHANNELS.SHELL_CP, (_event, src: string, dest: string) => cp(src, dest))
+ipcMain.handle(IPC_CHANNELS.SHELL_KILL, (_event, pid: number) => killProcess(pid))
 
 // Agent server
 ipcMain.handle(IPC_CHANNELS.AGENT_SERVER_START, () => startAgentServer())

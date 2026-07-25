@@ -1,28 +1,22 @@
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { addHistory } from '@/lib/db/terminal-repo'
-import { useTerminalStore } from '@/lib/store/terminal-store'
+import { addHistory, getHistory } from '@/lib/db/terminal-repo'
+import { useWorkspaceStore } from '@/lib/store/workspace-store'
 import { ShellAdapter } from '@/lib/terminal/shell-adapter'
+import {
+  registerTerminalInstance,
+  unregisterTerminalInstance,
+} from '@/lib/terminal/terminal-instance-registry'
 import type { OutputLine } from '@/lib/terminal/types'
 
 interface TerminalViewProps {
   sessionId: string
   initialCwd: string
-  initialHistory?: string[]
-  onCwdChange?: (cwd: string) => void
-  onHomeDirChange?: (homeDir: string) => void
-  insertCommandRef?: React.MutableRefObject<((cmd: string) => void) | null>
+  active?: boolean
 }
 
-export function TerminalView({
-  sessionId,
-  initialCwd,
-  initialHistory,
-  onCwdChange,
-  onHomeDirChange,
-  insertCommandRef,
-}: TerminalViewProps) {
+export function TerminalView({ sessionId, initialCwd, active = true }: TerminalViewProps) {
   const { t } = useTranslation()
   const [outputLines, setOutputLines] = React.useState<OutputLine[]>([])
   const [input, setInput] = React.useState('')
@@ -37,15 +31,6 @@ export function TerminalView({
   const containerRef = React.useRef<HTMLButtonElement | null>(null)
 
   React.useEffect(() => {
-    if (insertCommandRef) {
-      insertCommandRef.current = (cmd: string) => adapterRef.current?.insertCommand(cmd)
-      return () => {
-        insertCommandRef.current = null
-      }
-    }
-  }, [insertCommandRef])
-
-  React.useEffect(() => {
     setOutputLines([])
     setInput('')
     setCursor(0)
@@ -53,38 +38,49 @@ export function TerminalView({
     setCwd(initialCwd)
     setReady(false)
 
-    const adapter = new ShellAdapter({
-      cwd: initialCwd,
-      sessionId,
-      initialHistory,
-      callbacks: {
-        onOutput: (line) => setOutputLines((prev) => [...prev, line]),
-        onOutputClear: () => setOutputLines([]),
-        onInputChange: (newInput, newCursor) => {
-          setInput(newInput)
-          setCursor(newCursor)
+    let adapter: ShellAdapter | null = null
+    let destroyed = false
+    void (async () => {
+      const history = await getHistory(sessionId, 500)
+      if (destroyed) return
+      const initialHistory = history.map((h) => h.command).reverse()
+      adapter = new ShellAdapter({
+        cwd: initialCwd,
+        sessionId,
+        initialHistory,
+        callbacks: {
+          onOutput: (line) => setOutputLines((prev) => [...prev, line]),
+          onOutputClear: () => setOutputLines([]),
+          onInputChange: (newInput, newCursor) => {
+            setInput(newInput)
+            setCursor(newCursor)
+          },
+          onBusyChange: setBusy,
+          onCwdChange: (newCwd) => {
+            setCwd(newCwd)
+            void useWorkspaceStore.getState().updateSessionCwd(sessionId, newCwd)
+          },
+          onHistoryChange: (entry) => {
+            void addHistory(entry)
+            useWorkspaceStore.getState().bumpHistory()
+          },
+          onReady: (hd) => {
+            setHomeDir(hd)
+            setReady(true)
+          },
         },
-        onBusyChange: setBusy,
-        onCwdChange: (newCwd) => {
-          setCwd(newCwd)
-          onCwdChange?.(newCwd)
-        },
-        onHistoryChange: (entry) => {
-          void addHistory(entry)
-          useTerminalStore.getState().bumpHistory()
-        },
-        onReady: (hd) => {
-          setHomeDir(hd)
-          onHomeDirChange?.(hd)
-          setReady(true)
-        },
-      },
-    })
-    adapterRef.current = adapter
-    void adapter.init()
+      })
+      adapterRef.current = adapter
+      registerTerminalInstance(sessionId, adapter)
+      void adapter.init()
+    })()
 
-    return () => adapter.destroy()
-  }, [sessionId, initialCwd, initialHistory, onCwdChange, onHomeDirChange])
+    return () => {
+      destroyed = true
+      adapter?.destroy()
+      unregisterTerminalInstance(sessionId)
+    }
+  }, [sessionId, initialCwd])
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -93,8 +89,8 @@ export function TerminalView({
   }, [outputLines])
 
   React.useEffect(() => {
-    if (ready) containerRef.current?.focus()
-  }, [ready])
+    if (ready && active) containerRef.current?.focus()
+  }, [ready, active])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     adapterRef.current?.handleKeyDown(e.nativeEvent)

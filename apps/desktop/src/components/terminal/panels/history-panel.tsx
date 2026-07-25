@@ -2,28 +2,28 @@ import { ClockIcon, CornerUpLeftIcon } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { getHistory } from '@/lib/db/terminal-repo'
+import { getHistoryByWorkspace } from '@/lib/db/terminal-repo'
 import i18n from '@/lib/i18n'
-import { useTerminalStore } from '@/lib/store/terminal-store'
+import { useWorkspaceStore } from '@/lib/store/workspace-store'
 import type { HistoryEntry } from '@/lib/terminal/types'
 import { cn } from '@/lib/utils'
 
 interface HistoryPanelProps {
-  sessionId: string
+  workspaceId: string
   onInsertCommand: (cmd: string) => void
 }
 
-export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) {
+export function HistoryPanel({ workspaceId, onInsertCommand }: HistoryPanelProps) {
   const { t } = useTranslation()
   const [entries, setEntries] = React.useState<HistoryEntry[]>([])
   const [loading, setLoading] = React.useState(true)
   const [filter, setFilter] = React.useState('')
-  const historyVersion = useTerminalStore((s) => s.historyVersion)
+  const historyVersion = useWorkspaceStore((s) => s.historyVersion)
 
   React.useEffect(() => {
     let cancelled = false
     setLoading(true)
-    void getHistory(sessionId, 200)
+    void getHistoryByWorkspace(workspaceId, 200)
       .then((data) => {
         if (!cancelled) setEntries(data)
       })
@@ -33,7 +33,7 @@ export function HistoryPanel({ sessionId, onInsertCommand }: HistoryPanelProps) 
     return () => {
       cancelled = true
     }
-  }, [sessionId, historyVersion])
+  }, [workspaceId, historyVersion])
 
   const filtered = React.useMemo(() => {
     if (!filter.trim()) return entries

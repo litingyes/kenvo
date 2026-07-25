@@ -64,6 +64,8 @@ const api = {
   dialog: {
     showSaveDialog: (options: Electron.SaveDialogOptions) =>
       ipcRenderer.invoke(IPC_CHANNELS.DIALOG_SHOW_SAVE, options),
+    showOpenDialog: (options: Electron.OpenDialogOptions) =>
+      ipcRenderer.invoke(IPC_CHANNELS.DIALOG_SHOW_OPEN, options),
     showMessageBox: (options: Electron.MessageBoxOptions) =>
       ipcRenderer.invoke(IPC_CHANNELS.DIALOG_SHOW_MESSAGE, options),
   },
@@ -108,6 +110,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.SHELL_EXECUTE, command, args, options),
     openPath: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_OPEN_PATH, filePath),
     openExternal: (url: string) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_OPEN_EXTERNAL, url),
+    kill: (pid: number) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_KILL, pid),
   },
 
   db: {

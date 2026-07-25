@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import type { TFunction } from 'i18next'
 import {
   CopyIcon,
@@ -42,7 +41,7 @@ import {
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { useTerminalStore } from '@/lib/store/terminal-store'
+import { useWorkspaceStore } from '@/lib/store/workspace-store'
 import { openPathInEditor } from '@/lib/terminal/open-with'
 import { copyToClipboard, revealInFinder } from '@/lib/terminal/opener-helpers'
 import type { EditorApp, TerminalSession } from '@/lib/terminal/types'
@@ -53,8 +52,8 @@ export interface SessionActionsProps {
 }
 
 function useEditorSubmenuState() {
-  const availableEditors = useTerminalStore((s) => s.availableEditors)
-  const detect = useTerminalStore((s) => s.detectAvailableEditors)
+  const availableEditors = useWorkspaceStore((s) => s.availableEditors)
+  const detect = useWorkspaceStore((s) => s.detectAvailableEditors)
   const [loading, setLoading] = React.useState(false)
   const [editors, setEditors] = React.useState<EditorApp[] | null>(availableEditors)
 
@@ -84,9 +83,9 @@ export function useSessionActions(session: TerminalSession) {
   const [renameOpen, setRenameOpen] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
   const [duplicateOpen, setDuplicateOpen] = React.useState(false)
-  const renameSession = useTerminalStore((s) => s.renameSession)
-  const duplicateSession = useTerminalStore((s) => s.duplicateSession)
-  const closeSession = useTerminalStore((s) => s.closeSession)
+  const renameSession = useWorkspaceStore((s) => s.renameSession)
+  const duplicateSession = useWorkspaceStore((s) => s.duplicateSession)
+  const closeSession = useWorkspaceStore((s) => s.closeSession)
   const [renameValue, setRenameValue] = React.useState(session.title ?? '')
 
   return {
@@ -111,8 +110,9 @@ export function useSessionActions(session: TerminalSession) {
     requestDelete: () => setDeleteOpen(true),
     requestDuplicate: () => setDuplicateOpen(true),
     confirmDuplicate: async () => {
-      await duplicateSession(session.id)
+      const dup = await duplicateSession(session.id)
       setDuplicateOpen(false)
+      return dup
     },
     confirmDelete: async () => {
       await closeSession(session.id)
@@ -122,20 +122,15 @@ export function useSessionActions(session: TerminalSession) {
 }
 
 export function SessionActionDialogs({
-  session,
   actions,
 }: {
   session: TerminalSession
   actions: ReturnType<typeof useSessionActions>
 }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const onDup = async () => {
-    await actions.confirmDuplicate()
-    const next = useTerminalStore.getState().activeId
-    if (next && next !== session.id) {
-      void navigate({ to: '/terminal/$sessionId', params: { sessionId: next } })
-    }
+    const dup = await actions.confirmDuplicate()
+    if (dup) await useWorkspaceStore.getState().openTerminalTabForSession(dup.id)
   }
   return (
     <>

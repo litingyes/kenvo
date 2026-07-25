@@ -42,6 +42,7 @@ export const IPC_CHANNELS = {
   // Clipboard / dialog
   CLIPBOARD_WRITE_TEXT: 'clipboard:write_text',
   DIALOG_SHOW_SAVE: 'dialog:show_save_dialog',
+  DIALOG_SHOW_OPEN: 'dialog:show_open_dialog',
   DIALOG_SHOW_MESSAGE: 'dialog:show_message_box',
 
   // FS
@@ -65,6 +66,7 @@ export const IPC_CHANNELS = {
   SHELL_OPEN_EXTERNAL: 'shell:open_external',
   SHELL_OPEN_PATH: 'shell:open_path',
   SHELL_CP: 'shell:cp',
+  SHELL_KILL: 'shell:kill',
 
   // DB
   DB_SELECT: 'db:select',

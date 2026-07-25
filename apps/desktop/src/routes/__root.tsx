@@ -1,4 +1,4 @@
-import { Outlet, createRootRoute, useNavigate } from '@tanstack/react-router'
+import { Outlet, createRootRoute, useLocation, useNavigate } from '@tanstack/react-router'
 import { ThemeProvider } from 'next-themes'
 import * as React from 'react'
 
@@ -7,6 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { api } from '@/lib/electron/api'
 import { useThemeBridge } from '@/lib/settings/theme-bridge'
 import { checkForUpdate } from '@/lib/updater'
+import { requestNewTerminalTab } from '@/lib/workspace-bus'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -20,6 +21,7 @@ function ThemeBridge() {
 
 function RootComponent() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -27,14 +29,17 @@ function RootComponent() {
         switch (e.key.toLowerCase()) {
           case 't':
             e.preventDefault()
-            void navigate({ to: '/terminal' })
+            if (!location.pathname.startsWith('/workspace')) {
+              void navigate({ to: '/workspace' })
+            }
+            requestNewTerminalTab()
             break
         }
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [navigate])
+  }, [navigate, location.pathname])
 
   React.useEffect(() => {
     if (import.meta.env.PROD) {

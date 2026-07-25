@@ -33,6 +33,7 @@ import { initLogger, logMessage } from './logger'
 import { sendLanguageChangedToAllWindows, setupMenu } from './menu'
 import { getAppPaths, homeDir, setTauriPaths } from './paths'
 import { normalizePlatform } from './platform'
+import { createPty, killAllPtys, killPty, resizePty, writePty } from './pty'
 import { executeProcess, killProcess, openExternal, openPath, spawnProcess } from './shell'
 import { getAiSettings, getLanguage, getTheme, setAiSettings, setLanguage, setTheme } from './store'
 import { getMainWindowTrafficLightInset } from './traffic-light'
@@ -228,6 +229,22 @@ ipcMain.handle(
 )
 ipcMain.handle(IPC_CHANNELS.SHELL_CP, (_event, src: string, dest: string) => cp(src, dest))
 ipcMain.handle(IPC_CHANNELS.SHELL_KILL, (_event, pid: number) => killProcess(pid))
+
+// PTY
+ipcMain.handle(IPC_CHANNELS.PTY_CREATE, (event, options: Parameters<typeof createPty>[1]) =>
+  createPty(event.sender, options),
+)
+ipcMain.handle(IPC_CHANNELS.PTY_WRITE, (_event, sessionId: string, data: string) =>
+  writePty(sessionId, data),
+)
+ipcMain.handle(IPC_CHANNELS.PTY_RESIZE, (_event, sessionId: string, cols: number, rows: number) =>
+  resizePty(sessionId, cols, rows),
+)
+ipcMain.handle(IPC_CHANNELS.PTY_KILL, (_event, sessionId: string) => killPty(sessionId))
+
+app.on('will-quit', () => {
+  killAllPtys()
+})
 
 // Agent server
 ipcMain.handle(IPC_CHANNELS.AGENT_SERVER_START, () => startAgentServer())

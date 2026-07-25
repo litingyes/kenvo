@@ -81,7 +81,9 @@ export function createMainWindow(): BrowserWindow {
 
   if (isDev && rendererUrl) {
     void mainWindow.loadURL(rendererUrl)
-    mainWindow.webContents.openDevTools()
+    if (process.env.KENVO_DEVTOOLS !== '0') {
+      mainWindow.webContents.openDevTools()
+    }
     setupDevContextMenu(mainWindow.webContents)
   } else {
     void mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'))

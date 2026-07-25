@@ -8,6 +8,8 @@ files:
   - dist
   - dist-electron
   - resources
+asarUnpack:
+  - '**/node_modules/node-pty/**'
 extraResources:
   - from: ../../packages/agent-server/dist
     to: agent-server

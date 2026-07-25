@@ -31,6 +31,7 @@ export const api = {
   dialog: electronAPI.dialog,
   fs: electronAPI.fs,
   shell: electronAPI.shell,
+  pty: electronAPI.pty,
   db: electronAPI.db,
   log: electronAPI.log,
   updater: electronAPI.updater,

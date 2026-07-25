@@ -68,6 +68,13 @@ export const IPC_CHANNELS = {
   SHELL_CP: 'shell:cp',
   SHELL_KILL: 'shell:kill',
 
+  // PTY
+  PTY_CREATE: 'pty:create',
+  PTY_WRITE: 'pty:write',
+  PTY_RESIZE: 'pty:resize',
+  PTY_KILL: 'pty:kill',
+  PTY_EVENT: 'pty:event',
+
   // DB
   DB_SELECT: 'db:select',
   DB_EXECUTE: 'db:execute',

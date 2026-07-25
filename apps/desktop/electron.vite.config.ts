@@ -18,6 +18,7 @@ export default defineConfig({
           'electron-store',
           'electron-updater',
           'electron-window-state',
+          'node-pty',
         ],
         input: {
           index: path.resolve(__dirname, 'electron/main.ts'),

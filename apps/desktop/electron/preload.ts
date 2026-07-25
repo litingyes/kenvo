@@ -113,6 +113,39 @@ const api = {
     kill: (pid: number) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_KILL, pid),
   },
 
+  pty: {
+    create: (options: {
+      sessionId: string
+      cwd: string
+      cols?: number
+      rows?: number
+      env?: Record<string, string>
+    }) => ipcRenderer.invoke(IPC_CHANNELS.PTY_CREATE, options),
+    write: (sessionId: string, data: string) =>
+      ipcRenderer.invoke(IPC_CHANNELS.PTY_WRITE, sessionId, data),
+    resize: (sessionId: string, cols: number, rows: number) =>
+      ipcRenderer.invoke(IPC_CHANNELS.PTY_RESIZE, sessionId, cols, rows),
+    kill: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.PTY_KILL, sessionId),
+    onEvent: (
+      callback: (
+        payload:
+          | { id: string; event: 'data'; data: string }
+          | { id: string; event: 'exit'; exitCode: number; signal?: number },
+      ) => void,
+    ) => {
+      const fn = (
+        _event: Electron.IpcRendererEvent,
+        payload:
+          | { id: string; event: 'data'; data: string }
+          | { id: string; event: 'exit'; exitCode: number; signal?: number },
+      ) => callback(payload)
+      ipcRenderer.on(IPC_CHANNELS.PTY_EVENT, fn)
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.PTY_EVENT, fn)
+      }
+    },
+  },
+
   db: {
     select: (sql: string, params?: unknown[]) =>
       ipcRenderer.invoke(IPC_CHANNELS.DB_SELECT, sql, params),

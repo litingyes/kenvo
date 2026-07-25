@@ -2,7 +2,8 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { api, type DirEntry } from '@/lib/electron/api'
-import { getFileIconUrl } from '@/lib/file-icons'
+import { getFileIconClass } from '@/lib/file-icons'
+import { cn } from '@/lib/utils'
 
 const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'])
 const MAX_TEXT_SIZE = 2 * 1024 * 1024
@@ -99,7 +100,7 @@ export function FileViewer({ filePath }: { filePath: string }) {
   if (state.kind === 'tooLarge') {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-xs text-muted-foreground">
-        <img src={getFileIconUrl(filePath)} alt="" className="size-6 opacity-60" />
+        <span className={cn('size-6 opacity-60', getFileIconClass(filePath))} aria-hidden="true" />
         <p>{t('files.tooLarge', { size: Math.round((state.size / 1024 / 1024) * 100) / 100 })}</p>
       </div>
     )
@@ -108,7 +109,7 @@ export function FileViewer({ filePath }: { filePath: string }) {
   if (state.kind === 'binary') {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-xs text-muted-foreground">
-        <img src={getFileIconUrl(filePath)} alt="" className="size-6 opacity-60" />
+        <span className={cn('size-6 opacity-60', getFileIconClass(filePath))} aria-hidden="true" />
         <p>{t('files.binaryFile')}</p>
       </div>
     )

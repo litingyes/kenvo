@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { DirEntry } from '@/lib/electron/api'
-import { getFolderIconUrl, getFileIconUrl, getRootIconUrl } from '@/lib/file-icons'
+import { getFileIconClass, getFolderIconClass, getRootIconClass } from '@/lib/file-icons'
 import { cn } from '@/lib/utils'
 
 interface FileTreePanelProps {
@@ -78,7 +78,7 @@ export function FileTreePanel({ cwd, homeDir, onOpenFile }: FileTreePanelProps) 
       </div>
 
       <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-        <img src={getRootIconUrl(false)} alt="" className="size-3.5 shrink-0" />
+        <span className={cn('size-3.5 shrink-0', getRootIconClass(false))} aria-hidden="true" />
         <HomeIcon className="size-3" />
         {shortenPath(cwd, homeDir)}
       </div>
@@ -160,7 +160,10 @@ function TreeItem({
             ) : (
               <ChevronRightIcon className="size-3 shrink-0 text-muted-foreground" />
             )}
-            <img src={getFolderIconUrl(node.name, expanded)} alt="" className="size-3.5 shrink-0" />
+            <span
+              className={cn('size-3.5 shrink-0', getFolderIconClass(node.name, expanded))}
+              aria-hidden="true"
+            />
             <span className={cn('truncate text-foreground', node.isHidden && 'opacity-50')}>
               {node.name}
             </span>
@@ -168,7 +171,10 @@ function TreeItem({
         ) : (
           <>
             <span className="w-3 shrink-0" />
-            <img src={getFileIconUrl(node.name)} alt="" className="size-3.5 shrink-0" />
+            <span
+              className={cn('size-3.5 shrink-0', getFileIconClass(node.name))}
+              aria-hidden="true"
+            />
             <span className={cn('truncate text-muted-foreground', node.isHidden && 'opacity-50')}>
               {node.name}
             </span>

@@ -4,6 +4,7 @@
     "rust-lang.rust-analyzer",
     "bradlc.vscode-tailwindcss",
     "voidzero.vite-plus-extension-pack",
-    "astro-build.astro-vscode"
+    "astro-build.astro-vscode",
+    "antfu.iconify"
   ]
 }

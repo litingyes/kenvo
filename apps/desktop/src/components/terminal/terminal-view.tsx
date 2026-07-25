@@ -114,7 +114,7 @@ export function TerminalView({ sessionId, initialCwd, active = true }: TerminalV
       type="button"
       ref={containerRef}
       aria-label={t('terminal.terminalView')}
-      className="relative flex h-full flex-col bg-card text-left font-mono text-sm leading-relaxed outline-none select-text"
+      className="relative flex h-full w-full flex-col bg-card text-left font-mono text-sm leading-relaxed outline-none select-text"
       onKeyDown={handleKeyDown}
     >
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-2">

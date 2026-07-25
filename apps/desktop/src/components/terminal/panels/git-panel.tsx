@@ -212,7 +212,7 @@ export function GitPanel({ cwd }: { cwd: string }) {
                 value={commitMsg}
                 onChange={(e) => setCommitMsg(e.target.value)}
                 placeholder={t('git.commitPlaceholder')}
-                className="mb-2 min-h-16 text-xs"
+                className="mb-2 max-h-[50vh] min-h-16 resize-none overflow-y-auto text-xs"
                 disabled={generating}
               />
               {generateError && (

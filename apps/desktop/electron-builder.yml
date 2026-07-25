@@ -1,6 +1,10 @@
 appId: app.vercel.kenvo
 productName: Kenvo
 copyright: Copyright © 2026 Kenvo
+publish:
+  provider: github
+  owner: litingyes
+  repo: kenvo
 directories:
   output: release
   buildResources: build

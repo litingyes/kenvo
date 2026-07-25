@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceIndexRouteImport } from './routes/workspace/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as WorkspaceWorkspaceIdRouteImport } from './routes/workspace/$workspaceId'
 import { Route as SettingsLogsRouteImport } from './routes/settings/logs'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
@@ -36,6 +37,11 @@ const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
   id: '/workspace/',
   path: '/workspace/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const WorkspaceWorkspaceIdRoute = WorkspaceWorkspaceIdRouteImport.update({
   id: '/workspace/$workspaceId',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRoute
+  '/settings/': typeof SettingsIndexRoute
   '/workspace/': typeof WorkspaceIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
@@ -99,11 +106,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/settings': typeof SettingsRouteWithChildren
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRoute
+  '/settings': typeof SettingsIndexRoute
   '/workspace': typeof WorkspaceIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
@@ -119,6 +126,7 @@ export interface FileRoutesById {
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
   '/workspace/$workspaceId': typeof WorkspaceWorkspaceIdRoute
+  '/settings/': typeof SettingsIndexRoute
   '/workspace/': typeof WorkspaceIndexRoute
   '/settings/ai/agents': typeof SettingsAiAgentsRoute
   '/settings/ai/basic': typeof SettingsAiBasicRoute
@@ -135,6 +143,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/logs'
     | '/workspace/$workspaceId'
+    | '/settings/'
     | '/workspace/'
     | '/settings/ai/agents'
     | '/settings/ai/basic'
@@ -144,11 +153,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/settings'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
     | '/workspace/$workspaceId'
+    | '/settings'
     | '/workspace'
     | '/settings/ai/agents'
     | '/settings/ai/basic'
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/settings/appearance'
     | '/settings/logs'
     | '/workspace/$workspaceId'
+    | '/settings/'
     | '/workspace/'
     | '/settings/ai/agents'
     | '/settings/ai/basic'
@@ -200,6 +210,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/workspace/'
       preLoaderRoute: typeof WorkspaceIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/workspace/$workspaceId': {
       id: '/workspace/$workspaceId'
@@ -271,6 +288,7 @@ interface SettingsRouteChildren {
   SettingsAboutRoute: typeof SettingsAboutRoute
   SettingsAppearanceRoute: typeof SettingsAppearanceRoute
   SettingsLogsRoute: typeof SettingsLogsRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   SettingsAiAgentsRoute: typeof SettingsAiAgentsRoute
   SettingsAiBasicRoute: typeof SettingsAiBasicRoute
   SettingsAiModelsRoute: typeof SettingsAiModelsRoute
@@ -282,6 +300,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsAboutRoute: SettingsAboutRoute,
   SettingsAppearanceRoute: SettingsAppearanceRoute,
   SettingsLogsRoute: SettingsLogsRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   SettingsAiAgentsRoute: SettingsAiAgentsRoute,
   SettingsAiBasicRoute: SettingsAiBasicRoute,
   SettingsAiModelsRoute: SettingsAiModelsRoute,

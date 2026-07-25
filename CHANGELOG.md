@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.0.3
+
+[compare changes](https://github.com/litingyes/kenvo/compare/v0.0.2...v0.0.3)
+
+### 🚀 Enhancements
+
+- **desktop:** Add development context menu for electron windows ([9d85a34](https://github.com/litingyes/kenvo/commit/9d85a34))
+- **desktop:** ⚠️ Replace terminal views with workspace-based tabs ([df6c5da](https://github.com/litingyes/kenvo/commit/df6c5da))
+- **settings:** Add settings index route ([cca5a46](https://github.com/litingyes/kenvo/commit/cca5a46))
+- **desktop:** Replace custom file icons with iconify ([6930f2b](https://github.com/litingyes/kenvo/commit/6930f2b))
+- **terminal:** Replace custom shell with node-pty and xterm ([de33cd1](https://github.com/litingyes/kenvo/commit/de33cd1))
+
+### 🩹 Fixes
+
+- **desktop:** Limit git commit textarea height and add scrolling ([828cdea](https://github.com/litingyes/kenvo/commit/828cdea))
+
+### 💅 Refactors
+
+- **theme:** ⚠️ Remove theme presets and keep only kenvo ([b13817e](https://github.com/litingyes/kenvo/commit/b13817e))
+- **settings:** Merge language settings into appearance ([c7b8476](https://github.com/litingyes/kenvo/commit/c7b8476))
+
+### 📖 Documentation
+
+- Init ([88aebfe](https://github.com/litingyes/kenvo/commit/88aebfe))
+
+### 🎨 Styles
+
+- **theme:** Update Kenvo palette and active sidebar path color ([4bfadf3](https://github.com/litingyes/kenvo/commit/4bfadf3))
+- **terminal:** Add w-full to terminal view container ([9728089](https://github.com/litingyes/kenvo/commit/9728089))
+
+### 🤖 CI
+
+- **release:** Prevent electron-builder from auto-publishing ([fcb1e3a](https://github.com/litingyes/kenvo/commit/fcb1e3a))
+
+#### ⚠️ Breaking Changes
+
+- **desktop:** ⚠️ Replace terminal views with workspace-based tabs ([df6c5da](https://github.com/litingyes/kenvo/commit/df6c5da))
+- **theme:** ⚠️ Remove theme presets and keep only kenvo ([b13817e](https://github.com/litingyes/kenvo/commit/b13817e))
+
+### ❤️ Contributors
+
+- Litingyes ([@litingyes](https://github.com/litingyes))
+
 ## v0.0.2
 
 [compare changes](https://github.com/litingyes/kenvo/compare/v0.0.1...v0.0.2)

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.4
+
+[compare changes](https://github.com/litingyes/kenvo/compare/v0.0.3...v0.0.4)
+
+### 🩹 Fixes
+
+- Add publish config to electron-builder.yml to fix CI build failure ([b9bbdea](https://github.com/litingyes/kenvo/commit/b9bbdea))
+
 ## v0.0.3
 
 [compare changes](https://github.com/litingyes/kenvo/compare/v0.0.2...v0.0.3)

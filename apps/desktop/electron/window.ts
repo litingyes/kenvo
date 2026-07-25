@@ -3,6 +3,7 @@ import path from 'path'
 import { BrowserWindow, Menu, app, screen } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 
+import { IPC_CHANNELS } from './ipc-channels'
 import { isMacOS } from './platform'
 import { getTrafficLightPosition } from './traffic-light'
 
@@ -92,9 +93,10 @@ export function createMainWindow(): BrowserWindow {
   return mainWindow
 }
 
-export function createSettingsWindow(): BrowserWindow {
+export function createSettingsWindow(route = 'settings'): BrowserWindow {
   if (settingsWindow) {
     settingsWindow.focus()
+    settingsWindow.webContents.send(IPC_CHANNELS.NAVIGATE, { path: `/${route}` })
     return settingsWindow
   }
 
@@ -126,11 +128,11 @@ export function createSettingsWindow(): BrowserWindow {
   })
 
   if (isDev && rendererUrl) {
-    void settingsWindow.loadURL(`${rendererUrl}#/settings`)
+    void settingsWindow.loadURL(`${rendererUrl}#/${route}`)
     setupDevContextMenu(settingsWindow.webContents)
   } else {
     void settingsWindow.loadFile(path.join(__dirname, '../../dist/index.html'), {
-      hash: 'settings',
+      hash: route,
     })
   }
 

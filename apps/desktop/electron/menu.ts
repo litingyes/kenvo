@@ -45,7 +45,7 @@ export function buildMenu(language: string): Menu {
     {
       label: labels.app,
       submenu: [
-        { label: labels.about, enabled: false },
+        { label: labels.about, click: () => createSettingsWindow('settings/about') },
         { type: 'separator' },
         {
           label: labels.settings,

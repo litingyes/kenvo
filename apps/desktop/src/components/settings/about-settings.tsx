@@ -8,6 +8,8 @@ import { api } from '@/lib/electron/api'
 import { logger } from '@/lib/logger'
 import { checkForUpdate } from '@/lib/updater'
 
+const REPO_URL = 'https://github.com/litingyes/kenvo'
+
 export function AboutSettings() {
   const { t } = useTranslation()
   const [version, setVersion] = useState('')
@@ -36,13 +38,31 @@ export function AboutSettings() {
     }
   }
 
+  const handleOpenRepo = () => {
+    void api.shell.openExternal(REPO_URL)
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <Label>{t('settings.about.title')}</Label>
+      <p className="text-sm text-muted-foreground">{t('settings.about.appDescription')}</p>
+      <div className="grid gap-2">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t('settings.about.version')}:</span>
+          <span>{version}</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t('settings.about.license')}:</span>
+          <span>{t('settings.about.licenseValue')}</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">{t('settings.about.github')}:</span>
+          <Button variant="link" size="sm" className="h-auto px-0" onClick={() => handleOpenRepo()}>
+            {REPO_URL}
+          </Button>
+        </div>
+      </div>
       <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">
-          {t('settings.about.version')}: {version}
-        </span>
         <Button variant="outline" size="sm" disabled={checking} onClick={() => void handleCheck()}>
           {checking ? t('settings.about.checking') : t('settings.about.checkForUpdates')}
         </Button>

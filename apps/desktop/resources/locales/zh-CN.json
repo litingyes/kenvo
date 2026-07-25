@@ -19,7 +19,11 @@
     "about": {
       "title": "关于",
       "description": "版本信息与更新。",
+      "appDescription": "Kenvo 是一款面向开发者的桌面 AI 助手。",
       "version": "版本",
+      "license": "开源协议",
+      "licenseValue": "AGPL-3.0",
+      "github": "GitHub",
       "checkForUpdates": "检查更新",
       "checking": "正在检查…",
       "openLogFolder": "打开日志目录",

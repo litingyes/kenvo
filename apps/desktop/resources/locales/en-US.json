@@ -19,7 +19,11 @@
     "about": {
       "title": "About",
       "description": "Version information and updates.",
+      "appDescription": "Kenvo is a desktop AI assistant for developers.",
       "version": "Version",
+      "license": "License",
+      "licenseValue": "AGPL-3.0",
+      "github": "GitHub",
       "checkForUpdates": "Check for updates",
       "checking": "Checking…",
       "openLogFolder": "Open log folder",

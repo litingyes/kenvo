@@ -32,6 +32,7 @@ export const IPC_CHANNELS = {
   // Generic
   APP_GET_VERSION: 'app:get_version',
   APP_RELAUNCH: 'app:relaunch',
+  NAVIGATE: 'app:navigate',
   OS_GET_TYPE: 'os:get_type',
   OS_GET_LOCALE: 'os:get_locale',
   PATH_GET_HOME_DIR: 'path:get_home_dir',

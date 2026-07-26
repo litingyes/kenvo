@@ -23,6 +23,7 @@ import {
 } from '@/lib/db/workspace-repo'
 import { disposeFileEditor, saveFileEditor } from '@/lib/editor/editor-registry'
 import { api } from '@/lib/electron/api'
+import { runExternalQuiet } from '@/lib/terminal/external-runner'
 import {
   destroyTerminalInstance,
   insertCommandIntoTerminal,
@@ -41,6 +42,46 @@ function basename(p: string): string {
   if (!p || p === '/') return '/'
   const parts = p.replace(/\/+$/, '').split('/')
   return parts[parts.length - 1] || p
+}
+
+const RIGHT_VIEW_STORAGE_KEY = 'kenvo:rightView'
+
+function getStoredRightView(workspaceId: string): RightView | null {
+  try {
+    const raw = localStorage.getItem(`${RIGHT_VIEW_STORAGE_KEY}:${workspaceId}`)
+    if (raw === 'files' || raw === 'path' || raw === 'git' || raw === 'history') return raw
+  } catch {
+    // localStorage may be unavailable (e.g. private browsing).
+  }
+  return null
+}
+
+function setStoredRightView(workspaceId: string, view: RightView): void {
+  try {
+    localStorage.setItem(`${RIGHT_VIEW_STORAGE_KEY}:${workspaceId}`, view)
+  } catch {
+    // ignore
+  }
+}
+
+function removeStoredRightView(workspaceId: string): void {
+  try {
+    localStorage.removeItem(`${RIGHT_VIEW_STORAGE_KEY}:${workspaceId}`)
+  } catch {
+    // ignore
+  }
+}
+
+async function detectGitRepo(workspacePath: string): Promise<boolean> {
+  try {
+    const out = await runExternalQuiet(
+      'git rev-parse --is-inside-work-tree 2>/dev/null',
+      workspacePath,
+    )
+    return out.trim() === 'true'
+  } catch {
+    return false
+  }
 }
 
 function pickActiveTabId(tabs: WorkspaceTab[]): string | null {
@@ -69,6 +110,7 @@ interface WorkspaceStore {
   rightSidebarOpen: boolean
   historyVersion: number
   availableEditors: EditorApp[] | null
+  isGitRepo: boolean | null
 
   loadWorkspaces: () => Promise<void>
   hydrate: (data: {
@@ -106,6 +148,7 @@ interface WorkspaceStore {
   toggleLeftSidebar: () => void
   toggleRightSidebar: () => void
   bumpHistory: () => void
+  detectGitRepo: () => Promise<void>
   detectAvailableEditors: () => Promise<EditorApp[]>
 }
 
@@ -126,6 +169,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   rightSidebarOpen: true,
   historyVersion: 0,
   availableEditors: null,
+  isGitRepo: null,
 
   loadWorkspaces: async () => {
     const workspaces = await dbListWorkspaces()
@@ -134,6 +178,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   hydrate: (data) => {
     const activeTabId = pickActiveTabId(data.tabs)
+    const storedView = getStoredRightView(data.workspace.id)
     set({
       activeWorkspace: data.workspace,
       tabs: data.tabs,
@@ -141,6 +186,12 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       activeTabId,
       loaded: true,
       previewTabId: null,
+      rightView: storedView ?? 'files',
+      isGitRepo: null,
+    })
+    // Fire-and-forget: refresh git status for the workspace.
+    void detectGitRepo(data.workspace.path).then((isRepo) => {
+      set({ isGitRepo: isRepo })
     })
   },
 
@@ -162,6 +213,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   removeWorkspace: async (id) => {
     await dbDeleteWorkspace(id)
+    removeStoredRightView(id)
     set((state) => ({
       workspaces: state.workspaces.filter((w) => w.id !== id),
       ...(state.activeWorkspace?.id === id
@@ -410,13 +462,24 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   setGroupMode: (mode) => set({ groupMode: mode }),
   setSortMode: (mode) => set({ sortMode: mode }),
-  setRightView: (view) => set({ rightView: view }),
+  setRightView: (view) => {
+    const ws = get().activeWorkspace
+    if (ws) setStoredRightView(ws.id, view)
+    set({ rightView: view })
+  },
   setLeftSidebarOpen: (open) => set({ leftSidebarOpen: open }),
   setRightSidebarOpen: (open) => set({ rightSidebarOpen: open }),
   toggleLeftSidebar: () => set((s) => ({ leftSidebarOpen: !s.leftSidebarOpen })),
   toggleRightSidebar: () => set((s) => ({ rightSidebarOpen: !s.rightSidebarOpen })),
 
   bumpHistory: () => set((s) => ({ historyVersion: s.historyVersion + 1 })),
+
+  detectGitRepo: async () => {
+    const ws = get().activeWorkspace
+    if (!ws) return
+    const isRepo = await detectGitRepo(ws.path)
+    set({ isGitRepo: isRepo })
+  },
 
   detectAvailableEditors: async () => {
     if (get().availableEditors) return get().availableEditors!

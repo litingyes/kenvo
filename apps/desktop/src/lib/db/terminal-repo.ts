@@ -167,18 +167,3 @@ export async function addHistory(entry: Omit<HistoryEntry, 'id'>): Promise<void>
     [entry.session_id, entry.command, entry.cwd, entry.exit_code, entry.executed_at],
   )
 }
-
-export async function getHistoryByWorkspace(
-  workspaceId: string,
-  limit = 500,
-): Promise<HistoryEntry[]> {
-  const db = await getDatabase()
-  const rows = (await db.select(
-    `SELECT h.* FROM terminal_history h
-     JOIN terminal_sessions s ON s.id = h.session_id
-     WHERE s.workspace_id = $1
-     ORDER BY h.executed_at DESC LIMIT $2`,
-    [workspaceId, limit],
-  )) as Record<string, unknown>[]
-  return rows.map(rowToHistory)
-}

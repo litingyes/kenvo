@@ -23,9 +23,11 @@ export function PathInfoPanel({ cwd }: { cwd: string }) {
   const tabs = useWorkspaceStore((s) => s.tabs)
   const sessions = useWorkspaceStore((s) => s.sessions)
   const activeTabId = useWorkspaceStore((s) => s.activeTabId)
+  const activeTab = tabs.find((t) => t.id === activeTabId)
   const updateSessionCwd = useWorkspaceStore((s) => s.updateSessionCwd)
 
   const parents = getParentDirs(cwd)
+  const showParentNavigation = activeTab?.type === 'terminal'
 
   const handleSwitchCwd = async (path: string) => {
     const activeTab = tabs.find((tab) => tab.id === activeTabId && tab.type === 'terminal')
@@ -82,23 +84,25 @@ export function PathInfoPanel({ cwd }: { cwd: string }) {
         </div>
       </section>
 
-      <section>
-        <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">
-          {t('pathInfo.parentDirectories')}
-        </h3>
-        <div className="flex flex-col gap-0.5">
-          {parents.map((dir) => (
-            <button
-              key={dir.path}
-              onClick={() => void handleSwitchCwd(dir.path)}
-              className="truncate rounded px-1.5 py-0.5 text-left font-mono text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-              title={dir.path}
-            >
-              {dir.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      {showParentNavigation && (
+        <section>
+          <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">
+            {t('pathInfo.parentDirectories')}
+          </h3>
+          <div className="flex flex-col gap-0.5">
+            {parents.map((dir) => (
+              <button
+                key={dir.path}
+                onClick={() => void handleSwitchCwd(dir.path)}
+                className="truncate rounded px-1.5 py-0.5 text-left font-mono text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                title={dir.path}
+              >
+                {dir.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">

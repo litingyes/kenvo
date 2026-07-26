@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.0.5
+
+[compare changes](https://github.com/litingyes/kenvo/compare/v0.0.4...v0.0.5)
+
+### 🚀 Enhancements
+
+- **desktop:** Add functional about page and in-app navigation ([e251908](https://github.com/litingyes/kenvo/commit/e251908))
+- **desktop:** Add Monaco file editor with save and file watching ([11b21ef](https://github.com/litingyes/kenvo/commit/11b21ef))
+- **desktop:** Add file preview and pin tab support ([44d33ec](https://github.com/litingyes/kenvo/commit/44d33ec))
+- **desktop:** Add context-aware terminal info panel registry ([ef85b1c](https://github.com/litingyes/kenvo/commit/ef85b1c))
+- **desktop:** Dim git-ignored files in file tree panel ([cf746e8](https://github.com/litingyes/kenvo/commit/cf746e8))
+
+### 🩹 Fixes
+
+- **desktop:** Use MutationObserver to sync Monaco theme ([e239dc2](https://github.com/litingyes/kenvo/commit/e239dc2))
+
+### 📖 Documentation
+
+- **agents:** Update screenshot and visual verification guidelines ([dd4665b](https://github.com/litingyes/kenvo/commit/dd4665b))
+
+### ❤️ Contributors
+
+- Litingyes ([@litingyes](https://github.com/litingyes))
+
 ## v0.0.4
 
 [compare changes](https://github.com/litingyes/kenvo/compare/v0.0.3...v0.0.4)

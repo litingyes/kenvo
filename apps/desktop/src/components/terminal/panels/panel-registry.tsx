@@ -46,6 +46,7 @@ export const PANEL_REGISTRY: PanelDefinition[] = [
       <FileTreePanel
         cwd={ctx.workspacePath}
         homeDir={ctx.homeDir}
+        isGitRepo={ctx.isGitRepo}
         onOpenFile={(p) => void ctx.openFileTab(p)}
         onPinFile={(p) => void ctx.openFileTab(p, { pinned: true })}
       />

@@ -11,13 +11,15 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import type { DirEntry } from '@/lib/electron/api'
+import { api, type DirEntry } from '@/lib/electron/api'
 import { getFileIconClass, getFolderIconClass, getRootIconClass } from '@/lib/file-icons'
+import { shellQuote } from '@/lib/terminal/external-runner'
 import { cn } from '@/lib/utils'
 
 interface FileTreePanelProps {
   cwd: string
   homeDir: string
+  isGitRepo?: boolean
   onOpenFile?: (filePath: string) => void
   onPinFile?: (filePath: string) => void
 }
@@ -27,11 +29,18 @@ interface TreeNode {
   path: string
   isDir: boolean
   isHidden: boolean
+  isIgnored?: boolean
   children?: TreeNode[]
   loaded?: boolean
 }
 
-export function FileTreePanel({ cwd, homeDir, onOpenFile, onPinFile }: FileTreePanelProps) {
+export function FileTreePanel({
+  cwd,
+  homeDir,
+  isGitRepo,
+  onOpenFile,
+  onPinFile,
+}: FileTreePanelProps) {
   const { t } = useTranslation()
   const [tree, setTree] = React.useState<TreeNode[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -41,7 +50,7 @@ export function FileTreePanel({ cwd, homeDir, onOpenFile, onPinFile }: FileTreeP
   React.useEffect(() => {
     let cancelled = false
     setLoading(true)
-    void loadChildren(cwd, showHidden)
+    void loadChildren(cwd, showHidden, { checkIgnored: isGitRepo })
       .then((nodes) => {
         if (!cancelled) setTree(nodes)
       })
@@ -51,7 +60,7 @@ export function FileTreePanel({ cwd, homeDir, onOpenFile, onPinFile }: FileTreeP
     return () => {
       cancelled = true
     }
-  }, [cwd, showHidden])
+  }, [cwd, showHidden, isGitRepo])
 
   const filterLc = filter.trim().toLowerCase()
 
@@ -99,6 +108,7 @@ export function FileTreePanel({ cwd, homeDir, onOpenFile, onPinFile }: FileTreeP
                 depth={0}
                 showHidden={showHidden}
                 filter={filterLc}
+                checkIgnored={isGitRepo}
                 onOpenFile={onOpenFile}
                 onPinFile={onPinFile}
               />
@@ -114,6 +124,8 @@ function TreeItem({
   depth,
   showHidden,
   filter,
+  checkIgnored,
+  parentIgnored,
   onOpenFile,
   onPinFile,
 }: {
@@ -121,12 +133,15 @@ function TreeItem({
   depth: number
   showHidden: boolean
   filter: string
+  checkIgnored?: boolean
+  parentIgnored?: boolean
   onOpenFile?: (filePath: string) => void
   onPinFile?: (filePath: string) => void
 }) {
   const [expanded, setExpanded] = React.useState(false)
   const [children, setChildren] = React.useState<TreeNode[] | null>(null)
   const [loading, setLoading] = React.useState(false)
+  const isDimmed = node.isHidden || node.isIgnored
 
   const handleToggle = async () => {
     if (!node.isDir) {
@@ -135,7 +150,10 @@ function TreeItem({
     }
     if (!expanded && !children) {
       setLoading(true)
-      const nodes = await loadChildren(node.path, showHidden)
+      const nodes = await loadChildren(node.path, showHidden, {
+        checkIgnored,
+        parentIgnored,
+      })
       setChildren(nodes)
       setLoading(false)
     }
@@ -173,10 +191,14 @@ function TreeItem({
               <ChevronRightIcon className="size-3 shrink-0 text-muted-foreground" />
             )}
             <span
-              className={cn('size-3.5 shrink-0', getFolderIconClass(node.name, expanded))}
+              className={cn(
+                'size-3.5 shrink-0',
+                getFolderIconClass(node.name, expanded),
+                isDimmed && 'opacity-50',
+              )}
               aria-hidden="true"
             />
-            <span className={cn('truncate text-foreground', node.isHidden && 'opacity-50')}>
+            <span className={cn('truncate text-foreground', isDimmed && 'opacity-50')}>
               {node.name}
             </span>
           </>
@@ -184,10 +206,14 @@ function TreeItem({
           <>
             <span className="w-3 shrink-0" />
             <span
-              className={cn('size-3.5 shrink-0', getFileIconClass(node.name))}
+              className={cn(
+                'size-3.5 shrink-0',
+                getFileIconClass(node.name),
+                isDimmed && 'opacity-50',
+              )}
               aria-hidden="true"
             />
-            <span className={cn('truncate text-muted-foreground', node.isHidden && 'opacity-50')}>
+            <span className={cn('truncate text-muted-foreground', isDimmed && 'opacity-50')}>
               {node.name}
             </span>
           </>
@@ -202,6 +228,8 @@ function TreeItem({
               depth={depth + 1}
               showHidden={showHidden}
               filter={filter}
+              checkIgnored={checkIgnored}
+              parentIgnored={node.isIgnored}
               onOpenFile={onOpenFile}
               onPinFile={onPinFile}
             />
@@ -212,7 +240,12 @@ function TreeItem({
   )
 }
 
-async function loadChildren(dirPath: string, showHidden: boolean): Promise<TreeNode[]> {
+async function loadChildren(
+  dirPath: string,
+  showHidden: boolean,
+  options: { checkIgnored?: boolean; parentIgnored?: boolean } = {},
+): Promise<TreeNode[]> {
+  const { checkIgnored = false, parentIgnored = false } = options
   try {
     const { api: electronApi } = await import('@/lib/electron/api')
     const entries: DirEntry[] = await electronApi.fs.readDir(dirPath)
@@ -230,12 +263,37 @@ async function loadChildren(dirPath: string, showHidden: boolean): Promise<TreeN
         path,
         isDir: entry.isDirectory,
         isHidden,
+        isIgnored: parentIgnored ? true : undefined,
       })
     }
+
+    if (parentIgnored || nodes.length === 0 || !checkIgnored) {
+      return nodes.slice(0, 100)
+    }
+
+    const ignored = await getIgnoredNames(
+      dirPath,
+      nodes.map((n) => n.name),
+    )
+    if (ignored.size > 0) {
+      for (const node of nodes) {
+        if (ignored.has(node.name)) {
+          node.isIgnored = true
+        }
+      }
+    }
+
     return nodes.slice(0, 100)
   } catch {
     return []
   }
+}
+
+async function getIgnoredNames(dirPath: string, names: string[]): Promise<Set<string>> {
+  const command = `printf '%s\\0' ${names.map(shellQuote).join(' ')} | git check-ignore --stdin -z 2>/dev/null`
+  const { stdout } = await api.shell.execute('/bin/sh', ['-c', command], { cwd: dirPath })
+  if (!stdout) return new Set()
+  return new Set(stdout.split('\0').filter(Boolean))
 }
 
 function shortenPath(cwd: string, homeDir: string): string {

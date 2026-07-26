@@ -27,15 +27,12 @@ agent-browser skills get electron
 
 to load the Electron skill and understand the available commands and workflow.
 
-### Screenshots go to the configured directory
+### Screenshots & mandatory visual verification
 
-`agent-browser.json` at the repo root sets `screenshotDir` to `.agent-browser/screenshots` and `downloadPath` to `.agent-browser/downloads` — keep all generated artifacts inside the project, never write them to `/tmp` or elsewhere.
+Artifact locations are configured project-wide in `agent-browser.json`. Never pass output paths or directories to CLI commands — just run `agent-browser screenshot` (optionally with a bare filename) and artifacts land in the configured location automatically. Never write artifacts outside the project (e.g. `/tmp`).
 
-When taking screenshots, pass a **relative filename only** (or none) so the configured directory is used:
+UI quality is critical for this project. After **every** UI-affecting change you MUST:
 
-```bash
-agent-browser --cdp 9222 screenshot kenvo-light.png        # → .agent-browser/screenshots/kenvo-light.png
-agent-browser --cdp 9222 screenshot                       # → auto-named in the configured dir
-```
-
-Do NOT pass absolute paths like `/tmp/...`. An absolute path overrides `screenshotDir` and writes outside the project, which the project config is meant to prevent.
+1. Take screenshot(s) of the affected views (both light and dark mode when theming is relevant).
+2. Actually read the screenshot image and evaluate layout, spacing, alignment, typography, and colors against the design intent.
+3. Fix any visual issues found before considering the task complete.

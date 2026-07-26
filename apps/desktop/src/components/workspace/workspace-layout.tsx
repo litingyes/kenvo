@@ -97,7 +97,7 @@ export function WorkspaceLayout({ homeDir }: WorkspaceLayoutProps) {
                     }
                     return (
                       <div key={tab.id} className={active ? 'absolute inset-0' : 'hidden'}>
-                        <FileViewer filePath={tab.ref} tabId={tab.id} />
+                        <FileViewer key={tab.ref} filePath={tab.ref} tabId={tab.id} />
                       </div>
                     )
                   })

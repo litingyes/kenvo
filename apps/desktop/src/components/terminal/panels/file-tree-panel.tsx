@@ -19,6 +19,7 @@ interface FileTreePanelProps {
   cwd: string
   homeDir: string
   onOpenFile?: (filePath: string) => void
+  onPinFile?: (filePath: string) => void
 }
 
 interface TreeNode {
@@ -30,7 +31,7 @@ interface TreeNode {
   loaded?: boolean
 }
 
-export function FileTreePanel({ cwd, homeDir, onOpenFile }: FileTreePanelProps) {
+export function FileTreePanel({ cwd, homeDir, onOpenFile, onPinFile }: FileTreePanelProps) {
   const { t } = useTranslation()
   const [tree, setTree] = React.useState<TreeNode[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -99,6 +100,7 @@ export function FileTreePanel({ cwd, homeDir, onOpenFile }: FileTreePanelProps) 
                 showHidden={showHidden}
                 filter={filterLc}
                 onOpenFile={onOpenFile}
+                onPinFile={onPinFile}
               />
             ))}
         </div>
@@ -113,12 +115,14 @@ function TreeItem({
   showHidden,
   filter,
   onOpenFile,
+  onPinFile,
 }: {
   node: TreeNode
   depth: number
   showHidden: boolean
   filter: string
   onOpenFile?: (filePath: string) => void
+  onPinFile?: (filePath: string) => void
 }) {
   const [expanded, setExpanded] = React.useState(false)
   const [children, setChildren] = React.useState<TreeNode[] | null>(null)
@@ -138,6 +142,13 @@ function TreeItem({
     setExpanded(!expanded)
   }
 
+  const handlePin = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!node.isDir) {
+      onPinFile?.(node.path)
+    }
+  }
+
   const visibleChildren = React.useMemo(() => {
     if (!children) return []
     if (!filter) return children
@@ -148,6 +159,7 @@ function TreeItem({
     <div>
       <button
         onClick={handleToggle}
+        onDoubleClick={node.isDir ? undefined : handlePin}
         className="flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-xs hover:bg-muted"
         style={{ paddingLeft: depth * 12 + 4 }}
       >
@@ -191,6 +203,7 @@ function TreeItem({
               showHidden={showHidden}
               filter={filter}
               onOpenFile={onOpenFile}
+              onPinFile={onPinFile}
             />
           ))}
         </div>

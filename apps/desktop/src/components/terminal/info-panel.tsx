@@ -67,6 +67,12 @@ export function InfoPanel({ workspaceId, workspacePath, homeDir }: InfoPanelProp
   const onInsertCommand = useWorkspaceStore((s) => s.insertCommandIntoActiveTerminal)
   const openFileTab = useWorkspaceStore((s) => s.openFileTab)
 
+  const handleOpenFile = React.useCallback((p: string) => void openFileTab(p), [openFileTab])
+  const handlePinFile = React.useCallback(
+    (p: string) => void openFileTab(p, { pinned: true }),
+    [openFileTab],
+  )
+
   const handleSelectView = React.useCallback((id: RightView) => setRightView(id), [setRightView])
 
   return (
@@ -102,7 +108,8 @@ export function InfoPanel({ workspaceId, workspacePath, homeDir }: InfoPanelProp
             <FileTreePanel
               cwd={workspacePath}
               homeDir={homeDir}
-              onOpenFile={(p) => void openFileTab(p)}
+              onOpenFile={handleOpenFile}
+              onPinFile={handlePinFile}
             />
           )}
         </div>

@@ -172,6 +172,15 @@ export async function updateTabTitle(id: string, title: string): Promise<void> {
   await db.execute('UPDATE workspace_tabs SET title = $1 WHERE id = $2', [title, id])
 }
 
+export async function updateTabRef(id: string, ref: string, title?: string): Promise<void> {
+  const db = await getDatabase()
+  if (title === undefined) {
+    await db.execute('UPDATE workspace_tabs SET ref = $1 WHERE id = $2', [ref, id])
+    return
+  }
+  await db.execute('UPDATE workspace_tabs SET ref = $1, title = $2 WHERE id = $3', [ref, title, id])
+}
+
 export async function touchTab(id: string): Promise<void> {
   const db = await getDatabase()
   await db.execute('UPDATE workspace_tabs SET last_active_at = $1 WHERE id = $2', [now(), id])

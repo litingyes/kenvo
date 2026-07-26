@@ -13,9 +13,11 @@ export function WorkspaceTabBar() {
   const sessions = useWorkspaceStore((s) => s.sessions)
   const activeTabId = useWorkspaceStore((s) => s.activeTabId)
   const dirtyTabs = useWorkspaceStore((s) => s.dirtyTabs)
+  const previewTabId = useWorkspaceStore((s) => s.previewTabId)
   const setActiveTab = useWorkspaceStore((s) => s.setActiveTab)
   const closeTab = useWorkspaceStore((s) => s.closeTab)
   const openTerminalTab = useWorkspaceStore((s) => s.openTerminalTab)
+  const pinTab = useWorkspaceStore((s) => s.pinTab)
 
   const titleFor = React.useCallback(
     (tab: WorkspaceTab): string => {
@@ -35,6 +37,7 @@ export function WorkspaceTabBar() {
       <div className="flex flex-1 items-center gap-0.5 overflow-x-auto">
         {tabs.map((tab) => {
           const active = tab.id === activeTabId
+          const isPreview = tab.id === previewTabId
           return (
             <div
               key={tab.id}
@@ -44,6 +47,7 @@ export function WorkspaceTabBar() {
                   ? 'bg-muted text-foreground'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               )}
+              onDoubleClick={() => pinTab(tab.id)}
             >
               <button
                 type="button"
@@ -55,7 +59,9 @@ export function WorkspaceTabBar() {
                 ) : (
                   <FileIcon className="size-3.5 shrink-0" />
                 )}
-                <span className="max-w-40 truncate">{titleFor(tab)}</span>
+                <span className={cn('max-w-40 truncate', isPreview && 'italic')}>
+                  {titleFor(tab)}
+                </span>
                 {dirtyTabs.has(tab.id) && (
                   <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
                 )}

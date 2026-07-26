@@ -18,6 +18,7 @@ import {
   listWorkspaces as dbListWorkspaces,
   touchTab as dbTouchTab,
   touchWorkspace as dbTouchWorkspace,
+  updateTabRef as dbUpdateTabRef,
   updateWorkspaceTitle as dbUpdateWorkspaceTitle,
 } from '@/lib/db/workspace-repo'
 import { disposeFileEditor, saveFileEditor } from '@/lib/editor/editor-registry'
@@ -59,6 +60,7 @@ interface WorkspaceStore {
   activeTabId: string | null
   loaded: boolean
   dirtyTabs: Set<string>
+  previewTabId: string | null
 
   groupMode: GroupMode
   sortMode: SortMode
@@ -82,9 +84,10 @@ interface WorkspaceStore {
 
   openTerminalTab: (cwd?: string) => Promise<WorkspaceTab>
   openTerminalTabForSession: (sessionId: string) => Promise<WorkspaceTab>
-  openFileTab: (filePath: string) => Promise<WorkspaceTab>
+  openFileTab: (filePath: string, opts?: { pinned?: boolean }) => Promise<WorkspaceTab>
   closeTab: (tabId: string) => Promise<void>
   setActiveTab: (tabId: string) => void
+  pinTab: (tabId: string) => void
   setTabDirty: (tabId: string, dirty: boolean) => void
   saveFileTab: (tabId: string) => Promise<void>
   insertCommandIntoActiveTerminal: (command: string) => void
@@ -114,6 +117,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   activeTabId: null,
   loaded: false,
   dirtyTabs: new Set<string>(),
+  previewTabId: null,
 
   groupMode: 'time',
   sortMode: 'updated',
@@ -136,6 +140,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       sessions: data.sessions,
       activeTabId,
       loaded: true,
+      previewTabId: null,
     })
   },
 
@@ -160,7 +165,14 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     set((state) => ({
       workspaces: state.workspaces.filter((w) => w.id !== id),
       ...(state.activeWorkspace?.id === id
-        ? { activeWorkspace: null, tabs: [], sessions: [], activeTabId: null, loaded: false }
+        ? {
+            activeWorkspace: null,
+            tabs: [],
+            sessions: [],
+            activeTabId: null,
+            loaded: false,
+            previewTabId: null,
+          }
         : {}),
     }))
   },
@@ -220,16 +232,55 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     return tab
   },
 
-  openFileTab: async (filePath) => {
+  openFileTab: async (filePath, opts) => {
     const ws = get().activeWorkspace
     if (!ws) throw new Error('No active workspace')
+
+    const pinned = opts?.pinned ?? false
     const existing = get().tabs.find((t) => t.type === 'file' && t.ref === filePath)
     if (existing) {
+      if (pinned && get().previewTabId === existing.id) {
+        set({ previewTabId: null })
+      }
       get().setActiveTab(existing.id)
       return existing
     }
+
+    const previewTabId = get().previewTabId
+    const previewTab = previewTabId ? get().tabs.find((t) => t.id === previewTabId) : undefined
+    if (!pinned && previewTab?.type === 'file') {
+      // Reuse preview slot.
+      disposeFileEditor(previewTab.id)
+      const title = basename(filePath)
+      await dbUpdateTabRef(previewTab.id, filePath, title)
+      const updated: WorkspaceTab = { ...previewTab, ref: filePath, title }
+      set((state) => ({
+        tabs: state.tabs.map((t) => (t.id === updated.id ? updated : t)),
+        activeTabId: updated.id,
+      }))
+      return updated
+    }
+
+    if (pinned && previewTab?.type === 'file') {
+      // Replace preview slot and pin it.
+      disposeFileEditor(previewTab.id)
+      const title = basename(filePath)
+      await dbUpdateTabRef(previewTab.id, filePath, title)
+      const updated: WorkspaceTab = { ...previewTab, ref: filePath, title }
+      set((state) => ({
+        tabs: state.tabs.map((t) => (t.id === updated.id ? updated : t)),
+        activeTabId: updated.id,
+        previewTabId: null,
+      }))
+      return updated
+    }
+
     const tab = await dbCreateTab(ws.id, 'file', filePath, basename(filePath))
-    set((state) => ({ tabs: [...state.tabs, tab], activeTabId: tab.id }))
+    set((state) => ({
+      tabs: [...state.tabs, tab],
+      activeTabId: tab.id,
+      previewTabId: pinned ? state.previewTabId : tab.id,
+    }))
     return tab
   },
 
@@ -273,12 +324,13 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
         tab.type === 'terminal' ? state.sessions.filter((s) => s.id !== tab.ref) : state.sessions
       const dirtyTabs = new Set(state.dirtyTabs)
       dirtyTabs.delete(tabId)
+      const previewTabId = state.previewTabId === tabId ? null : state.previewTabId
       let activeTabId = state.activeTabId
       if (activeTabId === tabId) {
         const idx = state.tabs.findIndex((t) => t.id === tabId)
         activeTabId = tabs[Math.min(idx, tabs.length - 1)]?.id ?? null
       }
-      return { tabs, sessions, dirtyTabs, activeTabId }
+      return { tabs, sessions, dirtyTabs, activeTabId, previewTabId }
     })
   },
 
@@ -288,11 +340,20 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     set({ activeTabId: tabId })
   },
 
+  pinTab: (tabId) => {
+    set((state) => (state.previewTabId === tabId ? { previewTabId: null } : {}))
+  },
+
   setTabDirty: (tabId, dirty) =>
     set((state) => {
       const dirtyTabs = new Set(state.dirtyTabs)
       if (dirty) dirtyTabs.add(tabId)
       else dirtyTabs.delete(tabId)
+      // A dirty preview tab becomes pinned so it is not silently replaced.
+      const isPreview = state.previewTabId === tabId
+      if (dirty && isPreview) {
+        return { dirtyTabs, previewTabId: null }
+      }
       return { dirtyTabs }
     }),
 

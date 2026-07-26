@@ -1,4 +1,3 @@
-import { useTheme } from 'next-themes'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -28,7 +27,6 @@ const MAX_TEXT_SIZE = 10 * 1024 * 1024
 
 export function FileEditor({ filePath, tabId, active = true }: FileEditorProps) {
   const { t } = useTranslation()
-  const { resolvedTheme } = useTheme()
   const containerRef = React.useRef<HTMLDivElement>(null)
   const [state, setState] = React.useState<'loading' | 'ready' | 'error' | 'tooLarge' | 'binary'>(
     'loading',
@@ -141,11 +139,6 @@ export function FileEditor({ filePath, tabId, active = true }: FileEditorProps) 
       getFileEditor(tabId)?.focus()
     }
   }, [active, tabId])
-
-  // Sync Monaco theme when the app theme changes.
-  React.useEffect(() => {
-    updateMonacoTheme()
-  }, [resolvedTheme])
 
   // Watch for external file changes and prompt/auto-reload accordingly.
   React.useEffect(() => {

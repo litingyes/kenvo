@@ -163,4 +163,13 @@ export function updateMonacoTheme(): void {
   monaco.editor.setTheme('kenvo')
 }
 
+// next-themes applies the `dark` class to <html> inside a parent useEffect, so
+// React effect ordering makes child effects (e.g. FileEditor) run before the
+// class and CSS variables have actually updated. Observe the class attribute
+// directly instead; by the time the mutation fires, the CSS variables are live.
+new MutationObserver(() => updateMonacoTheme()).observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ['class'],
+})
+
 export { monaco }

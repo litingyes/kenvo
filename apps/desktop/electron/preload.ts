@@ -88,6 +88,18 @@ const api = {
     copyFile: (src: string, dest: string) =>
       ipcRenderer.invoke(IPC_CHANNELS.FS_COPY_FILE, src, dest),
     rename: (src: string, dest: string) => ipcRenderer.invoke(IPC_CHANNELS.FS_RENAME, src, dest),
+    watch: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.FS_WATCH, path),
+    unwatch: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.FS_UNWATCH, path),
+    onFileChanged: (callback: (payload: { path: string; eventType: string }) => void) => {
+      const fn = (
+        _event: Electron.IpcRendererEvent,
+        payload: { path: string; eventType: string },
+      ) => callback(payload)
+      ipcRenderer.on(IPC_CHANNELS.FS_FILE_CHANGED, fn)
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.FS_FILE_CHANGED, fn)
+      }
+    },
   },
 
   shell: {

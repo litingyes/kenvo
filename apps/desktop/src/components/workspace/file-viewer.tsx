@@ -5,19 +5,21 @@ import { api, type DirEntry } from '@/lib/electron/api'
 import { getFileIconClass } from '@/lib/file-icons'
 import { cn } from '@/lib/utils'
 
+import { FileEditor } from './file-editor'
+
 const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'])
-const MAX_TEXT_SIZE = 2 * 1024 * 1024
+const MAX_TEXT_SIZE = 10 * 1024 * 1024
 
 function ext(name: string): string {
   const i = name.lastIndexOf('.')
   return i >= 0 ? name.slice(i + 1).toLowerCase() : ''
 }
 
-export function FileViewer({ filePath }: { filePath: string }) {
+export function FileViewer({ filePath, tabId }: { filePath: string; tabId: string }) {
   const { t } = useTranslation()
   const [state, setState] = React.useState<
     | { kind: 'loading' }
-    | { kind: 'text'; content: string }
+    | { kind: 'text' }
     | { kind: 'image'; src: string }
     | { kind: 'tooLarge'; size: number }
     | { kind: 'binary' }
@@ -51,13 +53,7 @@ export function FileViewer({ filePath }: { filePath: string }) {
           return
         }
 
-        const content = (await api.fs.readTextFile(filePath)) as string
-        if (cancelled) return
-        if (content.includes('\u0000')) {
-          setState({ kind: 'binary' })
-          return
-        }
-        setState({ kind: 'text', content })
+        setState({ kind: 'text' })
       } catch (err) {
         if (cancelled) return
         setState({
@@ -123,24 +119,5 @@ export function FileViewer({ filePath }: { filePath: string }) {
     )
   }
 
-  const lines = state.content.split('\n')
-
-  return (
-    <div className="flex h-full flex-col bg-card font-mono text-sm">
-      <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse">
-          <tbody>
-            {lines.map((line, i) => (
-              <tr key={i} className="leading-relaxed">
-                <td className="sticky left-0 w-12 border-r border-border bg-muted/30 px-2 text-right text-xs text-muted-foreground/60 tabular-nums select-none">
-                  {i + 1}
-                </td>
-                <td className="px-3 whitespace-pre-wrap text-foreground">{line}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
+  return <FileEditor filePath={filePath} tabId={tabId} />
 }

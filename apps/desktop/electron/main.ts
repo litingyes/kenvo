@@ -1,4 +1,5 @@
-import fs from 'fs/promises'
+import fs from 'fs'
+import fsPromises from 'fs/promises'
 import path from 'path'
 
 import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron'
@@ -103,7 +104,7 @@ ipcMain.handle(IPC_CHANNELS.WINDOW_GET_TRAFFIC_LIGHT_INSET, (event) => {
 // Resources
 ipcMain.handle(IPC_CHANNELS.RESOURCES_READ_LOCALE, async (_event, language: string) => {
   const localePath = path.join(__dirname, '../../resources/locales', `${language}.json`)
-  return fs.readFile(localePath, 'utf-8')
+  return fsPromises.readFile(localePath, 'utf-8')
 })
 
 // App paths
@@ -138,8 +139,11 @@ ipcMain.handle(
 
 ipcMain.handle(
   IPC_CHANNELS.DIALOG_SHOW_MESSAGE,
-  async (_event, options: Electron.MessageBoxOptions) => {
-    const result = await dialog.showMessageBox(options)
+  async (event, options: Electron.MessageBoxOptions) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    const result = win
+      ? await dialog.showMessageBox(win, options)
+      : await dialog.showMessageBox(options)
     return result
   },
 )
@@ -207,6 +211,86 @@ ipcMain.handle(IPC_CHANNELS.FS_COPY_FILE, (_event, src: string, dest: string) =>
   copyFile(src, dest),
 )
 ipcMain.handle(IPC_CHANNELS.FS_RENAME, (_event, src: string, dest: string) => rename(src, dest))
+
+// File watchers
+// Watch the parent directory (not the file itself) so atomic saves that
+// replace the file (git checkout, many editors) keep delivering events.
+type DirWatcherEntry = {
+  watcher: fs.FSWatcher
+  files: Map<string, Set<Electron.WebContents>>
+}
+
+const dirWatchers = new Map<string, DirWatcherEntry>()
+const watchedSenders = new WeakSet<Electron.WebContents>()
+
+function ensureFileWatcher(filePath: string, sender: Electron.WebContents) {
+  const dir = path.dirname(filePath)
+  let entry = dirWatchers.get(dir)
+  if (!entry) {
+    const newEntry: DirWatcherEntry = {
+      watcher: undefined as unknown as fs.FSWatcher,
+      files: new Map(),
+    }
+    newEntry.watcher = fs.watch(dir, (eventType, filename) => {
+      if (!filename) return
+      for (const [watchedPath, subscribers] of newEntry.files) {
+        if (path.basename(watchedPath) !== filename) continue
+        for (const wc of subscribers) {
+          if (!wc.isDestroyed()) {
+            wc.send(IPC_CHANNELS.FS_FILE_CHANGED, { path: watchedPath, eventType })
+          }
+        }
+      }
+    })
+    dirWatchers.set(dir, newEntry)
+    entry = newEntry
+  }
+
+  let subscribers = entry.files.get(filePath)
+  if (!subscribers) {
+    subscribers = new Set()
+    entry.files.set(filePath, subscribers)
+  }
+  subscribers.add(sender)
+
+  if (!watchedSenders.has(sender)) {
+    watchedSenders.add(sender)
+    sender.once('destroyed', () => {
+      for (const [itemDir, item] of dirWatchers) {
+        for (const [itemPath, subscribers] of item.files) {
+          subscribers.delete(sender)
+          if (subscribers.size === 0) item.files.delete(itemPath)
+        }
+        if (item.files.size === 0) {
+          item.watcher.close()
+          dirWatchers.delete(itemDir)
+        }
+      }
+    })
+  }
+}
+
+function removeFileWatcher(filePath: string, sender: Electron.WebContents) {
+  const dir = path.dirname(filePath)
+  const entry = dirWatchers.get(dir)
+  if (!entry) return
+  const subscribers = entry.files.get(filePath)
+  if (subscribers) {
+    subscribers.delete(sender)
+    if (subscribers.size === 0) entry.files.delete(filePath)
+  }
+  if (entry.files.size === 0) {
+    entry.watcher.close()
+    dirWatchers.delete(dir)
+  }
+}
+
+ipcMain.handle(IPC_CHANNELS.FS_WATCH, (event, filePath: string) => {
+  ensureFileWatcher(filePath, event.sender)
+})
+ipcMain.handle(IPC_CHANNELS.FS_UNWATCH, (event, filePath: string) => {
+  removeFileWatcher(filePath, event.sender)
+})
 
 // Shell
 ipcMain.handle(

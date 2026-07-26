@@ -259,6 +259,17 @@
     "tooLarge": "文件过大 ({{size}}MB)，请使用外部编辑器打开",
     "binaryFile": "二进制文件，请使用外部编辑器打开"
   },
+  "editor": {
+    "label": "编辑器",
+    "save": "保存",
+    "dontSave": "不保存",
+    "cancel": "取消",
+    "saved": "已保存",
+    "unsavedChangesMessage": "\"{{file}}\" 有未保存的更改，是否保存？",
+    "reload": "重新加载",
+    "keepMine": "保留我的更改",
+    "externalChangeMessage": "\"{{file}}\" 在磁盘上已变更。"
+  },
   "workspace": {
     "addFolder": "添加文件夹",
     "empty": "还没有工作区",

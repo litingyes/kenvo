@@ -259,6 +259,17 @@
     "tooLarge": "File too large ({{size}}MB), open externally",
     "binaryFile": "Binary file, open externally"
   },
+  "editor": {
+    "label": "Editor",
+    "save": "Save",
+    "dontSave": "Don't Save",
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "unsavedChangesMessage": "\"{{file}}\" has unsaved changes. Do you want to save them?",
+    "reload": "Reload",
+    "keepMine": "Keep My Changes",
+    "externalChangeMessage": "\"{{file}}\" changed on disk."
+  },
   "workspace": {
     "addFolder": "Add folder",
     "empty": "No workspaces yet",

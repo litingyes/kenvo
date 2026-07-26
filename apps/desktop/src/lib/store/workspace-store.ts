@@ -1,3 +1,5 @@
+import i18n from 'i18next'
+import { toast } from 'sonner'
 import { create } from 'zustand'
 
 import {
@@ -18,6 +20,7 @@ import {
   touchWorkspace as dbTouchWorkspace,
   updateWorkspaceTitle as dbUpdateWorkspaceTitle,
 } from '@/lib/db/workspace-repo'
+import { disposeFileEditor, saveFileEditor } from '@/lib/editor/editor-registry'
 import { api } from '@/lib/electron/api'
 import {
   destroyTerminalInstance,
@@ -55,6 +58,7 @@ interface WorkspaceStore {
   sessions: TerminalSession[]
   activeTabId: string | null
   loaded: boolean
+  dirtyTabs: Set<string>
 
   groupMode: GroupMode
   sortMode: SortMode
@@ -81,6 +85,8 @@ interface WorkspaceStore {
   openFileTab: (filePath: string) => Promise<WorkspaceTab>
   closeTab: (tabId: string) => Promise<void>
   setActiveTab: (tabId: string) => void
+  setTabDirty: (tabId: string, dirty: boolean) => void
+  saveFileTab: (tabId: string) => Promise<void>
   insertCommandIntoActiveTerminal: (command: string) => void
 
   updateSessionCwd: (id: string, cwd: string) => Promise<void>
@@ -107,6 +113,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   sessions: [],
   activeTabId: null,
   loaded: false,
+  dirtyTabs: new Set<string>(),
 
   groupMode: 'time',
   sortMode: 'updated',
@@ -229,21 +236,49 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   closeTab: async (tabId) => {
     const tab = get().tabs.find((t) => t.id === tabId)
     if (!tab) return
+
+    if (tab.type === 'file' && get().dirtyTabs.has(tabId)) {
+      const title = tab.title ?? tab.ref
+      const { response } = await api.dialog.showMessageBox({
+        type: 'warning',
+        buttons: [
+          i18n?.t('editor.save') ?? 'Save',
+          i18n?.t('editor.dontSave') ?? "Don't Save",
+          i18n?.t('editor.cancel') ?? 'Cancel',
+        ],
+        defaultId: 0,
+        cancelId: 2,
+        message:
+          i18n?.t('editor.unsavedChangesMessage', { file: title }) ??
+          `"${title}" has unsaved changes. Do you want to save them?`,
+      })
+
+      if (response === 2) return
+      if (response === 0) {
+        await get().saveFileTab(tabId)
+      }
+    }
+
     await dbDeleteTab(tabId)
     if (tab.type === 'terminal') {
       await destroyTerminalInstance(tab.ref)
       await dbDeleteSession(tab.ref)
     }
+    if (tab.type === 'file') {
+      disposeFileEditor(tabId)
+    }
     set((state) => {
       const tabs = state.tabs.filter((t) => t.id !== tabId)
       const sessions =
         tab.type === 'terminal' ? state.sessions.filter((s) => s.id !== tab.ref) : state.sessions
+      const dirtyTabs = new Set(state.dirtyTabs)
+      dirtyTabs.delete(tabId)
       let activeTabId = state.activeTabId
       if (activeTabId === tabId) {
         const idx = state.tabs.findIndex((t) => t.id === tabId)
         activeTabId = tabs[Math.min(idx, tabs.length - 1)]?.id ?? null
       }
-      return { tabs, sessions, activeTabId }
+      return { tabs, sessions, dirtyTabs, activeTabId }
     })
   },
 
@@ -251,6 +286,26 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
     const tab = useWorkspaceStore.getState().tabs.find((t) => t.id === tabId)
     if (tab) void dbTouchTab(tabId)
     set({ activeTabId: tabId })
+  },
+
+  setTabDirty: (tabId, dirty) =>
+    set((state) => {
+      const dirtyTabs = new Set(state.dirtyTabs)
+      if (dirty) dirtyTabs.add(tabId)
+      else dirtyTabs.delete(tabId)
+      return { dirtyTabs }
+    }),
+
+  saveFileTab: async (tabId) => {
+    const tab = get().tabs.find((t) => t.id === tabId)
+    if (!tab || tab.type !== 'file') return
+    await saveFileEditor(tabId, tab.ref)
+    set((state) => {
+      const dirtyTabs = new Set(state.dirtyTabs)
+      dirtyTabs.delete(tabId)
+      return { dirtyTabs }
+    })
+    toast.success(i18n?.t('editor.saved') ?? 'Saved')
   },
 
   insertCommandIntoActiveTerminal: (command) => {

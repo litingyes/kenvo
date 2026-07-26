@@ -12,6 +12,7 @@ export function WorkspaceTabBar() {
   const tabs = useWorkspaceStore((s) => s.tabs)
   const sessions = useWorkspaceStore((s) => s.sessions)
   const activeTabId = useWorkspaceStore((s) => s.activeTabId)
+  const dirtyTabs = useWorkspaceStore((s) => s.dirtyTabs)
   const setActiveTab = useWorkspaceStore((s) => s.setActiveTab)
   const closeTab = useWorkspaceStore((s) => s.closeTab)
   const openTerminalTab = useWorkspaceStore((s) => s.openTerminalTab)
@@ -55,6 +56,9 @@ export function WorkspaceTabBar() {
                   <FileIcon className="size-3.5 shrink-0" />
                 )}
                 <span className="max-w-40 truncate">{titleFor(tab)}</span>
+                {dirtyTabs.has(tab.id) && (
+                  <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                )}
               </button>
               <button
                 type="button"

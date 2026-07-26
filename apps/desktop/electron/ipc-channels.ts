@@ -59,6 +59,9 @@ export const IPC_CHANNELS = {
   FS_REMOVE: 'fs:remove',
   FS_COPY_FILE: 'fs:copy_file',
   FS_RENAME: 'fs:rename',
+  FS_WATCH: 'fs:watch',
+  FS_UNWATCH: 'fs:unwatch',
+  FS_FILE_CHANGED: 'fs:file_changed',
 
   // Shell
   SHELL_SPAWN: 'shell:spawn',

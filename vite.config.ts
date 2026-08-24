@@ -29,7 +29,7 @@ export default defineConfig({
         specifier: '@tanstack/eslint-plugin-router',
       },
     ],
-    ignorePatterns: ['apps/desktop/src/routeTree.gen.ts'],
+    ignorePatterns: ['apps/desktop/src/routeTree.gen.ts', 'apps/desktop/src/components/ui/*.tsx'],
   },
   fmt: {
     semi: false,
@@ -39,7 +39,7 @@ export default defineConfig({
     sortTailwindcss: {
       stylesheet: './apps/desktop/src/root.css',
     },
-    ignorePatterns: ['apps/desktop/src/routeTree.gen.ts'],
+    ignorePatterns: ['apps/desktop/src/routeTree.gen.ts', 'apps/desktop/src/components/ui/*.tsx'],
   },
   staged: {
     '*': 'vp check --fix',

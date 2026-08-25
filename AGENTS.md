@@ -1,14 +1,42 @@
 # Kenvo
 
+> Write what you imagine, and beyond.
+
+A local-first AI writing studio: autonomous writing agents create novels, screenplays, and prompts as real Markdown files in the user's own folders.
+
 ## Tech Stack & Architecture
 
 - **Desktop shell**: Electron (Chromium-based native desktop shell with Node.js integration)
-- **Frontend**: React 19 + TypeScript 5.8 + TanStack Router (file-based, type-safe routing)
+- **Frontend**: React 19 + TypeScript + TanStack Router (file-based, type-safe routing)
 - **Styling**: Tailwind CSS v4 + shadcn/ui (base-nova) + Geist Variable font
-- **Build tool**: Vite 7 + vite-plus (ESLint, auto-formatting, pre-commit hooks)
+- **Build tool**: Vite + electron-vite + vite-plus (ESLint, auto-formatting, pre-commit hooks)
 - **Theming**: next-themes with dark/light mode via CSS variables
+- **Editor**: CodeMirror 6 (`@uiw/react-codemirror` + `@codemirror/lang-markdown`)
+- **Agent runtime**: `@earendil-works/pi-agent-core` (tool loop, steering, abort) + `@earendil-works/pi-ai` (30+ providers, model catalogs with cost/context metadata)
+- **Local AI service**: Hono server in `packages/agent-server`, streaming raw pi agent events over SSE
+- **Storage**: better-sqlite3 (projects, tabs, chat sessions/messages) + Electron Store (settings)
 
-Designed as a desktop AI chat/assistant application with a modern, native-feeling UI.
+### Repository layout
+
+- `apps/desktop` — Electron app. Renderer in `src/`, main process in `electron/`
+  - `src/routes/` — `/` home (project list), `/project/$projectId` (writing studio), `/settings/*`
+  - `src/components/agent/` — agent panel (message stream, tool-call cards, steering input)
+  - `src/components/editor/` — CodeMirror Markdown editor with FS-watcher reload
+  - `src/components/sidebar/` — project document tree
+  - `src/lib/agent/use-agent-chat.ts` — SSE client + transcript state machine + SQLite persistence
+  - `src/lib/db/` — schema and repos (projects / project_tabs / chat_sessions / chat_messages)
+- `packages/agent-server` — Hono server on port 32420
+  - `src/sessions.ts` — SessionManager: pi `Agent` instances keyed by session id, prompt/steer/abort
+  - `src/agents/` — writer / novelist / screenwriter / prompt-engineer definitions (system prompt + project template)
+  - `src/tools/fs-tools.ts` — 6 file tools (list/read/write/edit/delete/search) locked to the project root
+  - `src/providers.ts` — pi-ai Models collection over UI-configured provider credentials
+- `apps/portal` — Astro landing page
+
+### Key data flows
+
+- **Chat**: renderer `POST /sessions/:id/messages` → server runs `agent.prompt()` and forwards every pi agent event as SSE → `use-agent-chat.ts` rebuilds the transcript; finished messages are appended to SQLite.
+- **Resume**: on project open, renderer loads messages from SQLite and passes them as `history` to `POST /sessions`, then hydrates the panel.
+- **File sync**: agent file tools write directly into the project folder; the editor reloads via the existing Electron FS watcher (`fs:watch`/`fs:file_changed` IPC), and the tree refreshes on agent file activity.
 
 ## Code Conventions
 

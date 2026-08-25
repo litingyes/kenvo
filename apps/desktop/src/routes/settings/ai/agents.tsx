@@ -24,8 +24,11 @@ import {
 
 const AUTO_VALUE = 'auto'
 
-const BUILT_IN_AGENTS: { id: string; tasks: string[] }[] = [
-  { id: 'coder', tasks: ['commit-message'] },
+const BUILT_IN_AGENTS: { id: string; name: string }[] = [
+  { id: 'writer', name: 'Writer' },
+  { id: 'novelist', name: 'Novelist' },
+  { id: 'screenwriter', name: 'Screenwriter' },
+  { id: 'prompt-engineer', name: 'Prompt Engineer' },
 ]
 
 export const Route = createFileRoute('/settings/ai/agents')({
@@ -116,14 +119,8 @@ function AiAgentsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 font-medium">
-                    {agent.id === 'coder' ? 'Coder' : agent.id}
-                    {agent.tasks.map((task) => (
-                      <Badge key={task} variant="secondary">
-                        {t(`settings.aiCapabilities.agents.${agent.id}.tasks.${task}`, {
-                          defaultValue: task,
-                        })}
-                      </Badge>
-                    ))}
+                    {agent.name}
+                    <Badge variant="secondary">{agent.id}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {t(`settings.aiCapabilities.agents.${agent.id}.description`, {

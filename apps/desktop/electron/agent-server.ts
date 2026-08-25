@@ -27,7 +27,7 @@ function getAgentServerEntry(): string {
   if (app.isPackaged) {
     return path.join(process.resourcesPath, 'agent-server', 'index.cjs')
   }
-  return path.join(__dirname, '../../../packages/agent-server/dist/index.cjs')
+  return path.join(__dirname, '../../../../packages/agent-server/dist/index.cjs')
 }
 
 async function isAgentServerRunning(port: number): Promise<boolean> {

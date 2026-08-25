@@ -103,63 +103,12 @@ const api = {
   },
 
   shell: {
-    spawn: (
-      command: string,
-      args: string[],
-      options: { cwd?: string; env?: Record<string, string> },
-    ) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_SPAWN, command, args, options),
-    onSpawnEvent: (callback: (payload: { pid: number; event: string; data?: unknown }) => void) => {
-      const fn = (
-        _event: Electron.IpcRendererEvent,
-        payload: { pid: number; event: string; data?: unknown },
-      ) => callback(payload)
-      ipcRenderer.on(IPC_CHANNELS.SHELL_SPAWN_EVENT, fn)
-      return () => {
-        ipcRenderer.removeListener(IPC_CHANNELS.SHELL_SPAWN_EVENT, fn)
-      }
-    },
-    execute: (command: string, args: string[], options?: { cwd?: string }) =>
-      ipcRenderer.invoke(IPC_CHANNELS.SHELL_EXECUTE, command, args, options),
     openPath: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_OPEN_PATH, filePath),
     openExternal: (url: string) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_OPEN_EXTERNAL, url),
-    kill: (pid: number) => ipcRenderer.invoke(IPC_CHANNELS.SHELL_KILL, pid),
-  },
-
-  pty: {
-    create: (options: {
-      sessionId: string
-      cwd: string
-      cols?: number
-      rows?: number
-      env?: Record<string, string>
-    }) => ipcRenderer.invoke(IPC_CHANNELS.PTY_CREATE, options),
-    write: (sessionId: string, data: string) =>
-      ipcRenderer.invoke(IPC_CHANNELS.PTY_WRITE, sessionId, data),
-    resize: (sessionId: string, cols: number, rows: number) =>
-      ipcRenderer.invoke(IPC_CHANNELS.PTY_RESIZE, sessionId, cols, rows),
-    kill: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.PTY_KILL, sessionId),
-    onEvent: (
-      callback: (
-        payload:
-          | { id: string; event: 'data'; data: string }
-          | { id: string; event: 'exit'; exitCode: number; signal?: number },
-      ) => void,
-    ) => {
-      const fn = (
-        _event: Electron.IpcRendererEvent,
-        payload:
-          | { id: string; event: 'data'; data: string }
-          | { id: string; event: 'exit'; exitCode: number; signal?: number },
-      ) => callback(payload)
-      ipcRenderer.on(IPC_CHANNELS.PTY_EVENT, fn)
-      return () => {
-        ipcRenderer.removeListener(IPC_CHANNELS.PTY_EVENT, fn)
-      }
-    },
   },
 
   db: {
-    select: (sql: string, params?: unknown[]) =>
+    select: <T = unknown>(sql: string, params?: unknown[]): Promise<T[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.DB_SELECT, sql, params),
     execute: (sql: string, params?: unknown[]) =>
       ipcRenderer.invoke(IPC_CHANNELS.DB_EXECUTE, sql, params),

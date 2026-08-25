@@ -1,27 +1,22 @@
-import type { LanguageModel } from 'ai'
-import type { z } from 'zod'
-
-export interface TaskDefinition<Input = unknown, Output = unknown> {
-  inputSchema: z.ZodType<Input>
-  run: (model: LanguageModel, input: Input) => Promise<Output>
+/** A file to materialize when a project is created from an agent template. */
+export interface TemplateFile {
+  /** Path relative to the project root, POSIX separators. */
+  path: string
+  content: string
 }
 
-export function defineTask<Input, Output>(
-  task: TaskDefinition<Input, Output>,
-): TaskDefinition<unknown, unknown> {
-  return task as TaskDefinition<unknown, unknown>
-}
-
-export interface AgentDefinition {
+export interface WritingAgentDefinition {
   id: string
   name: string
   description: string
-  tasks: Record<string, TaskDefinition>
+  /** System prompt given to the pi Agent for this writing role. */
+  systemPrompt: string
+  /** Initial project structure created on project creation. */
+  projectTemplate: TemplateFile[]
 }
 
 export interface AgentMetadata {
   id: string
   name: string
   description: string
-  tasks: string[]
 }

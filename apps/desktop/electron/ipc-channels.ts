@@ -64,20 +64,8 @@ export const IPC_CHANNELS = {
   FS_FILE_CHANGED: 'fs:file_changed',
 
   // Shell
-  SHELL_SPAWN: 'shell:spawn',
-  SHELL_SPAWN_EVENT: 'shell:spawn:event',
-  SHELL_EXECUTE: 'shell:execute',
   SHELL_OPEN_EXTERNAL: 'shell:open_external',
   SHELL_OPEN_PATH: 'shell:open_path',
-  SHELL_CP: 'shell:cp',
-  SHELL_KILL: 'shell:kill',
-
-  // PTY
-  PTY_CREATE: 'pty:create',
-  PTY_WRITE: 'pty:write',
-  PTY_RESIZE: 'pty:resize',
-  PTY_KILL: 'pty:kill',
-  PTY_EVENT: 'pty:event',
 
   // DB
   DB_SELECT: 'db:select',

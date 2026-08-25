@@ -1,0 +1,254 @@
+import * as React from 'react'
+
+import { createAgentServerClient, type AgentStreamEvent } from '@/lib/ai/server-client'
+import { appendChatMessage, countChatMessages, touchChatSession } from '@/lib/db/chat-repo'
+
+// ---------- Pi message shapes (subset, structurally typed) ----------
+
+export interface TextContent {
+  type: 'text'
+  text: string
+}
+
+export interface ThinkingContent {
+  type: 'thinking'
+  thinking: string
+}
+
+export interface ToolCallContent {
+  type: 'toolCall'
+  id: string
+  name: string
+  arguments: Record<string, unknown>
+}
+
+export type AssistantContentBlock = TextContent | ThinkingContent | ToolCallContent
+
+export interface UiUserMessage {
+  role: 'user'
+  content: string | Array<{ type: string; text?: string }>
+  timestamp: number
+}
+
+export interface UiAssistantMessage {
+  role: 'assistant'
+  content: AssistantContentBlock[]
+  stopReason?: string
+  errorMessage?: string
+  usage?: { input: number; output: number; cost?: { total: number } }
+  timestamp: number
+}
+
+export interface UiToolResultMessage {
+  role: 'toolResult'
+  toolCallId: string
+  toolName: string
+  content: Array<{ type: string; text?: string }>
+  isError: boolean
+  timestamp: number
+}
+
+export type UiMessage = UiUserMessage | UiAssistantMessage | UiToolResultMessage
+
+export interface ToolExecutionState {
+  toolCallId: string
+  toolName: string
+  args?: Record<string, unknown>
+  status: 'running' | 'done' | 'error'
+  summary?: string
+}
+
+interface UseAgentChatOptions {
+  sessionId: string
+  serverPort: number | null
+  onFileActivity?: () => void
+}
+
+export interface UseAgentChatResult {
+  messages: UiMessage[]
+  toolExecutions: Map<string, ToolExecutionState>
+  running: boolean
+  error: string | null
+  send: (input: string) => Promise<void>
+  steer: (input: string) => Promise<void>
+  abort: () => Promise<void>
+  hydrate: (messages: UiMessage[]) => void
+}
+
+function messageRole(message: Record<string, unknown>): string {
+  return typeof message.role === 'string' ? message.role : 'unknown'
+}
+
+export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
+  const { sessionId, serverPort, onFileActivity } = options
+  const [messages, setMessages] = React.useState<UiMessage[]>([])
+  const [toolExecutions, setToolExecutions] = React.useState<Map<string, ToolExecutionState>>(
+    new Map(),
+  )
+  const [running, setRunning] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const abortRef = React.useRef<AbortController | null>(null)
+  const fileActivityRef = React.useRef(onFileActivity)
+  fileActivityRef.current = onFileActivity
+
+  const persistMessage = React.useCallback(
+    (message: UiMessage) => {
+      void appendChatMessage(sessionId, message.role, JSON.stringify(message)).catch(() => {})
+    },
+    [sessionId],
+  )
+
+  const handleEvent = React.useCallback(
+    (event: AgentStreamEvent) => {
+      switch (event.type) {
+        case 'agent_start':
+          setRunning(true)
+          setError(null)
+          setToolExecutions(new Map())
+          break
+
+        case 'message_start':
+        case 'message_update':
+        case 'message_end': {
+          const message = event.message as UiMessage | undefined
+          if (!message) break
+          const role = messageRole(message as unknown as Record<string, unknown>)
+          if (role === 'assistant') {
+            // The event carries the full (partial) assistant message — replace in place.
+            setMessages((prev) => {
+              const next = [...prev]
+              const last = next[next.length - 1]
+              if (last && last.role === 'assistant') {
+                next[next.length - 1] = message
+              } else {
+                next.push(message)
+              }
+              return next
+            })
+            if (event.type === 'message_end') persistMessage(message)
+          } else if (role === 'user' || role === 'toolResult') {
+            if (event.type === 'message_start') {
+              setMessages((prev) => [...prev, message])
+            }
+            if (event.type === 'message_end') persistMessage(message)
+          }
+          break
+        }
+
+        case 'tool_execution_start': {
+          const toolCallId = event.toolCallId as string
+          setToolExecutions((prev) => {
+            const next = new Map(prev)
+            next.set(toolCallId, {
+              toolCallId,
+              toolName: event.toolName as string,
+              args: event.args as Record<string, unknown>,
+              status: 'running',
+            })
+            return next
+          })
+          if (
+            event.toolName === 'write_file' ||
+            event.toolName === 'edit_file' ||
+            event.toolName === 'delete_file'
+          ) {
+            fileActivityRef.current?.()
+          }
+          break
+        }
+
+        case 'tool_execution_update': {
+          const toolCallId = event.toolCallId as string
+          setToolExecutions((prev) => {
+            const existing = prev.get(toolCallId)
+            if (!existing) return prev
+            const next = new Map(prev)
+            const partial = event.partialResult as
+              | { content?: Array<{ text?: string }> }
+              | undefined
+            next.set(toolCallId, {
+              ...existing,
+              summary: partial?.content?.[0]?.text ?? existing.summary,
+            })
+            return next
+          })
+          break
+        }
+
+        case 'tool_execution_end': {
+          const toolCallId = event.toolCallId as string
+          setToolExecutions((prev) => {
+            const existing = prev.get(toolCallId)
+            if (!existing) return prev
+            const next = new Map(prev)
+            next.set(toolCallId, {
+              ...existing,
+              status: event.isError ? 'error' : 'done',
+            })
+            return next
+          })
+          fileActivityRef.current?.()
+          break
+        }
+
+        case 'agent_end':
+          setRunning(false)
+          abortRef.current = null
+          void touchChatSession(sessionId).catch(() => {})
+          fileActivityRef.current?.()
+          break
+      }
+    },
+    [persistMessage, sessionId],
+  )
+
+  const send = React.useCallback(
+    async (input: string) => {
+      if (!serverPort) {
+        setError('Agent server is not running')
+        return
+      }
+      const client = createAgentServerClient(serverPort)
+      const controller = new AbortController()
+      abortRef.current = controller
+      setRunning(true)
+      setError(null)
+      try {
+        await client.sendMessage(sessionId, input, handleEvent, controller.signal)
+      } catch (e) {
+        if (controller.signal.aborted) {
+          setRunning(false)
+          return
+        }
+        setError(e instanceof Error ? e.message : String(e))
+        setRunning(false)
+      }
+    },
+    [serverPort, sessionId, handleEvent],
+  )
+
+  const steer = React.useCallback(
+    async (input: string) => {
+      if (!serverPort) return
+      const client = createAgentServerClient(serverPort)
+      await client.steerSession(sessionId, input)
+    },
+    [serverPort, sessionId],
+  )
+
+  const abort = React.useCallback(async () => {
+    if (!serverPort) return
+    const client = createAgentServerClient(serverPort)
+    await client.abortSession(sessionId).catch(() => {})
+    abortRef.current?.abort()
+    setRunning(false)
+  }, [serverPort, sessionId])
+
+  const hydrate = React.useCallback((historical: UiMessage[]) => {
+    setMessages(historical)
+  }, [])
+
+  return { messages, toolExecutions, running, error, send, steer, abort, hydrate }
+}
+
+export { countChatMessages }

@@ -1,9 +1,14 @@
-import { coderAgent } from './coder/index.js'
-import type { AgentDefinition, AgentMetadata } from './types.js'
+import { novelistAgent } from './novelist.js'
+import { promptEngineerAgent } from './prompt-engineer.js'
+import { screenwriterAgent } from './screenwriter.js'
+import type { AgentMetadata, WritingAgentDefinition } from './types.js'
+import { writerAgent } from './writer.js'
 
-const agents = new Map<string, AgentDefinition>([[coderAgent.id, coderAgent]])
+const agents = new Map<string, WritingAgentDefinition>(
+  [writerAgent, novelistAgent, screenwriterAgent, promptEngineerAgent].map((a) => [a.id, a]),
+)
 
-export function getAgent(id: string): AgentDefinition | undefined {
+export function getAgent(id: string): WritingAgentDefinition | undefined {
   return agents.get(id)
 }
 
@@ -12,6 +17,5 @@ export function listAgents(): AgentMetadata[] {
     id: agent.id,
     name: agent.name,
     description: agent.description,
-    tasks: Object.keys(agent.tasks),
   }))
 }

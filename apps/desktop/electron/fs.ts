@@ -104,7 +104,3 @@ export async function copyFile(src: string, dest: string): Promise<void> {
 export async function rename(src: string, dest: string): Promise<void> {
   await fs.rename(src, dest)
 }
-
-export async function cp(src: string, dest: string): Promise<void> {
-  await fs.cp(src, dest, { recursive: true })
-}

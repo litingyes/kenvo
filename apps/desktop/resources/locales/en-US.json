@@ -2,6 +2,42 @@
   "app": {
     "name": "Kenvo"
   },
+  "common": {
+    "cancel": "Cancel",
+    "creating": "Creating…",
+    "delete": "Delete",
+    "save": "Save",
+    "close": "Close"
+  },
+  "home": {
+    "slogan": "Write what you imagine, and beyond.",
+    "subtitle": "A local-first AI writing studio: let agents write novels, screenplays, and prompts with you.",
+    "newProject": "New Project",
+    "newProjectDesc": "Pick a folder as the project directory. Everything is saved locally as Markdown files.",
+    "projectTitle": "Project title (optional)",
+    "pickFolder": "Choose project folder",
+    "pickFolderAndCreate": "Choose folder & create"
+  },
+  "project": {
+    "files": "Files",
+    "newDocument": "New Document",
+    "newDocumentPrompt": "Name for the new document",
+    "noTabs": "No open documents",
+    "toggleFiles": "Toggle file sidebar",
+    "toggleAgent": "Toggle agent sidebar"
+  },
+  "agent": {
+    "title": "Agent",
+    "empty": "Describe what you want to write — the agent will create it right in the project.",
+    "placeholder": "What shall we write?",
+    "steerPlaceholder": "Agent is working… type to steer it mid-run",
+    "send": "Send",
+    "stop": "Stop",
+    "thinking": "Thinking",
+    "connecting": "Connecting to agent…",
+    "noModel": "No model configured. Enable a model in Settings → AI → Models and assign it to a writing agent.",
+    "serverStopped": "Agent server is not running. Start it in Settings → AI → Basic."
+  },
   "settings": {
     "title": "Settings",
     "appearance": {
@@ -14,20 +50,20 @@
         "system": "System"
       },
       "language": "Language",
-      "languageDescription": "Select your preferred language."
+      "languageDescription": "Choose your preferred language."
     },
     "about": {
       "title": "About",
       "description": "Version information and updates.",
-      "appDescription": "Kenvo is a desktop AI assistant for developers.",
+      "appDescription": "Kenvo is a local-first AI writing studio — Write what you imagine, and beyond.",
       "version": "Version",
       "license": "License",
       "licenseValue": "AGPL-3.0",
       "github": "GitHub",
-      "checkForUpdates": "Check for updates",
+      "checkForUpdates": "Check for Updates",
       "checking": "Checking…",
-      "openLogFolder": "Open log folder",
-      "openDataFolder": "Open data folder",
+      "openLogFolder": "Open Log Folder",
+      "openDataFolder": "Open Data Folder",
       "openFolderFailed": "Failed to open folder"
     },
     "logs": {
@@ -38,12 +74,12 @@
       "agentServer": "Agent Server",
       "aiConversations": "AI Conversations",
       "level": "Level",
-      "allLevels": "All levels",
+      "allLevels": "All Levels",
       "trace": "Trace",
       "debug": "Debug",
       "info": "Info",
       "warn": "Warn",
-      "error": "Error",
+      "error": "Failed to load logs: {{error}}",
       "search": "Search logs...",
       "autoScroll": "Auto-scroll",
       "wrapLines": "Wrap lines",
@@ -52,17 +88,16 @@
       "openFolder": "Open folder",
       "clear": "Clear",
       "loading": "Loading logs...",
-      "empty": "No log entries match the current filters.",
-      "emptyHint": "Try switching sources or clearing the filters.",
-      "error": "Failed to load logs: {{error}}",
+      "empty": "No logs match the current filters.",
+      "emptyHint": "Try switching sources or clearing filters.",
       "resumeTail": "Resume tail",
-      "timestamp": "Time",
+      "timestamp": "Timestamp",
       "source": "Source",
       "target": "Target",
       "message": "Message",
       "openFolderFailed": "Failed to open folder",
-      "exportSuccess": "Exported successfully",
-      "exportFailed": "Failed to export"
+      "exportSuccess": "Export succeeded",
+      "exportFailed": "Export failed"
     },
     "aiCapabilities": {
       "title": "AI Capabilities",
@@ -70,8 +105,8 @@
         "title": "Basic",
         "description": "Configure the AI agent server.",
         "serverPort": "Server port",
-        "autoStart": "Auto-start",
-        "autoStartDescription": "Automatically start the agent server when the app launches.",
+        "autoStart": "Auto start",
+        "autoStartDescription": "Start the agent server automatically when the app launches.",
         "status": "Server status",
         "running": "Running on port {{port}}",
         "stopped": "Stopped",
@@ -86,7 +121,7 @@
         "edit": "Edit",
         "test": "Test",
         "connection": "Connection",
-        "connectionDescription": "Enter your API key and optional base URL for this provider.",
+        "connectionDescription": "Enter the API key and an optional base URL for this provider.",
         "apiKey": "API key",
         "apiKeyPlaceholder": "Enter your API key",
         "baseUrl": "Base URL",
@@ -99,211 +134,39 @@
       "models": {
         "title": "Models",
         "description": "Enable or disable models per provider.",
-        "empty": "Connect a provider in the Providers tab to see available models."
+        "empty": "Connect a provider in Providers first to see available models."
       },
       "agents": {
         "title": "Agents",
-        "description": "Built-in agents and the model each one uses.",
+        "description": "Built-in writing agents and the model each one uses.",
         "model": "Model",
         "auto": "Auto",
-        "autoHint": "Uses {{model}} (first enabled model)",
-        "noModel": "No models enabled. Enable models in the Models tab first.",
-        "coder": {
-          "description": "Handles code-focused tasks such as summarizing file changes into commit messages.",
-          "tasks": {
-            "commit-message": "Commit message"
-          }
+        "autoHint": "Uses {{model}} (the first enabled model)",
+        "noModel": "No models enabled yet — enable some on the Models page first.",
+        "writer": {
+          "description": "General-purpose writing: articles, essays, notes, and any text."
+        },
+        "novelist": {
+          "description": "Long-form fiction: chapters, characters, and worldbuilding."
+        },
+        "screenwriter": {
+          "description": "Screenplays: scenes, dialogue, and act structure in standard format."
+        },
+        "prompt-engineer": {
+          "description": "Design and iterate LLM prompts: templates, variables, and evals."
         }
       }
     }
   },
-  "terminal": {
-    "title": "Terminal",
-    "sessions": "Sessions",
-    "noSessions": "No sessions yet",
-    "newSession": "New session",
-    "sessionActions": "Session actions",
-    "closeSession": "Close session",
-    "collapseSidebar": "Collapse sidebar",
-    "collapseRightSidebar": "Collapse right sidebar",
-    "leftSidebar": "Left sidebar",
-    "rightSidebar": "Right sidebar",
-    "initializing": "Initializing terminal...",
-    "terminalView": "Terminal",
-    "emptyPrompt": "Type a command and press Enter...",
-    "groupBy": "Group by",
-    "sortBy": "Sort by",
-    "groupOptions": {
-      "none": "No Group",
-      "time": "Time",
-      "path": "Path"
-    },
-    "sortOptions": {
-      "updated": "Updated Time",
-      "created": "Created Time"
-    },
-    "timeLabels": {
-      "today": "Today",
-      "yesterday": "Yesterday",
-      "thisWeek": "This Week",
-      "older": "Older"
-    },
-    "relativeTime": {
-      "justNow": "just now",
-      "minutesAgo": "{{count}}m ago",
-      "hoursAgo": "{{count}}h ago",
-      "daysAgo": "{{count}}d ago"
-    }
-  },
-  "session": {
-    "actions": {
-      "rename": "Rename",
-      "copyPath": "Copy Path",
-      "reveal": "Reveal in Finder",
-      "openIn": "Open in…",
-      "duplicate": "Duplicate",
-      "delete": "Delete"
-    },
-    "dialogs": {
-      "rename": {
-        "title": "Rename Session",
-        "placeholder": "Session name",
-        "cancel": "Cancel",
-        "save": "Save"
-      },
-      "delete": {
-        "title": "Delete this session?",
-        "description": "This action cannot be undone. The session and its history will be removed.",
-        "cancel": "Cancel",
-        "confirm": "Delete"
-      },
-      "duplicate": {
-        "title": "Duplicate this session?",
-        "description": "Creates a new session with the same working directory and command history.",
-        "cancel": "Cancel",
-        "confirm": "Duplicate"
-      }
-    },
-    "editor": {
-      "loading": "Loading…",
-      "label": "Editor",
-      "empty": "No editors detected"
-    }
-  },
-  "infoPanel": {
-    "tabs": {
-      "path": "Path",
-      "history": "History",
-      "git": "Git",
-      "files": "Files"
-    }
-  },
-  "pathInfo": {
-    "currentPath": "Current Path",
-    "copy": "Copy",
-    "reveal": "Reveal",
-    "openInVSCode": "in VS Code",
-    "parentDirectories": "Parent Directories",
-    "details": "Details",
-    "loading": "Loading...",
-    "type": "Type",
-    "size": "Size",
-    "modified": "Modified",
-    "mode": "Mode",
-    "readOnly": "Read-only",
-    "yes": "Yes",
-    "no": "No",
-    "directory": "Directory",
-    "symlink": "Symlink",
-    "file": "File",
-    "unknown": "Unknown"
-  },
-  "history": {
-    "filter": "Filter commands...",
-    "loading": "Loading...",
-    "noCommands": "No commands yet",
-    "insertTooltip": "Insert to input",
-    "exitCode": "exit={{code}}"
-  },
-  "git": {
-    "loading": "Loading git info...",
-    "notRepo": "Not a git repository",
-    "ahead": "{{count}} ahead",
-    "behind": "{{count}} behind",
-    "commitMessage": "Commit message",
-    "commitPlaceholder": "Enter commit message…",
-    "cancel": "Cancel",
-    "commit": "Commit",
-    "moreActions": "More git actions",
-    "pull": "Pull (rebase)",
-    "push": "Push",
-    "stageAll": "Stage All",
-    "fetch": "Fetch",
-    "running": "Running {{action}}...",
-    "changes": "Changes ({{count}})",
-    "moreFiles": "+{{count}} more",
-    "recentCommits": "Recent Commits",
-    "generateWithAi": "Generate with AI",
-    "generating": "Generating…",
-    "aiNoModel": "No model available. Enable a model in Settings → AI → Models.",
-    "aiGenerateFailed": "AI generation failed: {{error}}"
-  },
-  "files": {
-    "search": "Search files…",
-    "showHidden": "Show hidden files",
-    "hideHidden": "Hide hidden files",
-    "showDotfiles": "Show dotfiles",
-    "hideDotfiles": "Hide dotfiles",
-    "loading": "Loading…",
-    "emptyDirectory": "Empty directory",
-    "tooLarge": "File too large ({{size}}MB), open externally",
-    "binaryFile": "Binary file, open externally"
-  },
-  "editor": {
-    "label": "Editor",
-    "save": "Save",
-    "dontSave": "Don't Save",
-    "cancel": "Cancel",
-    "saved": "Saved",
-    "unsavedChangesMessage": "\"{{file}}\" has unsaved changes. Do you want to save them?",
-    "reload": "Reload",
-    "keepMine": "Keep My Changes",
-    "externalChangeMessage": "\"{{file}}\" changed on disk."
-  },
-  "workspace": {
-    "addFolder": "Add folder",
-    "empty": "No workspaces yet",
-    "rename": "Rename",
-    "delete": "Delete workspace",
-    "actions": "Workspace actions",
-    "noTabs": "No open tabs",
-    "dialogs": {
-      "rename": {
-        "title": "Rename workspace"
-      },
-      "delete": {
-        "title": "Delete this workspace?",
-        "description": "This action cannot be undone. The workspace and all its terminal sessions and history will be removed."
-      }
-    }
-  },
-  "toast": {
-    "copyPath": "Path copied to clipboard",
-    "reveal": "Revealed in Finder",
-    "openVSCode": "Opened in VS Code",
-    "copyPathError": "Failed to copy path",
-    "revealError": "Failed to reveal in Finder",
-    "openVSCodeError": "Failed to open VS Code"
-  },
   "updater": {
-    "availableTitle": "Update available",
-    "availableMessage": "Kenvo {{version}} is available. Download and install now?",
-    "updateNow": "Update now",
+    "availableTitle": "Update Available",
+    "availableMessage": "Kenvo {{version}} is available. Download and install it now?",
+    "updateNow": "Update Now",
     "later": "Later",
     "downloading": "Downloading update… {{progress}}%",
-    "readyTitle": "Update ready",
-    "readyMessage": "The update has been installed. Restart Kenvo to apply it?",
-    "restartNow": "Restart now",
+    "readyTitle": "Update Ready",
+    "readyMessage": "The update has been installed. Restart Kenvo now to apply it?",
+    "restartNow": "Restart Now",
     "upToDate": "You're up to date",
     "checkFailed": "Failed to check for updates",
     "installFailed": "Failed to install the update"
@@ -316,22 +179,14 @@
     "quit": "Quit Kenvo",
     "edit": "Edit"
   },
-  "errors": {
-    "commandFailed": "Command failed with exit code {{code}}",
-    "cdNotDirectory": "cd: not a directory: {{target}}",
-    "cdNotFound": "cd: no such file or directory: {{target}}"
-  },
-  "shell": {
-    "welcome": "Kenvo Terminal — cwd: {{cwd}}"
-  },
   "ui": {
-    "toggleSidebar": "Toggle Sidebar",
+    "toggleSidebar": "Toggle sidebar",
     "sidebar": "Sidebar",
     "sidebarDescription": "Displays the mobile sidebar.",
-    "breadcrumb": "breadcrumb",
-    "pagination": "pagination",
-    "previousPage": "Go to previous page",
-    "nextPage": "Go to next page",
+    "breadcrumb": "Breadcrumb",
+    "pagination": "Pagination",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
     "previous": "Previous",
     "next": "Next",
     "morePages": "More pages",

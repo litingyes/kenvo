@@ -57,9 +57,9 @@ export interface Translations {
 const dictionary: Record<Locale, Translations> = {
   'en-US': {
     meta: {
-      title: 'Kenvo — AI-native terminal desktop workspace',
+      title: 'Kenvo — Write what you imagine, and beyond.',
       description:
-        'Kenvo brings terminal, file browsing, Git operations, and local AI capabilities into a single Electron desktop window.',
+        'Kenvo is a local-first AI writing studio. Autonomous writing agents create novels, screenplays, and prompts right in your local folders.',
     },
     nav: {
       docs: 'Docs',
@@ -67,41 +67,44 @@ const dictionary: Record<Locale, Translations> = {
       releases: 'Releases',
     },
     hero: {
-      tagline: 'An AI-native terminal desktop workspace for developers.',
+      tagline: 'Write what you imagine, and beyond.',
       description:
-        'Kenvo brings terminal, file browsing, Git operations, and local AI capabilities into a single Electron desktop window, letting you switch seamlessly between the command line and AI assistance.',
+        'Kenvo is a local-first AI writing studio. Autonomous writing agents plan, draft, and revise novels, screenplays, and prompts as real Markdown files in your own folders — you steer, they write.',
       ctaPrimary: 'Download',
       ctaSecondary: 'View on GitHub',
     },
     features: {
-      title: 'Everything in one workspace',
+      title: 'A studio built for writing with agents',
       items: [
         {
-          title: 'Multi-session Terminal',
+          title: 'Autonomous Writing Agents',
           description:
-            'Launch real shell processes through Electron IPC with session tree grouping and sorting.',
+            'Novelist, Screenwriter, Prompt Engineer, and a general Writer — each with its own craft instructions and project templates.',
         },
         {
-          title: 'Git Workflow',
-          description: 'Stage, commit, pull, push, fetch — plus AI-generated commit messages.',
-        },
-        {
-          title: 'Extensible AI',
+          title: 'Real Files, Your Folders',
           description:
-            'Local Hono agent server wired to OpenAI, Anthropic, DeepSeek, Moonshot, Alibaba Cloud, and xAI.',
+            'Agents read and write Markdown directly in the project folder you choose. Everything stays usable in any editor.',
         },
         {
-          title: 'File & Path Info',
+          title: 'Steer Mid-Run',
           description:
-            'Right-side info panel shows path, command history, Git status, and file tree.',
+            'Interrupt the agent while it works: redirect the plot, rename a character, change the tone — no need to restart.',
         },
         {
-          title: 'Themes',
-          description: 'Light / dark / system modes with Kenvo, Ayu, and Catppuccin presets.',
+          title: 'Multi-provider Models',
+          description:
+            'OpenAI, Anthropic, DeepSeek, Moonshot, Alibaba Cloud, and xAI via a local agent server, with per-agent model assignment.',
+        },
+        {
+          title: 'Long-form Continuity',
+          description:
+            'Chapters, characters, and worldbuilding stay consistent as agents re-read the project before writing more.',
         },
         {
           title: 'Local-first',
-          description: 'Sessions, history, and settings persisted in SQLite and Electron Store.',
+          description:
+            'Projects, chats, and settings live in local files and SQLite. Your words never leave your machine except to the model APIs you choose.',
         },
       ],
     },
@@ -136,8 +139,9 @@ const dictionary: Record<Locale, Translations> = {
   },
   'zh-CN': {
     meta: {
-      title: 'Kenvo — 面向开发者的 AI 原生终端桌面工作台',
-      description: 'Kenvo 将终端、文件浏览、Git 操作和本地 AI 能力整合进一个 Electron 桌面窗口。',
+      title: 'Kenvo — Write what you imagine, and beyond.',
+      description:
+        'Kenvo 是一个本地优先的 AI 写作工作台。自主写作 Agent 在你的本地文件夹中直接创作小说、剧本与 Prompt。',
     },
     nav: {
       docs: '文档',
@@ -145,39 +149,41 @@ const dictionary: Record<Locale, Translations> = {
       releases: '发布',
     },
     hero: {
-      tagline: '面向开发者的 AI 原生终端桌面工作台。',
+      tagline: 'Write what you imagine, and beyond.',
       description:
-        'Kenvo 将终端、文件浏览、Git 操作和本地 AI 能力整合进一个 Electron 桌面窗口，让你在命令行与 AI 辅助之间无缝切换。',
+        'Kenvo 是一个本地优先的 AI 写作工作台。写作 Agent 在你选择的文件夹里构思、起草、修改小说、剧本与 Prompt——你掌舵，它落笔。',
       ctaPrimary: '下载',
       ctaSecondary: '在 GitHub 上查看',
     },
     features: {
-      title: '一个工作台，整合一切',
+      title: '为「与 Agent 一起写作」而生的工作台',
       items: [
         {
-          title: '多会话终端',
-          description: '通过 Electron IPC 启动真实 shell 进程，支持会话树分组与排序。',
-        },
-        {
-          title: 'Git 工作流',
-          description: '暂存、提交、拉取、推送、获取，并支持 AI 生成提交信息。',
-        },
-        {
-          title: '可扩展 AI',
+          title: '自主写作 Agent',
           description:
-            '本地 Hono Agent 服务，可接入 OpenAI、Anthropic、DeepSeek、Moonshot、阿里云和 xAI。',
+            'Novelist、Screenwriter、Prompt Engineer 与通用 Writer，各自拥有专属写作指令与项目模板。',
         },
         {
-          title: '文件与路径信息',
-          description: '右侧信息面板展示路径、命令历史、Git 状态与文件树。',
+          title: '真实文件，你的文件夹',
+          description: 'Agent 直接在你选择的项目文件夹中读写 Markdown，任何编辑器都能继续创作。',
         },
         {
-          title: '主题',
-          description: '亮色 / 暗色 / 跟随系统，内置 Kenvo、Ayu、Catppuccin 预设。',
+          title: '运行中随时掌舵',
+          description: 'Agent 工作时也能插话：改剧情、换人设、调语气，无需打断重来。',
+        },
+        {
+          title: '多 Provider 模型',
+          description:
+            '通过本地 Agent 服务接入 OpenAI、Anthropic、DeepSeek、Moonshot、阿里云与 xAI，每个 Agent 可指派不同模型。',
+        },
+        {
+          title: '长篇一致性',
+          description: '章节、人物与世界观保持连贯——Agent 落笔前会先重读项目。',
         },
         {
           title: '本地优先',
-          description: '会话、历史与设置持久化到 SQLite 和 Electron Store。',
+          description:
+            '项目、对话与设置都保存在本地文件与 SQLite。除了你选择的模型 API，文字不离开你的机器。',
         },
       ],
     },

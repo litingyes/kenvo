@@ -3,12 +3,13 @@ packages:
   - 'packages/*'
 
 allowBuilds:
+  '@google/genai': false
   '@mongodb-js/zstd': false
   better-sqlite3: true
   electron-winstaller: true
   esbuild: true
   node-liblzma: false
-  node-pty: true
+  protobufjs: false
 
 catalog:
   '@iconify-json/catppuccin': ^1.2.17

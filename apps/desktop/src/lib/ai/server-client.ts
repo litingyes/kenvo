@@ -14,22 +14,41 @@ export interface TestProviderResult {
   error?: string
 }
 
-export interface ModelsResponse {
-  models: string[]
+export interface ModelMetadata {
+  id: string
+  name: string
+  contextWindow: number
+  maxTokens: number
+  reasoning: boolean
+  input: ('text' | 'image')[]
+  cost: { input: number; output: number; cacheRead: number; cacheWrite: number }
 }
 
 export interface AgentMetadata {
   id: string
   name: string
   description: string
-  tasks: string[]
 }
 
-export interface RunAgentRequest {
-  task: string
+export interface TemplateFile {
+  path: string
+  content: string
+}
+
+export interface CreateSessionRequest {
+  sessionId: string
+  agentId: string
+  projectRoot: string
   providerId: string
   modelId: string
-  input: unknown
+  history?: unknown[]
+}
+
+/** One server-sent agent event (pi-agent-core event + sequence number). */
+export interface AgentStreamEvent {
+  seq: number
+  type: string
+  [key: string]: unknown
 }
 
 export class AgentServerClient {
@@ -81,7 +100,7 @@ export class AgentServerClient {
     return response.json()
   }
 
-  async getModels(id: string): Promise<string[]> {
+  async getModels(id: string): Promise<ModelMetadata[]> {
     const response = await this.request(`/providers/${id}/models`)
     const data = await response.json()
     return data.models
@@ -93,17 +112,129 @@ export class AgentServerClient {
     return data.agents
   }
 
-  async runAgent(id: string, body: RunAgentRequest): Promise<unknown> {
-    const response = await this.request(`/agents/${id}/run`, {
+  async getAgentTemplate(id: string): Promise<TemplateFile[]> {
+    const response = await this.request(`/agents/${id}/template`)
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data.error ?? `Failed to load template (${response.status})`)
+    }
+    return data.files
+  }
+
+  async createSession(body: CreateSessionRequest): Promise<void> {
+    const response = await this.request('/sessions', {
       method: 'POST',
       body: JSON.stringify(body),
     })
     const data = await response.json()
     if (!response.ok) {
-      const error = typeof data.error === 'string' ? data.error : JSON.stringify(data.error)
-      throw new Error(error || `Agent run failed (${response.status})`)
+      throw new Error(
+        typeof data.error === 'string' ? data.error : `Session create failed (${response.status})`,
+      )
     }
-    return data.output
+  }
+
+  async destroySession(sessionId: string): Promise<void> {
+    await this.request(`/sessions/${sessionId}`, { method: 'DELETE' })
+  }
+
+  async steerSession(sessionId: string, input: string): Promise<void> {
+    const response = await this.request(`/sessions/${sessionId}/steer`, {
+      method: 'POST',
+      body: JSON.stringify({ input }),
+    })
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(typeof data.error === 'string' ? data.error : 'Steer failed')
+    }
+  }
+
+  async abortSession(sessionId: string): Promise<void> {
+    await this.request(`/sessions/${sessionId}/abort`, { method: 'POST' })
+  }
+
+  /**
+   * Send a message and stream agent events. `onEvent` receives each parsed
+   * SSE event. Resolves when the stream ends; throws on transport or
+   * server-reported errors.
+   */
+  async sendMessage(
+    sessionId: string,
+    input: string,
+    onEvent: (event: AgentStreamEvent) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ input }),
+      signal,
+    })
+
+    if (!response.ok) {
+      let message = `Request failed (${response.status})`
+      try {
+        const data = await response.json()
+        if (typeof data.error === 'string') message = data.error
+      } catch {
+        // ignore
+      }
+      throw new Error(message)
+    }
+
+    if (!response.body) {
+      throw new Error('Empty response body')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let currentEvent = 'message'
+    let currentData: string[] = []
+
+    const dispatch = () => {
+      const raw = currentData.join('\n')
+      currentData = []
+      if (!raw) return
+      if (currentEvent === 'done') return
+      if (currentEvent === 'error') {
+        try {
+          const parsed = JSON.parse(raw)
+          throw new Error(parsed.error ?? 'Agent run failed')
+        } catch (e) {
+          if (e instanceof SyntaxError) throw new Error(raw)
+          throw e
+        }
+      }
+      try {
+        onEvent(JSON.parse(raw) as AgentStreamEvent)
+      } catch {
+        // skip malformed events
+      }
+    }
+
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      let idx: number
+      while ((idx = buffer.indexOf('\n')) !== -1) {
+        const line = buffer.slice(0, idx)
+        buffer = buffer.slice(idx + 1)
+        if (line === '' || line === '\r') {
+          dispatch()
+          currentEvent = 'message'
+          continue
+        }
+        if (line.startsWith('event:')) {
+          currentEvent = line.slice(6).trim()
+        } else if (line.startsWith('data:')) {
+          currentData.push(line.slice(5).replace(/^ /, ''))
+        }
+      }
+    }
+    dispatch()
   }
 }
 

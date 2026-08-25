@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### 💥 Breaking Changes
+
+- **app:** Repositioned Kenvo from an AI-native terminal workspace to a local-first AI writing studio — "Write what you imagine, and beyond." The terminal, Git panel, and workspace features were removed entirely; the old SQLite tables (workspaces, terminal_sessions, terminal_history, workspace_tabs) are dropped on first launch.
+- **agent-server:** Replaced the Vercel AI SDK with `@earendil-works/pi-agent-core` + `@earendil-works/pi-ai` as the agent runtime. The old `coder` agent and `/agents/:id/run` endpoint were removed; new session-based SSE endpoints (`POST /sessions`, `POST /sessions/:id/messages`, `/steer`, `/abort`) power the writing agents.
+- **desktop:** Replaced Monaco with CodeMirror 6 for the Markdown editor.
+
+### 🚀 Enhancements
+
+- **agents:** Four built-in writing agents — Writer, Novelist, Screenwriter, Prompt Engineer — each with craft-specific instructions and project templates.
+- **agents:** Autonomous agent loop with six project-scoped file tools (list/read/write/edit/delete/search), mid-run steering, abort, and per-turn token/cost reporting.
+- **desktop:** New home screen with project cards and a create-project flow that materializes the agent's template into a local folder.
+- **desktop:** New writing studio: document tree, tabbed Markdown editor with external-change watching, and an agent panel with streaming messages, tool-call cards, and thinking blocks.
+- **desktop:** Chat history persisted per project in SQLite and resumed into the agent on project open.
+- **settings:** Models page now shows pi-ai catalog metadata (context window, reasoning, vision); Agents page configures the four writing agents.
+- **portal:** Landing page rewritten for the writing-studio positioning.
+
 ## v0.0.5
 
 [compare changes](https://github.com/litingyes/kenvo/compare/v0.0.4...v0.0.5)

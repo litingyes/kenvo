@@ -9,7 +9,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Switch } from '@/components/ui/switch'
-import { createAgentServerClient, type ProviderMetadata } from '@/lib/ai/server-client'
+import {
+  createAgentServerClient,
+  type ModelMetadata,
+  type ProviderMetadata,
+} from '@/lib/ai/server-client'
 import {
   getAgentServerStatus,
   getAiSettings,
@@ -34,7 +38,7 @@ export const Route = createFileRoute('/settings/ai/models')({
 function AiModelsPage() {
   const { t } = useTranslation()
   const [settings, setSettings] = useState<AiSettings | null>(null)
-  const [providerModels, setProviderModels] = useState<Record<string, string[]>>({})
+  const [providerModels, setProviderModels] = useState<Record<string, ModelMetadata[]>>({})
   const [providers, setProviders] = useState<ProviderMetadata[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -61,7 +65,7 @@ function AiModelsPage() {
       const providerList = await client.getProviders()
       setProviders(providerList)
 
-      const models: Record<string, string[]> = {}
+      const models: Record<string, ModelMetadata[]> = {}
       for (const provider of providerList) {
         const existing = settingsData.providers.find((p) => p.id === provider.id)
         if (existing?.apiKey) {
@@ -118,18 +122,32 @@ function AiModelsPage() {
                   {provider.name}
                 </div>
                 <div className="space-y-1 rounded-lg border border-border">
-                  {models.map((modelId) => {
-                    const enabled = settings?.enabledModels[provider.id]?.includes(modelId) ?? false
+                  {models.map((model) => {
+                    const enabled =
+                      settings?.enabledModels[provider.id]?.includes(model.id) ?? false
 
                     return (
                       <div
-                        key={modelId}
+                        key={model.id}
                         className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
                       >
-                        <span className="font-mono text-sm">{modelId}</span>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate font-mono text-sm">{model.id}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {[
+                              model.contextWindow
+                                ? `${Math.round(model.contextWindow / 1000)}k ctx`
+                                : null,
+                              model.reasoning ? 'reasoning' : null,
+                              model.input.includes('image') ? 'vision' : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </span>
+                        </div>
                         <Switch
                           checked={enabled}
-                          onCheckedChange={() => handleToggleModel(provider.id, modelId)}
+                          onCheckedChange={() => handleToggleModel(provider.id, model.id)}
                         />
                       </div>
                     )

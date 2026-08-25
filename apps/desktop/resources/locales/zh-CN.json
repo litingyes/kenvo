@@ -2,6 +2,42 @@
   "app": {
     "name": "Kenvo"
   },
+  "common": {
+    "cancel": "取消",
+    "creating": "正在创建…",
+    "delete": "删除",
+    "save": "保存",
+    "close": "关闭"
+  },
+  "home": {
+    "slogan": "Write what you imagine, and beyond.",
+    "subtitle": "本地 AI 写作工作台：让 Agent 帮你写小说、剧本与 Prompt。",
+    "newProject": "新建项目",
+    "newProjectDesc": "选择一个文件夹作为项目目录，所有作品都会以 Markdown 文件保存在本地。",
+    "projectTitle": "项目名称（可选）",
+    "pickFolder": "选择项目文件夹",
+    "pickFolderAndCreate": "选择文件夹并创建"
+  },
+  "project": {
+    "files": "文件",
+    "newDocument": "新建文档",
+    "newDocumentPrompt": "新文档的文件名",
+    "noTabs": "没有打开的文档",
+    "toggleFiles": "切换文件栏",
+    "toggleAgent": "切换 Agent 栏"
+  },
+  "agent": {
+    "title": "Agent",
+    "empty": "描述你想写的内容，Agent 会直接在项目里创作。",
+    "placeholder": "想写点什么？",
+    "steerPlaceholder": "Agent 工作中… 输入可中途调整方向",
+    "send": "发送",
+    "stop": "停止",
+    "thinking": "思考过程",
+    "connecting": "正在连接 Agent…",
+    "noModel": "尚未配置模型。请在 设置 → AI → Models 启用模型，并在 Agents 页分配给写作 Agent。",
+    "serverStopped": "Agent 服务未运行。请在 设置 → AI → 基础配置 中启动。"
+  },
   "settings": {
     "title": "设置",
     "appearance": {
@@ -19,7 +55,7 @@
     "about": {
       "title": "关于",
       "description": "版本信息与更新。",
-      "appDescription": "Kenvo 是一款面向开发者的桌面 AI 助手。",
+      "appDescription": "Kenvo 是一个本地优先的 AI 写作工作台 —— Write what you imagine, and beyond.",
       "version": "版本",
       "license": "开源协议",
       "licenseValue": "AGPL-3.0",
@@ -43,7 +79,7 @@
       "debug": "Debug",
       "info": "Info",
       "warn": "Warn",
-      "error": "Error",
+      "error": "加载日志失败：{{error}}",
       "search": "搜索日志...",
       "autoScroll": "自动滚动",
       "wrapLines": "自动换行",
@@ -54,7 +90,6 @@
       "loading": "正在加载日志...",
       "empty": "没有符合当前筛选条件的日志。",
       "emptyHint": "尝试切换来源或清除筛选条件。",
-      "error": "加载日志失败：{{error}}",
       "resumeTail": "恢复跟踪",
       "timestamp": "时间",
       "source": "来源",
@@ -103,197 +138,25 @@
       },
       "agents": {
         "title": "智能体",
-        "description": "内置智能体及其各自使用的模型。",
+        "description": "内置写作智能体及其各自使用的模型。",
         "model": "模型",
         "auto": "自动",
         "autoHint": "使用 {{model}}（第一个启用的模型）",
         "noModel": "尚未启用任何模型，请先在 Models 页启用。",
-        "coder": {
-          "description": "处理代码相关任务，例如将文件变更总结为 commit message。",
-          "tasks": {
-            "commit-message": "Commit message"
-          }
+        "writer": {
+          "description": "通用写作：文章、随笔、笔记与各类文本。"
+        },
+        "novelist": {
+          "description": "长篇与短篇虚构创作：章节、人物与世界观管理。"
+        },
+        "screenwriter": {
+          "description": "剧本创作：标准剧本格式的场景、对白与幕结构。"
+        },
+        "prompt-engineer": {
+          "description": "设计与迭代 LLM Prompt：模板、变量与评估用例。"
         }
       }
     }
-  },
-  "terminal": {
-    "title": "终端",
-    "sessions": "会话",
-    "noSessions": "还没有会话",
-    "newSession": "新建会话",
-    "sessionActions": "会话操作",
-    "closeSession": "关闭会话",
-    "collapseSidebar": "收起侧边栏",
-    "collapseRightSidebar": "收起右侧边栏",
-    "leftSidebar": "左侧边栏",
-    "rightSidebar": "右侧边栏",
-    "initializing": "正在初始化终端...",
-    "terminalView": "终端",
-    "emptyPrompt": "输入命令后按回车...",
-    "groupBy": "分组方式",
-    "sortBy": "排序方式",
-    "groupOptions": {
-      "none": "不分组",
-      "time": "时间",
-      "path": "路径"
-    },
-    "sortOptions": {
-      "updated": "更新时间",
-      "created": "创建时间"
-    },
-    "timeLabels": {
-      "today": "今天",
-      "yesterday": "昨天",
-      "thisWeek": "本周",
-      "older": "更早"
-    },
-    "relativeTime": {
-      "justNow": "刚刚",
-      "minutesAgo": "{{count}} 分钟前",
-      "hoursAgo": "{{count}} 小时前",
-      "daysAgo": "{{count}} 天前"
-    }
-  },
-  "session": {
-    "actions": {
-      "rename": "重命名",
-      "copyPath": "复制路径",
-      "reveal": "在 Finder 中显示",
-      "openIn": "打开方式…",
-      "duplicate": "复制",
-      "delete": "删除"
-    },
-    "dialogs": {
-      "rename": {
-        "title": "重命名会话",
-        "placeholder": "会话名称",
-        "cancel": "取消",
-        "save": "保存"
-      },
-      "delete": {
-        "title": "删除此会话？",
-        "description": "此操作无法撤销。该会话及其历史记录将被移除。",
-        "cancel": "取消",
-        "confirm": "删除"
-      },
-      "duplicate": {
-        "title": "复制此会话？",
-        "description": "创建一个工作目录和命令历史相同的新会话。",
-        "cancel": "取消",
-        "confirm": "复制"
-      }
-    },
-    "editor": {
-      "loading": "加载中…",
-      "label": "编辑器",
-      "empty": "未检测到编辑器"
-    }
-  },
-  "infoPanel": {
-    "tabs": {
-      "path": "路径",
-      "history": "历史",
-      "git": "Git",
-      "files": "文件"
-    }
-  },
-  "pathInfo": {
-    "currentPath": "当前路径",
-    "copy": "复制",
-    "reveal": "显示",
-    "openInVSCode": "在 VS Code 中打开",
-    "parentDirectories": "父级目录",
-    "details": "详情",
-    "loading": "加载中...",
-    "type": "类型",
-    "size": "大小",
-    "modified": "修改时间",
-    "mode": "权限",
-    "readOnly": "只读",
-    "yes": "是",
-    "no": "否",
-    "directory": "目录",
-    "symlink": "符号链接",
-    "file": "文件",
-    "unknown": "未知"
-  },
-  "history": {
-    "filter": "筛选命令...",
-    "loading": "加载中...",
-    "noCommands": "还没有命令",
-    "insertTooltip": "插入到输入框",
-    "exitCode": "退出码={{code}}"
-  },
-  "git": {
-    "loading": "正在加载 Git 信息...",
-    "notRepo": "不是 Git 仓库",
-    "ahead": "领先 {{count}} 个提交",
-    "behind": "落后 {{count}} 个提交",
-    "commitMessage": "提交信息",
-    "commitPlaceholder": "输入提交信息…",
-    "cancel": "取消",
-    "commit": "提交",
-    "moreActions": "更多 Git 操作",
-    "pull": "拉取（变基）",
-    "push": "推送",
-    "stageAll": "全部暂存",
-    "fetch": "获取",
-    "running": "正在执行 {{action}}...",
-    "changes": "变更（{{count}}）",
-    "moreFiles": "还有 {{count}} 项",
-    "recentCommits": "最近提交",
-    "generateWithAi": "使用 AI 生成",
-    "generating": "生成中…",
-    "aiNoModel": "没有可用模型，请先在 设置 → AI → Models 中启用模型。",
-    "aiGenerateFailed": "AI 生成失败：{{error}}"
-  },
-  "files": {
-    "search": "搜索文件…",
-    "showHidden": "显示隐藏文件",
-    "hideHidden": "隐藏隐藏文件",
-    "showDotfiles": "显示 dotfiles",
-    "hideDotfiles": "隐藏 dotfiles",
-    "loading": "加载中…",
-    "emptyDirectory": "空目录",
-    "tooLarge": "文件过大 ({{size}}MB)，请使用外部编辑器打开",
-    "binaryFile": "二进制文件，请使用外部编辑器打开"
-  },
-  "editor": {
-    "label": "编辑器",
-    "save": "保存",
-    "dontSave": "不保存",
-    "cancel": "取消",
-    "saved": "已保存",
-    "unsavedChangesMessage": "\"{{file}}\" 有未保存的更改，是否保存？",
-    "reload": "重新加载",
-    "keepMine": "保留我的更改",
-    "externalChangeMessage": "\"{{file}}\" 在磁盘上已变更。"
-  },
-  "workspace": {
-    "addFolder": "添加文件夹",
-    "empty": "还没有工作区",
-    "rename": "重命名",
-    "delete": "删除工作区",
-    "actions": "工作区操作",
-    "noTabs": "没有打开的标签页",
-    "dialogs": {
-      "rename": {
-        "title": "重命名工作区"
-      },
-      "delete": {
-        "title": "删除此工作区？",
-        "description": "此操作无法撤销。该工作区及其所有终端会话、历史记录将被移除。"
-      }
-    }
-  },
-  "toast": {
-    "copyPath": "路径已复制到剪贴板",
-    "reveal": "已在 Finder 中显示",
-    "openVSCode": "已在 VS Code 中打开",
-    "copyPathError": "复制路径失败",
-    "revealError": "在 Finder 中显示失败",
-    "openVSCodeError": "在 VS Code 中打开失败"
   },
   "updater": {
     "availableTitle": "发现新版本",
@@ -315,14 +178,6 @@
     "hide": "隐藏 Kenvo",
     "quit": "退出 Kenvo",
     "edit": "编辑"
-  },
-  "errors": {
-    "commandFailed": "命令执行失败，退出码 {{code}}",
-    "cdNotDirectory": "cd: 不是目录: {{target}}",
-    "cdNotFound": "cd: 没有这样的文件或目录: {{target}}"
-  },
-  "shell": {
-    "welcome": "Kenvo 终端 — 当前目录: {{cwd}}"
   },
   "ui": {
     "toggleSidebar": "切换侧边栏",

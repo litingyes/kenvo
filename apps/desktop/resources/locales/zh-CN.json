@@ -24,7 +24,11 @@
     "newDocumentPrompt": "新文档的文件名",
     "noTabs": "没有打开的文档",
     "toggleFiles": "切换文件栏",
-    "toggleAgent": "切换 Agent 栏"
+    "toggleAgent": "切换 Agent 栏",
+    "editor": "编辑器",
+    "toggleEditor": "切换编辑器",
+    "toggleSessions": "切换会话栏",
+    "openInEditor": "在编辑器中打开"
   },
   "agent": {
     "title": "Agent",
@@ -36,7 +40,41 @@
     "thinking": "思考过程",
     "connecting": "正在连接 Agent…",
     "noModel": "尚未配置模型。请在 设置 → AI → Models 启用模型，并在 Agents 页分配给写作 Agent。",
-    "serverStopped": "Agent 服务未运行。请在 设置 → AI → 基础配置 中启动。"
+    "serverStopped": "Agent 服务未运行。请在 设置 → AI → 基础配置 中启动。",
+    "sessions": "会话",
+    "newSession": "新会话",
+    "untitled": "未命名会话",
+    "deleteSession": "删除会话",
+    "deleteSessionTitle": "删除该会话？",
+    "deleteSessionDesc": "会话历史将被永久删除，此操作不可撤销。",
+    "switchTitle": "切换会话",
+    "switchDesc": "Agent 正在生成内容，切换会话将中止当前任务。",
+    "confirmSwitch": "仍然切换",
+    "openFile": "打开文件",
+    "backToBottom": "回到底部",
+    "emptyHint": "从下面的方向开始，或直接描述你的想法。",
+    "starters": {
+      "writer": [
+        "写一篇关于“远行的意义”的随笔",
+        "帮我起草一封正式的求职邮件",
+        "把我的大纲扩展成一篇完整的文章"
+      ],
+      "novelist": [
+        "写一篇 600 字左右的短篇科幻小说",
+        "构思一个故事大纲和三个主要人物",
+        "为第一章写一个吸引人的开场"
+      ],
+      "screenwriter": [
+        "写一个 3 分钟短片的开场场景，发生在深夜便利店",
+        "写一段两个对手之间的对峙戏",
+        "写一个只有一场戏、结尾反转的短片剧本"
+      ],
+      "prompt-engineer": [
+        "设计一个代码审查 prompt 模板",
+        "为图像生成模型写一个 prompt",
+        "帮我评审并改进一个现有 prompt"
+      ]
+    }
   },
   "settings": {
     "title": "设置",

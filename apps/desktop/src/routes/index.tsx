@@ -1,15 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import {
-  BookOpenIcon,
-  ClapperboardIcon,
-  PenLineIcon,
-  PlusIcon,
-  Trash2Icon,
-  Wand2Icon,
-} from 'lucide-react'
+import { PlusIcon, Trash2Icon } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { agentIcon } from '@/components/agent/agent-meta'
 import { AppHeader } from '@/components/layout/app-header'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,13 +33,6 @@ export const Route = createFileRoute('/')({
   },
   component: HomePage,
 })
-
-const AGENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  writer: PenLineIcon,
-  novelist: BookOpenIcon,
-  screenwriter: ClapperboardIcon,
-  'prompt-engineer': Wand2Icon,
-}
 
 function HomePage() {
   const { t } = useTranslation()
@@ -93,7 +80,7 @@ function HomePage() {
             </button>
 
             {projects.map((project) => {
-              const Icon = AGENT_ICONS[project.agent_id] ?? PenLineIcon
+              const Icon = agentIcon(project.agent_id)
               return (
                 <div key={project.id} className="group relative">
                   <button

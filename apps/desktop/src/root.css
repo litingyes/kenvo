@@ -72,3 +72,78 @@
     cursor: pointer;
   }
 }
+
+/*
+ * Typography for agent-authored Markdown in the chat view.
+ * Long-form output (novels, screenplays, prompts) must read like a document.
+ */
+@layer components {
+  .prose-agent {
+    @apply text-sm leading-7 break-words text-foreground;
+  }
+  .prose-agent > :first-child {
+    margin-top: 0;
+  }
+  .prose-agent > :last-child {
+    margin-bottom: 0;
+  }
+  .prose-agent h1 {
+    @apply mt-6 mb-3 text-xl font-semibold tracking-tight;
+  }
+  .prose-agent h2 {
+    @apply mt-5 mb-2.5 text-lg font-semibold tracking-tight;
+  }
+  .prose-agent h3 {
+    @apply mt-4 mb-2 text-base font-semibold;
+  }
+  .prose-agent h4 {
+    @apply mt-3 mb-1.5 text-sm font-semibold;
+  }
+  .prose-agent p {
+    @apply my-2.5;
+  }
+  .prose-agent ul {
+    @apply my-2.5 list-disc pl-5;
+  }
+  .prose-agent ol {
+    @apply my-2.5 list-decimal pl-5;
+  }
+  .prose-agent li {
+    @apply my-1;
+  }
+  .prose-agent li > ul,
+  .prose-agent li > ol {
+    @apply my-1;
+  }
+  .prose-agent strong {
+    @apply font-semibold;
+  }
+  .prose-agent a {
+    @apply text-primary underline underline-offset-2;
+  }
+  .prose-agent blockquote {
+    @apply my-2.5 border-l-2 border-border pl-3 text-muted-foreground;
+  }
+  .prose-agent hr {
+    @apply my-4 border-border;
+  }
+  .prose-agent code {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .prose-agent pre {
+    @apply my-3 overflow-x-auto rounded-md bg-muted p-3 text-xs leading-relaxed;
+  }
+  .prose-agent pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+  .prose-agent table {
+    @apply my-3 w-full border-collapse text-xs;
+  }
+  .prose-agent th,
+  .prose-agent td {
+    @apply border border-border px-2 py-1 text-left;
+  }
+  .prose-agent th {
+    @apply bg-muted font-medium;
+  }
+}

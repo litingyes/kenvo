@@ -1,7 +1,12 @@
 import * as React from 'react'
 
 import { createAgentServerClient, type AgentStreamEvent } from '@/lib/ai/server-client'
-import { appendChatMessage, countChatMessages, touchChatSession } from '@/lib/db/chat-repo'
+import {
+  appendChatMessage,
+  countChatMessages,
+  touchChatSession,
+  updateChatSessionTitle,
+} from '@/lib/db/chat-repo'
 
 // ---------- Pi message shapes (subset, structurally typed) ----------
 
@@ -62,6 +67,10 @@ interface UseAgentChatOptions {
   sessionId: string
   serverPort: number | null
   onFileActivity?: () => void
+  /** Fired when the session list should refresh (title set, activity timestamp bumped). */
+  onSessionActivity?: () => void
+  /** Fired whenever the run state changes (for session-switch guards). */
+  onRunningChange?: (running: boolean) => void
 }
 
 export interface UseAgentChatResult {
@@ -79,8 +88,18 @@ function messageRole(message: Record<string, unknown>): string {
   return typeof message.role === 'string' ? message.role : 'unknown'
 }
 
+function userMessageText(message: UiUserMessage): string {
+  if (typeof message.content === 'string') return message.content
+  return message.content.map((c) => c.text ?? '').join('')
+}
+
+/** Derive a short session title from the first user message. */
+function sessionTitleFrom(text: string): string {
+  return text.replace(/\s+/g, ' ').trim().slice(0, 40)
+}
+
 export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
-  const { sessionId, serverPort, onFileActivity } = options
+  const { sessionId, serverPort, onFileActivity, onSessionActivity, onRunningChange } = options
   const [messages, setMessages] = React.useState<UiMessage[]>([])
   const [toolExecutions, setToolExecutions] = React.useState<Map<string, ToolExecutionState>>(
     new Map(),
@@ -90,6 +109,13 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
   const abortRef = React.useRef<AbortController | null>(null)
   const fileActivityRef = React.useRef(onFileActivity)
   fileActivityRef.current = onFileActivity
+  const sessionActivityRef = React.useRef(onSessionActivity)
+  sessionActivityRef.current = onSessionActivity
+  const hasUserMessageRef = React.useRef(false)
+
+  React.useEffect(() => {
+    onRunningChange?.(running)
+  }, [running, onRunningChange])
 
   const persistMessage = React.useCallback(
     (message: UiMessage) => {
@@ -130,7 +156,19 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
             if (event.type === 'message_start') {
               setMessages((prev) => [...prev, message])
             }
-            if (event.type === 'message_end') persistMessage(message)
+            if (event.type === 'message_end') {
+              persistMessage(message)
+              // Auto-title the session from its first user message.
+              if (role === 'user' && !hasUserMessageRef.current) {
+                hasUserMessageRef.current = true
+                const title = sessionTitleFrom(userMessageText(message as UiUserMessage))
+                if (title) {
+                  void updateChatSessionTitle(sessionId, title)
+                    .then(() => sessionActivityRef.current?.())
+                    .catch(() => {})
+                }
+              }
+            }
           }
           break
         }
@@ -194,7 +232,9 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
         case 'agent_end':
           setRunning(false)
           abortRef.current = null
-          void touchChatSession(sessionId).catch(() => {})
+          void touchChatSession(sessionId)
+            .then(() => sessionActivityRef.current?.())
+            .catch(() => {})
           fileActivityRef.current?.()
           break
       }
@@ -245,6 +285,7 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
   }, [serverPort, sessionId])
 
   const hydrate = React.useCallback((historical: UiMessage[]) => {
+    hasUserMessageRef.current = historical.some((m) => m.role === 'user')
     setMessages(historical)
   }, [])
 

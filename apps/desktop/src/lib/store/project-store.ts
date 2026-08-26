@@ -8,7 +8,10 @@ interface ProjectState {
   tabs: ProjectTab[]
   activeTabId: string | null
   leftSidebarOpen: boolean
-  rightSidebarOpen: boolean
+  /** Whether the editor drawer is visible (slides over the chat view). */
+  editorOpen: boolean
+  /** Bump to force the project file tree to reload (e.g. agent file activity). */
+  treeVersion: number
 
   hydrate: (project: Project, tabs: ProjectTab[]) => void
   openFile: (filePath: string) => Promise<void>
@@ -16,7 +19,9 @@ interface ProjectState {
   activateTab: (tabId: string) => void
   reloadTabs: () => Promise<void>
   toggleLeftSidebar: () => void
-  toggleRightSidebar: () => void
+  toggleEditor: () => void
+  setEditorOpen: (open: boolean) => void
+  bumpTree: () => void
 }
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
@@ -24,13 +29,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   tabs: [],
   activeTabId: null,
   leftSidebarOpen: true,
-  rightSidebarOpen: true,
+  editorOpen: false,
+  treeVersion: 0,
 
   hydrate: (project, tabs) => {
     set({
       project,
       tabs,
       activeTabId: tabs.length > 0 ? (get().activeTabId ?? tabs[tabs.length - 1].id) : null,
+      // The editor drawer starts closed so the chat view owns the screen.
+      editorOpen: false,
     })
   },
 
@@ -39,7 +47,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     if (!project) return
     const tab = await openTab(project.id, filePath)
     const tabs = await listTabs(project.id)
-    set({ tabs, activeTabId: tab.id })
+    set({ tabs, activeTabId: tab.id, editorOpen: true })
   },
 
   closeFile: async (tabId) => {
@@ -52,6 +60,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       tabs,
       activeTabId:
         activeTabId === tabId ? (tabs.length > 0 ? tabs[tabs.length - 1].id : null) : activeTabId,
+      // No open documents left: close the drawer.
+      editorOpen: tabs.length > 0 ? get().editorOpen : false,
     })
   },
 
@@ -65,5 +75,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   toggleLeftSidebar: () => set((s) => ({ leftSidebarOpen: !s.leftSidebarOpen })),
-  toggleRightSidebar: () => set((s) => ({ rightSidebarOpen: !s.rightSidebarOpen })),
+  toggleEditor: () => set((s) => ({ editorOpen: !s.editorOpen })),
+  setEditorOpen: (open) => set({ editorOpen: open }),
+  bumpTree: () => set((s) => ({ treeVersion: s.treeVersion + 1 })),
 }))

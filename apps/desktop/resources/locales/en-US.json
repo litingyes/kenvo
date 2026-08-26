@@ -24,7 +24,11 @@
     "newDocumentPrompt": "Name for the new document",
     "noTabs": "No open documents",
     "toggleFiles": "Toggle file sidebar",
-    "toggleAgent": "Toggle agent sidebar"
+    "toggleAgent": "Toggle agent sidebar",
+    "editor": "Editor",
+    "toggleEditor": "Toggle editor",
+    "toggleSessions": "Toggle session sidebar",
+    "openInEditor": "Open in editor"
   },
   "agent": {
     "title": "Agent",
@@ -36,7 +40,41 @@
     "thinking": "Thinking",
     "connecting": "Connecting to agent…",
     "noModel": "No model configured. Enable a model in Settings → AI → Models and assign it to a writing agent.",
-    "serverStopped": "Agent server is not running. Start it in Settings → AI → Basic."
+    "serverStopped": "Agent server is not running. Start it in Settings → AI → Basic.",
+    "sessions": "Sessions",
+    "newSession": "New Session",
+    "untitled": "Untitled session",
+    "deleteSession": "Delete session",
+    "deleteSessionTitle": "Delete this session?",
+    "deleteSessionDesc": "The conversation history will be permanently removed. This cannot be undone.",
+    "switchTitle": "Switch session",
+    "switchDesc": "The agent is still generating. Switching sessions will abort the current run.",
+    "confirmSwitch": "Switch anyway",
+    "openFile": "Open file",
+    "backToBottom": "Back to bottom",
+    "emptyHint": "Pick a starting point, or describe your own idea below.",
+    "starters": {
+      "writer": [
+        "Write an essay about the meaning of travel",
+        "Draft a formal job application email",
+        "Expand my outline into a full article"
+      ],
+      "novelist": [
+        "Write a sci-fi short story of about 600 words",
+        "Outline a story premise with three main characters",
+        "Write the opening scene of chapter one"
+      ],
+      "screenwriter": [
+        "Write the opening scene of a 3-minute short film, set in a late-night convenience store",
+        "Write a face-off dialogue scene between two rivals",
+        "Write a single-scene screenplay with a twist ending"
+      ],
+      "prompt-engineer": [
+        "Design a code review prompt template",
+        "Write a prompt for an image-generation model",
+        "Help me critique and improve an existing prompt"
+      ]
+    }
   },
   "settings": {
     "title": "Settings",

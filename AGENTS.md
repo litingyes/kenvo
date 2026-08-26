@@ -20,10 +20,10 @@ A local-first AI writing studio: autonomous writing agents create novels, screen
 
 - `apps/desktop` — Electron app. Renderer in `src/`, main process in `electron/`
   - `src/routes/` — `/` home (project list), `/project/$projectId` (writing studio), `/settings/*`
-  - `src/components/agent/` — agent panel (message stream, tool-call cards, steering input)
-  - `src/components/editor/` — CodeMirror Markdown editor with FS-watcher reload
+  - `src/components/agent/` — chat main view (message stream, tool-call cards, steering input) + Codex-style session history sidebar
+  - `src/components/editor/` — CodeMirror Markdown editor with FS-watcher reload, hosted in a right-side overlay drawer (file tree + tabs)
   - `src/components/sidebar/` — project document tree
-  - `src/lib/agent/use-agent-chat.ts` — SSE client + transcript state machine + SQLite persistence
+  - `src/lib/agent/use-agent-chat.ts` — SSE client + transcript state machine + SQLite persistence + session auto-titling
   - `src/lib/db/` — schema and repos (projects / project_tabs / chat_sessions / chat_messages)
 - `packages/agent-server` — Hono server on port 32420
   - `src/sessions.ts` — SessionManager: pi `Agent` instances keyed by session id, prompt/steer/abort
@@ -35,8 +35,8 @@ A local-first AI writing studio: autonomous writing agents create novels, screen
 ### Key data flows
 
 - **Chat**: renderer `POST /sessions/:id/messages` → server runs `agent.prompt()` and forwards every pi agent event as SSE → `use-agent-chat.ts` rebuilds the transcript; finished messages are appended to SQLite.
-- **Resume**: on project open, renderer loads messages from SQLite and passes them as `history` to `POST /sessions`, then hydrates the panel.
-- **File sync**: agent file tools write directly into the project folder; the editor reloads via the existing Electron FS watcher (`fs:watch`/`fs:file_changed` IPC), and the tree refreshes on agent file activity.
+- **Resume / session switching**: on project open, the renderer loads the most recent session's messages from SQLite and passes them as `history` to `POST /sessions`, then hydrates the panel. Switching sessions aborts + destroys the server-side agent and recreates it from the target session's SQLite history (running sessions require confirmation first).
+- **File sync**: agent file tools write directly into the project folder; the editor drawer reloads via the existing Electron FS watcher (`fs:watch`/`fs:file_changed` IPC), and the tree refreshes on agent file activity.
 
 ## Code Conventions
 

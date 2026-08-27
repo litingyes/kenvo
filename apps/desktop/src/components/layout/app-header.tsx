@@ -9,20 +9,33 @@ interface AppHeaderProps {
   /** Rendered left-aligned in the flexible middle zone (e.g. session title). */
   centerContent?: React.ReactNode
   rightContent?: React.ReactNode
+  /** Pad the left zone past the macOS traffic lights. Disable when the
+   * traffic lights sit over a sibling column (e.g. the sidebar) instead. */
+  withTrafficLightInset?: boolean
+  /** Show the bottom border. Disable for seamless column surfaces. */
+  bordered?: boolean
 }
 
-export function AppHeader({ leftContent, centerContent, rightContent }: AppHeaderProps) {
+export function AppHeader({
+  leftContent,
+  centerContent,
+  rightContent,
+  withTrafficLightInset = true,
+  bordered = true,
+}: AppHeaderProps) {
   const isMacOS = useIsMacOS()
   const trafficLightInset = useTrafficLightInset()
+  const applyInset = isMacOS && withTrafficLightInset
 
   return (
     <div
       className={cn(
-        'flex h-9 shrink-0 items-center border-b border-border bg-background',
+        'flex h-9 shrink-0 items-center bg-background',
+        bordered && 'border-b border-border',
         isMacOS && '[-webkit-app-region:drag]',
       )}
       style={
-        isMacOS
+        applyInset
           ? ({ '--traffic-light-inset': `${trafficLightInset}px` } as React.CSSProperties)
           : undefined
       }
@@ -30,7 +43,7 @@ export function AppHeader({ leftContent, centerContent, rightContent }: AppHeade
       <div
         className={cn(
           'flex h-full shrink-0 items-center pr-3 [-webkit-app-region:no-drag]',
-          isMacOS && 'pl-(--traffic-light-inset)',
+          applyInset && 'pl-(--traffic-light-inset)',
         )}
       >
         {leftContent}

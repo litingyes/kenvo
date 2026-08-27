@@ -380,109 +380,120 @@ export function StudioLayout() {
 
   const AgentBadgeIcon = activeProject ? agentIcon(activeProject.agent_id) : null
 
+  const sidebarToggle = (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={toggleLeft}
+      aria-label={t('project.toggleSessions')}
+      title={t('project.toggleSessions')}
+    >
+      <PanelLeftIcon className="size-3.5" />
+    </Button>
+  )
+
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
-      <AppHeader
-        leftContent={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={toggleLeft}
-            aria-label={t('project.toggleSessions')}
-            title={t('project.toggleSessions')}
-          >
-            <PanelLeftIcon className="size-3.5" />
-          </Button>
-        }
-        centerContent={
-          activeProject && activeSession ? (
-            <div className="flex min-w-0 items-center gap-1.5">
-              <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
-              <span className="truncate text-xs font-medium">
-                {activeSession.title || t('agent.untitled')}
-              </span>
-              {AgentBadgeIcon && (
-                <span className="ml-1 flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
-                  <AgentBadgeIcon className="size-3" />
-                  {agentName(activeProject.agent_id)}
-                </span>
+    <div className="h-screen w-screen overflow-hidden bg-background">
+      <ResizablePanelGroup orientation="horizontal" className="h-full">
+        {leftOpen && (
+          <>
+            <ResizablePanel defaultSize="18%" minSize="14%" maxSize="30%">
+              <div className="flex h-full flex-col">
+                {/* Sidebar top bar: hosts the macOS traffic lights + sidebar toggle. */}
+                <AppHeader leftContent={sidebarToggle} bordered={false} />
+                <div className="min-h-0 flex-1">
+                  <StudioSidebar
+                    projects={projects}
+                    sessions={sessions}
+                    activeSessionId={activeSessionId}
+                    onSelectSession={(id) => void activateSession(id)}
+                    onNewSession={() => void newSession()}
+                    onDeleteSession={(id) => setConfirmAction({ type: 'delete', sessionId: id })}
+                    onDeleteProject={(id) =>
+                      setConfirmAction({ type: 'deleteProject', projectId: id })
+                    }
+                    onNewProject={() => setNewProjectOpen(true)}
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle />
+          </>
+        )}
+
+        <ResizablePanel minSize="30%">
+          <div className="flex h-full flex-col">
+            <AppHeader
+              withTrafficLightInset={!leftOpen}
+              leftContent={leftOpen ? undefined : sidebarToggle}
+              centerContent={
+                activeProject && activeSession ? (
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate text-xs font-medium">
+                      {activeSession.title || t('agent.untitled')}
+                    </span>
+                    {AgentBadgeIcon && (
+                      <span className="ml-1 flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
+                        <AgentBadgeIcon className="size-3" />
+                        {agentName(activeProject.agent_id)}
+                      </span>
+                    )}
+                  </div>
+                ) : null
+              }
+              rightContent={
+                activeSessionId ? (
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={toggleRight}
+                    aria-label={t('project.toggleRightPanel')}
+                    title={t('project.toggleRightPanel')}
+                  >
+                    <PanelRightIcon className="size-3.5" />
+                  </Button>
+                ) : null
+              }
+            />
+
+            <div className="min-h-0 flex-1">
+              {!serverPort ? (
+                <CenteredNote text={t('agent.serverStopped')} />
+              ) : sessionError ? (
+                <CenteredNote text={sessionError} />
+              ) : activeSessionId && activeProject ? (
+                <AgentPanel
+                  key={activeSessionId}
+                  sessionId={activeSessionId}
+                  agentId={activeProject.agent_id}
+                  serverPort={serverPort}
+                  initialMessages={historyMessages}
+                  onFileActivity={bumpTree}
+                  onSessionActivity={refreshSessions}
+                  onRunningChange={setAgentRunning}
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
+                  <p className="text-xs text-muted-foreground">{t('studio.noProjectsHint')}</p>
+                  <Button variant="outline" size="sm" onClick={() => setNewProjectOpen(true)}>
+                    {t('studio.newProject')}
+                  </Button>
+                </div>
               )}
             </div>
-          ) : null
-        }
-        rightContent={
-          activeSessionId ? (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={toggleRight}
-              aria-label={t('project.toggleRightPanel')}
-              title={t('project.toggleRightPanel')}
-            >
-              <PanelRightIcon className="size-3.5" />
-            </Button>
-          ) : null
-        }
-      />
+          </div>
+        </ResizablePanel>
 
-      <div className="min-h-0 flex-1">
-        <ResizablePanelGroup orientation="horizontal">
-          {leftOpen && (
-            <>
-              <ResizablePanel defaultSize="18%" minSize="14%" maxSize="30%">
-                <StudioSidebar
-                  projects={projects}
-                  sessions={sessions}
-                  activeSessionId={activeSessionId}
-                  onSelectSession={(id) => void activateSession(id)}
-                  onNewSession={() => void newSession()}
-                  onDeleteSession={(id) => setConfirmAction({ type: 'delete', sessionId: id })}
-                  onDeleteProject={(id) =>
-                    setConfirmAction({ type: 'deleteProject', projectId: id })
-                  }
-                  onNewProject={() => setNewProjectOpen(true)}
-                />
-              </ResizablePanel>
-              <ResizableHandle />
-            </>
-          )}
-
-          <ResizablePanel minSize="30%">
-            {!serverPort ? (
-              <CenteredNote text={t('agent.serverStopped')} />
-            ) : sessionError ? (
-              <CenteredNote text={sessionError} />
-            ) : activeSessionId && activeProject ? (
-              <AgentPanel
-                key={activeSessionId}
-                sessionId={activeSessionId}
-                agentId={activeProject.agent_id}
-                serverPort={serverPort}
-                initialMessages={historyMessages}
-                onFileActivity={bumpTree}
-                onSessionActivity={refreshSessions}
-                onRunningChange={setAgentRunning}
-              />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
-                <p className="text-xs text-muted-foreground">{t('studio.noProjectsHint')}</p>
-                <Button variant="outline" size="sm" onClick={() => setNewProjectOpen(true)}>
-                  {t('studio.newProject')}
-                </Button>
-              </div>
-            )}
-          </ResizablePanel>
-
-          {rightOpen && activeProject && (
-            <>
-              <ResizableHandle />
-              <ResizablePanel defaultSize="38%" minSize="26%" maxSize="55%">
-                <FilesPanel />
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
-      </div>
+        {rightOpen && activeProject && (
+          <>
+            <ResizableHandle />
+            <ResizablePanel defaultSize="38%" minSize="26%" maxSize="55%">
+              <FilesPanel />
+            </ResizablePanel>
+          </>
+        )}
+      </ResizablePanelGroup>
 
       <NewProjectDialog
         open={newProjectOpen}

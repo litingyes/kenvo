@@ -6,10 +6,12 @@ import { cn } from '@/lib/utils'
 
 interface AppHeaderProps {
   leftContent?: React.ReactNode
+  /** Rendered left-aligned in the flexible middle zone (e.g. session title). */
+  centerContent?: React.ReactNode
   rightContent?: React.ReactNode
 }
 
-export function AppHeader({ leftContent, rightContent }: AppHeaderProps) {
+export function AppHeader({ leftContent, centerContent, rightContent }: AppHeaderProps) {
   const isMacOS = useIsMacOS()
   const trafficLightInset = useTrafficLightInset()
 
@@ -34,7 +36,7 @@ export function AppHeader({ leftContent, rightContent }: AppHeaderProps) {
         {leftContent}
       </div>
 
-      <div className="min-w-2 flex-1 self-stretch" />
+      <div className="flex min-w-2 flex-1 items-center self-stretch">{centerContent}</div>
 
       <div className="flex h-full shrink-0 items-center gap-2 px-3 [-webkit-app-region:no-drag]">
         {rightContent}

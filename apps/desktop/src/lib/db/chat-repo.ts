@@ -76,6 +76,12 @@ export async function listChatSessions(projectId: string): Promise<ChatSession[]
   )
 }
 
+/** All sessions across projects, most recently active first. */
+export async function listAllChatSessions(): Promise<ChatSession[]> {
+  const db = await getDatabase()
+  return db.select<ChatSession>(`SELECT * FROM chat_sessions ORDER BY last_active_at DESC`)
+}
+
 export async function updateChatSessionTitle(id: string, title: string): Promise<void> {
   const db = await getDatabase()
   await db.execute(`UPDATE chat_sessions SET title = ? WHERE id = ?`, [title, id])

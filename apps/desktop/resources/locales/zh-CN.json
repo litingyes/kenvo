@@ -28,7 +28,20 @@
     "editor": "编辑器",
     "toggleEditor": "切换编辑器",
     "toggleSessions": "切换会话栏",
+    "toggleRightPanel": "切换右侧面板",
     "openInEditor": "在编辑器中打开"
+  },
+  "studio": {
+    "newChat": "新会话",
+    "newProject": "新建项目",
+    "groupByProject": "按项目分组",
+    "flatList": "平铺列表",
+    "noProjects": "还没有项目",
+    "noProjectsHint": "创建一个项目，开始与 Agent 一起写作。",
+    "noChats": "暂无会话",
+    "deleteProject": "删除项目",
+    "deleteProjectTitle": "删除该项目？",
+    "deleteProjectDesc": "项目及其所有会话将从 Kenvo 中移除，磁盘上的文件不会被删除。"
   },
   "agent": {
     "title": "Agent",

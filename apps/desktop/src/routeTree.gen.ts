@@ -15,7 +15,6 @@ import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsLogsRouteImport } from './routes/settings/logs'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsAboutRouteImport } from './routes/settings/about'
-import { Route as ProjectProjectIdRouteImport } from './routes/project/$projectId'
 import { Route as SettingsAiIndexRouteImport } from './routes/settings/ai/index'
 import { Route as SettingsAiProvidersRouteImport } from './routes/settings/ai/providers'
 import { Route as SettingsAiModelsRouteImport } from './routes/settings/ai/models'
@@ -52,11 +51,6 @@ const SettingsAboutRoute = SettingsAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => SettingsRoute,
 } as any)
-const ProjectProjectIdRoute = ProjectProjectIdRouteImport.update({
-  id: '/project/$projectId',
-  path: '/project/$projectId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SettingsAiIndexRoute = SettingsAiIndexRouteImport.update({
   id: '/ai/',
   path: '/ai/',
@@ -86,7 +80,6 @@ const SettingsAiAgentsRoute = SettingsAiAgentsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
-  '/project/$projectId': typeof ProjectProjectIdRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
@@ -99,7 +92,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/project/$projectId': typeof ProjectProjectIdRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
@@ -114,7 +106,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
-  '/project/$projectId': typeof ProjectProjectIdRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
@@ -130,7 +121,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
-    | '/project/$projectId'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
@@ -143,7 +133,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/project/$projectId'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
@@ -157,7 +146,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
-    | '/project/$projectId'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
@@ -172,7 +160,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRouteWithChildren
-  ProjectProjectIdRoute: typeof ProjectProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -218,13 +205,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/about'
       preLoaderRoute: typeof SettingsAboutRouteImport
       parentRoute: typeof SettingsRoute
-    }
-    '/project/$projectId': {
-      id: '/project/$projectId'
-      path: '/project/$projectId'
-      fullPath: '/project/$projectId'
-      preLoaderRoute: typeof ProjectProjectIdRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/settings/ai/': {
       id: '/settings/ai/'
@@ -295,7 +275,6 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRouteWithChildren,
-  ProjectProjectIdRoute: ProjectProjectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

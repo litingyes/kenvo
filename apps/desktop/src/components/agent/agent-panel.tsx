@@ -13,7 +13,6 @@ import { useTranslation } from 'react-i18next'
 import Markdown from 'react-markdown'
 
 import { agentIcon, agentName } from '@/components/agent/agent-meta'
-import { EDITOR_DRAWER_CLASSES } from '@/components/editor/editor-drawer'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -67,9 +66,6 @@ export function AgentPanel({
   const pinnedRef = React.useRef(true)
   const [showBackToBottom, setShowBackToBottom] = React.useState(false)
   const hydratedRef = React.useRef(false)
-  // When the editor drawer slides in, the chat column is pushed left by the
-  // same width so messages and tool cards stay fully visible.
-  const editorOpen = useProjectStore((s) => s.editorOpen)
 
   React.useEffect(() => {
     if (!hydratedRef.current && initialMessages) {
@@ -114,12 +110,7 @@ export function AgentPanel({
   const empty = messages.length === 0 && !running
 
   return (
-    <div
-      className={cn(
-        'relative flex h-full flex-col transition-[padding] duration-200',
-        editorOpen && EDITOR_DRAWER_CLASSES.chatPadding,
-      )}
-    >
+    <div className="relative flex h-full flex-col">
       <div className="relative flex min-h-0 flex-1 flex-col">
         <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto">
           {empty ? (

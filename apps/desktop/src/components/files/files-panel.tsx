@@ -10,27 +10,19 @@ import { useProjectStore } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
 
 /**
- * Auxiliary file viewer: a non-modal drawer sliding in from the right.
+ * Right-side docked feature panel: project file viewer.
  * Contains the project file tree (collapsible column), document tabs and the
- * Markdown editor. While open, the chat view is pushed left (same width) so
- * both stay fully visible and interactive.
+ * Markdown editor. Docked next to the chat view, so both stay fully visible.
  */
-export const EDITOR_DRAWER_CLASSES = {
-  width: 'w-[min(52rem,62%)]',
-  /** Matches `width`; applied as right padding on the chat view. */
-  chatPadding: 'pr-[min(52rem,62%)]',
-} as const
-
-export function EditorDrawer() {
+export function FilesPanel() {
   const { t } = useTranslation()
   const project = useProjectStore((s) => s.project)
   const tabs = useProjectStore((s) => s.tabs)
   const activeTabId = useProjectStore((s) => s.activeTabId)
-  const editorOpen = useProjectStore((s) => s.editorOpen)
   const treeVersion = useProjectStore((s) => s.treeVersion)
   const activateTab = useProjectStore((s) => s.activateTab)
   const closeFile = useProjectStore((s) => s.closeFile)
-  const toggleEditor = useProjectStore((s) => s.toggleEditor)
+  const toggleRightPanel = useProjectStore((s) => s.toggleRightPanel)
   const bumpTree = useProjectStore((s) => s.bumpTree)
   const [treeOpen, setTreeOpen] = React.useState(true)
 
@@ -50,14 +42,7 @@ export function EditorDrawer() {
   if (!project) return null
 
   return (
-    <div
-      className={cn(
-        'absolute inset-y-0 right-0 z-20 flex flex-col border-l border-border bg-background shadow-xl transition-[transform,visibility] duration-200',
-        EDITOR_DRAWER_CLASSES.width,
-        editorOpen ? 'translate-x-0' : 'invisible translate-x-full',
-      )}
-      aria-hidden={!editorOpen}
-    >
+    <div className="flex h-full flex-col bg-background">
       {/* Header: tree toggle + tabs + close */}
       <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border px-2">
         <Button
@@ -116,7 +101,7 @@ export function EditorDrawer() {
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={toggleEditor}
+          onClick={toggleRightPanel}
           aria-label={t('common.close')}
           title={t('common.close')}
         >
@@ -127,7 +112,7 @@ export function EditorDrawer() {
       {/* Body: file tree column + editor */}
       <div className="flex min-h-0 flex-1">
         {treeOpen && (
-          <div className="flex w-52 shrink-0 flex-col border-r border-border">
+          <div className="flex w-36 shrink-0 flex-col border-r border-border">
             <div className="flex h-7 shrink-0 items-center px-3">
               <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                 {t('project.files')}

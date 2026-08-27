@@ -3,13 +3,18 @@ import { create } from 'zustand'
 import type { Project, ProjectTab } from '@/lib/db/project-repo'
 import { closeTab, listTabs, openTab } from '@/lib/db/project-repo'
 
+/** How the studio sidebar lists chat sessions. */
+export type SessionListMode = 'grouped' | 'flat'
+
 interface ProjectState {
   project: Project | null
   tabs: ProjectTab[]
   activeTabId: string | null
   leftSidebarOpen: boolean
-  /** Whether the editor drawer is visible (slides over the chat view). */
-  editorOpen: boolean
+  /** Whether the right-side feature panel (Files) is visible. */
+  rightPanelOpen: boolean
+  /** Sidebar session list presentation: grouped by project or flat. */
+  sessionListMode: SessionListMode
   /** Bump to force the project file tree to reload (e.g. agent file activity). */
   treeVersion: number
 
@@ -19,8 +24,9 @@ interface ProjectState {
   activateTab: (tabId: string) => void
   reloadTabs: () => Promise<void>
   toggleLeftSidebar: () => void
-  toggleEditor: () => void
-  setEditorOpen: (open: boolean) => void
+  toggleRightPanel: () => void
+  setRightPanelOpen: (open: boolean) => void
+  toggleSessionListMode: () => void
   bumpTree: () => void
 }
 
@@ -29,16 +35,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   tabs: [],
   activeTabId: null,
   leftSidebarOpen: true,
-  editorOpen: false,
+  rightPanelOpen: false,
+  sessionListMode: 'grouped',
   treeVersion: 0,
 
   hydrate: (project, tabs) => {
+    const current = get().activeTabId
+    const stillThere = current !== null && tabs.some((t) => t.id === current)
     set({
       project,
       tabs,
-      activeTabId: tabs.length > 0 ? (get().activeTabId ?? tabs[tabs.length - 1].id) : null,
-      // The editor drawer starts closed so the chat view owns the screen.
-      editorOpen: false,
+      activeTabId: tabs.length > 0 ? (stillThere ? current : tabs[tabs.length - 1].id) : null,
     })
   },
 
@@ -47,7 +54,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     if (!project) return
     const tab = await openTab(project.id, filePath)
     const tabs = await listTabs(project.id)
-    set({ tabs, activeTabId: tab.id, editorOpen: true })
+    set({ tabs, activeTabId: tab.id, rightPanelOpen: true })
   },
 
   closeFile: async (tabId) => {
@@ -60,8 +67,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       tabs,
       activeTabId:
         activeTabId === tabId ? (tabs.length > 0 ? tabs[tabs.length - 1].id : null) : activeTabId,
-      // No open documents left: close the drawer.
-      editorOpen: tabs.length > 0 ? get().editorOpen : false,
     })
   },
 
@@ -75,7 +80,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   toggleLeftSidebar: () => set((s) => ({ leftSidebarOpen: !s.leftSidebarOpen })),
-  toggleEditor: () => set((s) => ({ editorOpen: !s.editorOpen })),
-  setEditorOpen: (open) => set({ editorOpen: open }),
+  toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
+  setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
+  toggleSessionListMode: () =>
+    set((s) => ({ sessionListMode: s.sessionListMode === 'grouped' ? 'flat' : 'grouped' })),
   bumpTree: () => set((s) => ({ treeVersion: s.treeVersion + 1 })),
 }))

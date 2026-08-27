@@ -28,7 +28,20 @@
     "editor": "Editor",
     "toggleEditor": "Toggle editor",
     "toggleSessions": "Toggle session sidebar",
+    "toggleRightPanel": "Toggle right panel",
     "openInEditor": "Open in editor"
+  },
+  "studio": {
+    "newChat": "New chat",
+    "newProject": "New project",
+    "groupByProject": "Group by project",
+    "flatList": "Flat list",
+    "noProjects": "No projects yet",
+    "noProjectsHint": "Create a project to start writing with an agent.",
+    "noChats": "No chats",
+    "deleteProject": "Delete project",
+    "deleteProjectTitle": "Delete this project?",
+    "deleteProjectDesc": "The project and all its chat sessions will be removed from Kenvo. Files on disk are not deleted."
   },
   "agent": {
     "title": "Agent",

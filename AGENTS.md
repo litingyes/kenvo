@@ -8,7 +8,7 @@ A local-first AI writing studio: autonomous writing agents create novels, screen
 
 - **Desktop shell**: Electron (Chromium-based native desktop shell with Node.js integration)
 - **Frontend**: React 19 + TypeScript + TanStack Router (file-based, type-safe routing)
-- **Styling**: Tailwind CSS v4 + shadcn/ui (base-nova) + Geist Variable font
+- **Styling**: Tailwind CSS v4 + shadcn/ui (base-nova, zinc) + Inter Variable font (Geist Mono Variable for code)
 - **Build tool**: Vite + electron-vite + vite-plus (ESLint, auto-formatting, pre-commit hooks)
 - **Theming**: next-themes with dark/light mode via CSS variables
 - **Editor**: CodeMirror 6 (`@uiw/react-codemirror` + `@codemirror/lang-markdown`)

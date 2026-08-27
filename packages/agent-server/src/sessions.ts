@@ -2,20 +2,19 @@ import { Agent, type AgentEvent } from '@earendil-works/pi-agent-core'
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
 import type { Model } from '@earendil-works/pi-ai'
 
-import { getAgent } from './agents/registry.js'
 import { serverLog, writeAiRecord } from './logging.js'
 import {
   getModelsCollection,
-  getProviderConfig,
   getProviderInstance,
   listModels,
   type ProviderId,
 } from './providers.js'
+import { buildSystemPrompt, getSkill } from './skills.js'
 import { createFsTools } from './tools/fs-tools.js'
 
 interface SessionEntry {
   agent: Agent
-  agentId: string
+  skillId: string
   projectRoot: string
   providerId: string
   modelId: string
@@ -50,7 +49,7 @@ async function resolveModel(providerId: string, modelId: string): Promise<Model<
 
 export interface CreateSessionOptions {
   sessionId: string
-  agentId: string
+  skillId: string
   projectRoot: string
   providerId: string
   modelId: string
@@ -59,9 +58,9 @@ export interface CreateSessionOptions {
 }
 
 export async function createSession(options: CreateSessionOptions): Promise<void> {
-  const definition = getAgent(options.agentId)
-  if (!definition) {
-    throw new SessionError(`Unknown agent: ${options.agentId}`, 404)
+  const skill = getSkill(options.skillId)
+  if (!skill) {
+    throw new SessionError(`Unknown skill: ${options.skillId}`, 404)
   }
 
   const model = await resolveModel(options.providerId, options.modelId)
@@ -69,7 +68,7 @@ export async function createSession(options: CreateSessionOptions): Promise<void
 
   const agent = new Agent({
     initialState: {
-      systemPrompt: definition.systemPrompt,
+      systemPrompt: buildSystemPrompt(skill),
       model,
       tools: createFsTools(options.projectRoot),
       messages: options.history ?? [],
@@ -80,7 +79,7 @@ export async function createSession(options: CreateSessionOptions): Promise<void
 
   sessions.set(options.sessionId, {
     agent,
-    agentId: options.agentId,
+    skillId: options.skillId,
     projectRoot: options.projectRoot,
     providerId: options.providerId,
     modelId: options.modelId,
@@ -89,7 +88,7 @@ export async function createSession(options: CreateSessionOptions): Promise<void
 
   serverLog('info', 'session created', {
     sessionId: options.sessionId,
-    agentId: options.agentId,
+    skillId: options.skillId,
     providerId: options.providerId,
     modelId: options.modelId,
     resumedMessages: options.history?.length ?? 0,
@@ -135,7 +134,7 @@ export async function runPrompt(
       writeAiRecord({
         type: 'assistant-message',
         sessionId,
-        agentId: entry.agentId,
+        agentId: entry.skillId,
         provider: entry.providerId,
         model: entry.modelId,
         stopReason: event.message.stopReason,
@@ -190,17 +189,4 @@ export function getSessionMessages(sessionId: string): AgentMessage[] {
     throw new SessionError(`Unknown session: ${sessionId}`, 404)
   }
   return entry.agent.state.messages
-}
-
-export function getSessionConfig(sessionId: string) {
-  const entry = sessions.get(sessionId)
-  if (!entry) return undefined
-  const config = getProviderConfig(entry.providerId)
-  return {
-    agentId: entry.agentId,
-    projectRoot: entry.projectRoot,
-    providerId: entry.providerId,
-    providerName: config?.name,
-    modelId: entry.modelId,
-  }
 }

@@ -4,7 +4,6 @@ import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
 
-import { getAgent as getAgentDefinition, listAgents } from './agents/registry.js'
 import { serverLog } from './logging.js'
 import {
   configureProvider,
@@ -27,6 +26,7 @@ import {
   SessionError,
   steerSession,
 } from './sessions.js'
+import { listSkills } from './skills.js'
 import type { ProviderMetadata } from './types.js'
 
 const configureSchema = z.object({
@@ -42,7 +42,7 @@ const testSchema = z.object({
 
 const createSessionSchema = z.object({
   sessionId: z.string().min(1),
-  agentId: z.string().min(1),
+  skillId: z.string().min(1),
   projectRoot: z.string().min(1),
   providerId: z.string().min(1),
   modelId: z.string().min(1),
@@ -144,18 +144,10 @@ export function createApp() {
     })
   })
 
-  // ---------- Agents ----------
+  // ---------- Skills ----------
 
-  app.get('/agents', (c) => {
-    return c.json({ agents: listAgents() })
-  })
-
-  app.get('/agents/:id/template', (c) => {
-    const definition = getAgentDefinition(c.req.param('id'))
-    if (!definition) {
-      return c.json({ error: 'Unknown agent' }, 404)
-    }
-    return c.json({ files: definition.projectTemplate })
+  app.get('/skills', (c) => {
+    return c.json({ skills: listSkills() })
   })
 
   // ---------- Sessions ----------
@@ -167,12 +159,12 @@ export function createApp() {
       return c.json({ error: parsed.error.errors }, 400)
     }
 
-    const { sessionId, agentId, projectRoot, providerId, modelId, history } = parsed.data
+    const { sessionId, skillId, projectRoot, providerId, modelId, history } = parsed.data
 
     try {
       await createSession({
         sessionId,
-        agentId,
+        skillId,
         projectRoot,
         providerId,
         modelId,

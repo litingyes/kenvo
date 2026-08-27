@@ -12,8 +12,17 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import Markdown from 'react-markdown'
 
-import { agentIcon, agentName } from '@/components/agent/agent-meta'
+import { skillIcon, skillName } from '@/components/agent/skill-meta'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import {
   useAgentChat,
@@ -23,7 +32,12 @@ import {
   type UiToolResultMessage,
   type UiUserMessage,
 } from '@/lib/agent/use-agent-chat'
-import { createAgentServerClient } from '@/lib/ai/server-client'
+import {
+  createAgentServerClient,
+  type ProviderMetadata,
+  type SkillMetadata,
+} from '@/lib/ai/server-client'
+import type { AiSettings, ModelRef } from '@/lib/ai/settings-bridge'
 import { useProjectStore } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
 
@@ -32,7 +46,13 @@ const PIN_THRESHOLD = 80
 
 interface AgentPanelProps {
   sessionId: string
-  agentId: string
+  skillId: string
+  /** The session's stored model; null for legacy sessions (falls back visually). */
+  modelRef: ModelRef | null
+  skills: SkillMetadata[]
+  providers: ProviderMetadata[]
+  settings: AiSettings | null
+  onConfigChange: (update: { skillId?: string; providerId?: string; modelId?: string }) => void
   serverPort: number | null
   initialMessages?: UiMessage[]
   onFileActivity?: () => void
@@ -46,7 +66,12 @@ interface AgentPanelProps {
  */
 export function AgentPanel({
   sessionId,
-  agentId,
+  skillId,
+  modelRef,
+  skills,
+  providers,
+  settings,
+  onConfigChange,
   serverPort,
   initialMessages,
   onFileActivity,
@@ -114,7 +139,7 @@ export function AgentPanel({
       <div className="relative flex min-h-0 flex-1 flex-col">
         <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto">
           {empty ? (
-            <EmptyState agentId={agentId} onPick={(text) => void submit(text)} />
+            <EmptyState skillId={skillId} onPick={(text) => void submit(text)} />
           ) : (
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-6 py-5">
               {messages.map((message, index) => (
@@ -148,51 +173,172 @@ export function AgentPanel({
       </div>
 
       <div className="shrink-0 border-t border-border">
-        <div className="mx-auto flex w-full max-w-3xl items-end gap-2 px-6 py-3">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={running ? t('agent.steerPlaceholder') : t('agent.placeholder')}
-            className="max-h-40 min-h-9 flex-1 resize-none text-sm"
-            rows={1}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                e.preventDefault()
-                void submit(input)
-              }
-            }}
-          />
-          {running ? (
+        <div className="mx-auto w-full max-w-3xl px-6 py-3">
+          <div className="flex items-end gap-2">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={running ? t('agent.steerPlaceholder') : t('agent.placeholder')}
+              className="max-h-40 min-h-9 flex-1 resize-none text-sm"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  void submit(input)
+                }
+              }}
+            />
+            {running ? (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => void abort()}
+                aria-label={t('agent.stop')}
+              >
+                <SquareIcon className="size-3.5" />
+              </Button>
+            ) : null}
             <Button
-              variant="ghost"
+              variant="default"
               size="icon-sm"
-              onClick={() => void abort()}
-              aria-label={t('agent.stop')}
+              onClick={() => void submit(input)}
+              disabled={!input.trim() || !serverPort}
+              aria-label={t('agent.send')}
             >
-              <SquareIcon className="size-3.5" />
+              <SendHorizonalIcon className="size-3.5" />
             </Button>
-          ) : null}
-          <Button
-            variant="default"
-            size="icon-sm"
-            onClick={() => void submit(input)}
-            disabled={!input.trim() || !serverPort}
-            aria-label={t('agent.send')}
-          >
-            <SendHorizonalIcon className="size-3.5" />
-          </Button>
+          </div>
+          <ConfigPickers
+            skillId={skillId}
+            modelRef={modelRef}
+            skills={skills}
+            providers={providers}
+            settings={settings}
+            disabled={running}
+            onConfigChange={onConfigChange}
+          />
         </div>
       </div>
     </div>
   )
 }
 
+// ---------- Skill + model pickers ----------
+
+function encodeModel(providerId: string, modelId: string): string {
+  return `${providerId}::${modelId}`
+}
+
+function decodeModel(value: string): ModelRef | null {
+  const index = value.indexOf('::')
+  if (index <= 0) return null
+  return { providerId: value.slice(0, index), modelId: value.slice(index + 2) }
+}
+
+interface ConfigPickersProps {
+  skillId: string
+  modelRef: ModelRef | null
+  skills: SkillMetadata[]
+  providers: ProviderMetadata[]
+  settings: AiSettings | null
+  disabled: boolean
+  onConfigChange: AgentPanelProps['onConfigChange']
+}
+
+function ConfigPickers({
+  skillId,
+  modelRef,
+  skills,
+  providers,
+  settings,
+  disabled,
+  onConfigChange,
+}: ConfigPickersProps) {
+  const { t } = useTranslation()
+
+  const providerNames = React.useMemo(() => {
+    const names: Record<string, string> = {}
+    for (const provider of providers) names[provider.id] = provider.name
+    return names
+  }, [providers])
+
+  // Enabled models whose provider has credentials, grouped by provider.
+  const modelGroups = React.useMemo(() => {
+    if (!settings) return []
+    const configured = new Set(settings.providers.filter((p) => p.apiKey).map((p) => p.id))
+    return Object.entries(settings.enabledModels)
+      .filter(([providerId, models]) => configured.has(providerId) && models.length > 0)
+      .map(([providerId, models]) => ({ providerId, models }))
+  }, [settings])
+
+  const modelValue = modelRef ? encodeModel(modelRef.providerId, modelRef.modelId) : undefined
+
+  return (
+    <div className="mt-2 flex items-center gap-1.5">
+      <Select
+        value={skillId}
+        onValueChange={(next) => next && next !== skillId && onConfigChange({ skillId: next })}
+        disabled={disabled}
+      >
+        <SelectTrigger
+          size="sm"
+          aria-label={t('agent.skill')}
+          className="h-6 gap-1 border-none px-1.5 text-[11px] text-muted-foreground shadow-none hover:text-foreground"
+        >
+          <SelectValue>{skillName(skillId)}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>{t('agent.skill')}</SelectLabel>
+            {(skills.length > 0 ? skills : [{ id: skillId, name: skillId, description: '' }]).map(
+              (skill) => (
+                <SelectItem key={skill.id} value={skill.id}>
+                  {skillName(skill.id)}
+                </SelectItem>
+              ),
+            )}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={modelValue}
+        onValueChange={(next) => {
+          const decoded = next ? decodeModel(next) : null
+          if (decoded) onConfigChange(decoded)
+        }}
+        disabled={disabled || modelGroups.length === 0}
+      >
+        <SelectTrigger
+          size="sm"
+          aria-label={t('agent.model')}
+          className="h-6 gap-1 border-none px-1.5 text-[11px] text-muted-foreground shadow-none hover:text-foreground"
+        >
+          <SelectValue placeholder={t('agent.noModelShort')}>{modelRef?.modelId}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {modelGroups.map(({ providerId, models }) => (
+            <SelectGroup key={providerId}>
+              <SelectLabel>{providerNames[providerId] ?? providerId}</SelectLabel>
+              {models.map((modelId) => (
+                <SelectItem key={modelId} value={encodeModel(providerId, modelId)}>
+                  {modelId}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
 // ---------- Empty state ----------
 
-function EmptyState({ agentId, onPick }: { agentId: string; onPick: (text: string) => void }) {
+function EmptyState({ skillId, onPick }: { skillId: string; onPick: (text: string) => void }) {
   const { t } = useTranslation()
-  const Icon = agentIcon(agentId)
-  const starters = t(`agent.starters.${agentId}`, {
+  const Icon = skillIcon(skillId)
+  const starters = t(`agent.starters.${skillId}`, {
     returnObjects: true,
     defaultValue: [],
   }) as string[]
@@ -201,7 +347,7 @@ function EmptyState({ agentId, onPick }: { agentId: string; onPick: (text: strin
     <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
       <Icon className="size-8 text-muted-foreground" />
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium">{agentName(agentId)}</p>
+        <p className="text-sm font-medium">{skillName(skillId)}</p>
         <p className="text-xs text-muted-foreground">{t('agent.empty')}</p>
       </div>
       {starters.length > 0 && (

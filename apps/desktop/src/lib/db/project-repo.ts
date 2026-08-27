@@ -4,7 +4,6 @@ export interface Project {
   id: string
   path: string
   title: string
-  agent_id: string
   created_at: number
   last_active_at: number
 }
@@ -24,25 +23,20 @@ function genId(): string {
 
 // ---------- Projects ----------
 
-export async function createProject(
-  path: string,
-  title: string,
-  agentId: string,
-): Promise<Project> {
+export async function createProject(path: string, title: string): Promise<Project> {
   const db = await getDatabase()
   const now = Date.now()
   const project: Project = {
     id: genId(),
     path,
     title,
-    agent_id: agentId,
     created_at: now,
     last_active_at: now,
   }
   await db.execute(
-    `INSERT INTO projects (id, path, title, agent_id, created_at, last_active_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [project.id, project.path, project.title, project.agent_id, now, now],
+    `INSERT INTO projects (id, path, title, created_at, last_active_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [project.id, project.path, project.title, now, now],
   )
   return project
 }

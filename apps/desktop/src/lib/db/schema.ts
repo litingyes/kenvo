@@ -14,7 +14,6 @@ const SCHEMA_STATEMENTS = [
     id             TEXT PRIMARY KEY,
     path           TEXT NOT NULL UNIQUE,
     title          TEXT NOT NULL,
-    agent_id       TEXT NOT NULL DEFAULT 'writer',
     created_at     INTEGER NOT NULL,
     last_active_at INTEGER NOT NULL
   )`,
@@ -34,7 +33,7 @@ const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS chat_sessions (
     id             TEXT PRIMARY KEY,
     project_id     TEXT NOT NULL,
-    agent_id       TEXT NOT NULL,
+    skill_id       TEXT NOT NULL,
     title          TEXT,
     provider_id    TEXT,
     model_id       TEXT,
@@ -57,6 +56,23 @@ const SCHEMA_STATEMENTS = [
      ON chat_messages(session_id, seq)`,
 ]
 
+async function tableColumns(table: string): Promise<string[]> {
+  const rows = await api.db.select<{ name: string }>(`PRAGMA table_info(${table})`)
+  return rows.map((row) => row.name)
+}
+
+/** Migrate pre-skills databases: agents became session-scoped skills. */
+async function migrateLegacyAgentColumns(): Promise<void> {
+  const sessionCols = await tableColumns('chat_sessions')
+  if (sessionCols.includes('agent_id') && !sessionCols.includes('skill_id')) {
+    await api.db.execute(`ALTER TABLE chat_sessions RENAME COLUMN agent_id TO skill_id`)
+  }
+  const projectCols = await tableColumns('projects')
+  if (projectCols.includes('agent_id')) {
+    await api.db.execute(`ALTER TABLE projects DROP COLUMN agent_id`)
+  }
+}
+
 async function ensureSchema(): Promise<void> {
   for (const stmt of DROP_LEGACY_STATEMENTS) {
     await api.db.execute(stmt)
@@ -64,6 +80,7 @@ async function ensureSchema(): Promise<void> {
   for (const stmt of SCHEMA_STATEMENTS) {
     await api.db.execute(stmt)
   }
+  await migrateLegacyAgentColumns()
 }
 
 export async function initDatabase(): Promise<void> {

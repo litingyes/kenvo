@@ -29,16 +29,19 @@ A local-first AI writing studio: autonomous writing agents create novels, screen
   - `src/lib/db/` — schema and repos (projects / project_tabs / chat_sessions / chat_messages)
 - `packages/agent-server` — Hono server on port 32420
   - `src/sessions.ts` — SessionManager: pi `Agent` instances keyed by session id, prompt/steer/abort
-  - `src/agents/` — writer / novelist / screenwriter / prompt-engineer definitions (system prompt + project template)
+  - `src/skills.ts` — built-in writing skills (`skills/*/SKILL.md`, agentskills.io format) loaded via pi-agent-core `loadSkills`; session system prompt = shared base prompt + selected skill content
   - `src/tools/fs-tools.ts` — 6 file tools (list/read/write/edit/delete/search) locked to the project root
   - `src/providers.ts` — pi-ai Models collection over UI-configured provider credentials
+  - Built with tsdown: single-file ESM bundle (`dist/index.mjs`) with all deps inlined and `skills/` copied next to it
 - `apps/portal` — Astro landing page
 
 ### Key data flows
 
 - **Chat**: renderer `POST /sessions/:id/messages` → server runs `agent.prompt()` and forwards every pi agent event as SSE → `use-agent-chat.ts` rebuilds the transcript; finished messages are appended to SQLite.
-- **Resume / session switching**: on studio load, the renderer activates the most recent session across all projects: its messages are loaded from SQLite and passed as `history` to `POST /sessions`, scoped to that session's project (agent + folder). Switching sessions aborts + destroys the server-side agent and recreates it from the target session's SQLite history (running sessions require confirmation first).
+- **Skill + model selection**: each chat session stores its own `skill_id` / `provider_id` / `model_id`. The user picks skill + model in the chat composer; changing either rebuilds the server-side agent in place (same session id, transcript preserved). New sessions default to the last-used config (localStorage `kenvo:chat-config`), falling back to the first enabled model. There are no per-scenario model assignments in settings.
+- **Resume / session switching**: on studio load, the renderer activates the most recent session across all projects: its messages are loaded from SQLite and passed as `history` to `POST /sessions`, scoped to that session's project (folder) with the session's stored skill + model. Switching sessions aborts + destroys the server-side agent and recreates it from the target session's SQLite history (running sessions require confirmation first).
 - **File sync**: agent file tools write directly into the project folder; the Files panel editor reloads via the existing Electron FS watcher (`fs:watch`/`fs:file_changed` IPC), and the tree refreshes on agent file activity.
+- **Projects** are just folders (no type/template binding): creating a project seeds a minimal README only; writing scenarios are chosen per session via skills.
 
 ## Code Conventions
 

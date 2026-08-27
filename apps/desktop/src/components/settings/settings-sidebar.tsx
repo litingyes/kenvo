@@ -1,6 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import {
-  BotIcon,
   BrainCircuitIcon,
   CpuIcon,
   FileTextIcon,
@@ -71,11 +70,6 @@ export function SettingsSidebar() {
           to="/settings/ai/models"
           icon={CpuIcon}
           label={t('settings.aiCapabilities.models.title')}
-        />
-        <NavItem
-          to="/settings/ai/agents"
-          icon={BotIcon}
-          label={t('settings.aiCapabilities.agents.title')}
         />
       </nav>
     </aside>

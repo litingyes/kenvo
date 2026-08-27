@@ -24,20 +24,15 @@ export interface ModelMetadata {
   cost: { input: number; output: number; cacheRead: number; cacheWrite: number }
 }
 
-export interface AgentMetadata {
+export interface SkillMetadata {
   id: string
   name: string
   description: string
 }
 
-export interface TemplateFile {
-  path: string
-  content: string
-}
-
 export interface CreateSessionRequest {
   sessionId: string
-  agentId: string
+  skillId: string
   projectRoot: string
   providerId: string
   modelId: string
@@ -106,19 +101,10 @@ export class AgentServerClient {
     return data.models
   }
 
-  async getAgents(): Promise<AgentMetadata[]> {
-    const response = await this.request('/agents')
+  async getSkills(): Promise<SkillMetadata[]> {
+    const response = await this.request('/skills')
     const data = await response.json()
-    return data.agents
-  }
-
-  async getAgentTemplate(id: string): Promise<TemplateFile[]> {
-    const response = await this.request(`/agents/${id}/template`)
-    const data = await response.json()
-    if (!response.ok) {
-      throw new Error(data.error ?? `Failed to load template (${response.status})`)
-    }
-    return data.files
+    return data.skills
   }
 
   async createSession(body: CreateSessionRequest): Promise<void> {

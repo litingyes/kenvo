@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server'
 
 import { getLogDir, serverLog } from './logging.js'
 import { createApp } from './routes.js'
+import { initSkills } from './skills.js'
 
 const DEFAULT_PORT = 32420
 const MAX_PORT_ATTEMPTS = 20
@@ -57,6 +58,7 @@ async function findAvailablePort(startPort: number): Promise<number> {
 }
 
 async function main() {
+  await initSkills()
   const desiredPort = getDesiredPort()
   const port = await findAvailablePort(desiredPort)
   serverLog('info', 'agent-server started', { port, logDir: getLogDir() })

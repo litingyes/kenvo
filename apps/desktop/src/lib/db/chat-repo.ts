@@ -3,7 +3,7 @@ import { getDatabase } from './schema'
 export interface ChatSession {
   id: string
   project_id: string
-  agent_id: string
+  skill_id: string
   title: string | null
   provider_id: string | null
   model_id: string | null
@@ -28,7 +28,7 @@ function genId(): string {
 
 export async function createChatSession(
   projectId: string,
-  agentId: string,
+  skillId: string,
   providerId?: string,
   modelId?: string,
 ): Promise<ChatSession> {
@@ -37,7 +37,7 @@ export async function createChatSession(
   const session: ChatSession = {
     id: genId(),
     project_id: projectId,
-    agent_id: agentId,
+    skill_id: skillId,
     title: null,
     provider_id: providerId ?? null,
     model_id: modelId ?? null,
@@ -46,12 +46,12 @@ export async function createChatSession(
   }
   await db.execute(
     `INSERT INTO chat_sessions
-       (id, project_id, agent_id, title, provider_id, model_id, created_at, last_active_at)
+       (id, project_id, skill_id, title, provider_id, model_id, created_at, last_active_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       session.id,
       session.project_id,
-      session.agent_id,
+      session.skill_id,
       session.title,
       session.provider_id,
       session.model_id,
@@ -85,6 +85,26 @@ export async function listAllChatSessions(): Promise<ChatSession[]> {
 export async function updateChatSessionTitle(id: string, title: string): Promise<void> {
   const db = await getDatabase()
   await db.execute(`UPDATE chat_sessions SET title = ? WHERE id = ?`, [title, id])
+}
+
+/** Update the session's skill / model selection (used when the user switches either in chat). */
+export async function updateChatSessionConfig(
+  id: string,
+  config: { skillId?: string; providerId?: string; modelId?: string },
+): Promise<void> {
+  const db = await getDatabase()
+  if (config.skillId !== undefined) {
+    await db.execute(`UPDATE chat_sessions SET skill_id = ? WHERE id = ?`, [config.skillId, id])
+  }
+  if (config.providerId !== undefined) {
+    await db.execute(`UPDATE chat_sessions SET provider_id = ? WHERE id = ?`, [
+      config.providerId,
+      id,
+    ])
+  }
+  if (config.modelId !== undefined) {
+    await db.execute(`UPDATE chat_sessions SET model_id = ? WHERE id = ?`, [config.modelId, id])
+  }
 }
 
 export async function touchChatSession(id: string): Promise<void> {

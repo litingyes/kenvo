@@ -2,8 +2,8 @@ import { FolderIcon, PanelLeftIcon, PanelRightIcon } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { agentIcon, agentName } from '@/components/agent/agent-meta'
 import { AgentPanel } from '@/components/agent/agent-panel'
+import { skillIcon, skillName } from '@/components/agent/skill-meta'
 import { FilesPanel } from '@/components/files/files-panel'
 import { AppHeader } from '@/components/layout/app-header'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
@@ -21,14 +21,26 @@ import {
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
-import { createAgentServerClient } from '@/lib/ai/server-client'
-import { getAiSettings, resolveAgentModel, type AiSettings } from '@/lib/ai/settings-bridge'
+import {
+  createAgentServerClient,
+  type ProviderMetadata,
+  type SkillMetadata,
+} from '@/lib/ai/server-client'
+import {
+  getAiSettings,
+  isModelUsable,
+  listUsableModels,
+  resolveDefaultModel,
+  type AiSettings,
+  type ModelRef,
+} from '@/lib/ai/settings-bridge'
 import {
   createChatSession,
   deleteChatSession,
   getChatSession,
   listAllChatSessions,
   listChatMessages,
+  updateChatSessionConfig,
   type ChatSession,
 } from '@/lib/db/chat-repo'
 import {
@@ -47,6 +59,33 @@ type ConfirmAction =
   | { type: 'new' }
   | { type: 'delete'; sessionId: string }
   | { type: 'deleteProject'; projectId: string }
+
+/** Session config (skill + model) chosen in chat. */
+interface SessionConfig {
+  skillId: string
+  providerId: string
+  modelId: string
+}
+
+const LAST_CONFIG_KEY = 'kenvo:chat-config'
+const DEFAULT_SKILL_ID = 'writer'
+
+function readLastConfig(): Partial<SessionConfig> | null {
+  try {
+    const raw = localStorage.getItem(LAST_CONFIG_KEY)
+    return raw ? (JSON.parse(raw) as Partial<SessionConfig>) : null
+  } catch {
+    return null
+  }
+}
+
+function writeLastConfig(config: SessionConfig): void {
+  try {
+    localStorage.setItem(LAST_CONFIG_KEY, JSON.stringify(config))
+  } catch {
+    // Best effort.
+  }
+}
 
 /**
  * Codex-style unified studio: session history across all projects on the
@@ -70,6 +109,9 @@ export function StudioLayout() {
   const [agentRunning, setAgentRunning] = React.useState(false)
   const [confirmAction, setConfirmAction] = React.useState<ConfirmAction | null>(null)
   const [newProjectOpen, setNewProjectOpen] = React.useState(false)
+  const [aiSettings, setAiSettingsState] = React.useState<AiSettings | null>(null)
+  const [skills, setSkills] = React.useState<SkillMetadata[]>([])
+  const [providers, setProviders] = React.useState<ProviderMetadata[]>([])
   const settingsRef = React.useRef<AiSettings | null>(null)
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null
@@ -127,47 +169,106 @@ export function StudioLayout() {
     await touchProject(project.id)
   }, [])
 
+  /**
+   * Resolve the model a session should run with: the session's own stored
+   * model when still usable, otherwise the default (first enabled) model.
+   */
+  const resolveSessionModel = React.useCallback((session: ChatSession): ModelRef | null => {
+    const settings = settingsRef.current
+    if (!settings) return null
+    const stored =
+      session.provider_id && session.model_id
+        ? { providerId: session.provider_id, modelId: session.model_id }
+        : null
+    if (stored && isModelUsable(settings, stored)) return stored
+    return resolveDefaultModel(settings) ?? null
+  }, [])
+
   /** Load the persisted transcript and (re)create the server-side agent session. */
   const startServerSession = React.useCallback(
     async (session: ChatSession, project: Project, port: number): Promise<UiMessage[]> => {
       const settings = settingsRef.current
-      const assignment = settings ? resolveAgentModel(settings, project.agent_id) : null
-      if (!assignment) throw new Error(t('agent.noModel'))
+      let model = resolveSessionModel(session)
+      if (!model) throw new Error(t('agent.noModel'))
       const rows = await listChatMessages(session.id)
       const history = rows.map((r) => JSON.parse(r.message) as UiMessage)
       const client = createAgentServerClient(port)
-      await client.createSession({
-        sessionId: session.id,
-        agentId: project.agent_id,
-        projectRoot: project.path,
-        providerId: assignment.providerId,
-        modelId: assignment.modelId,
-        history,
+      const create = (m: ModelRef) =>
+        client.createSession({
+          sessionId: session.id,
+          skillId: session.skill_id,
+          projectRoot: project.path,
+          providerId: m.providerId,
+          modelId: m.modelId,
+          history,
+        })
+      // Try the session's model, then every other enabled model: a stored
+      // model may have vanished from the provider's catalog since.
+      const seen = new Set<string>()
+      const candidates = [model, ...(settings ? listUsableModels(settings) : [])].filter((m) => {
+        const key = `${m.providerId}/${m.modelId}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
       })
+      let lastError: unknown = null
+      let created = false
+      for (const candidate of candidates) {
+        try {
+          await create(candidate)
+          model = candidate
+          created = true
+          break
+        } catch (e) {
+          lastError = e
+        }
+      }
+      if (!created) throw lastError
+      // Persist the effective model so the session runs consistently.
+      if (model.providerId !== session.provider_id || model.modelId !== session.model_id) {
+        const effective: ModelRef = model
+        await updateChatSessionConfig(session.id, {
+          providerId: effective.providerId,
+          modelId: effective.modelId,
+        }).catch(() => {})
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === session.id
+              ? { ...s, provider_id: effective.providerId, model_id: effective.modelId }
+              : s,
+          ),
+        )
+      }
       return history
     },
-    [t],
+    [t, resolveSessionModel],
   )
 
   /** Create a fresh chat session under the given project and activate it. */
   const createSessionForProject = React.useCallback(
     async (project: Project, port: number): Promise<ChatSession> => {
       const settings = settingsRef.current
-      const assignment = settings ? resolveAgentModel(settings, project.agent_id) : null
-      if (!assignment) throw new Error(t('agent.noModel'))
-      const session = await createChatSession(
-        project.id,
-        project.agent_id,
-        assignment.providerId,
-        assignment.modelId,
-      )
+      const last = readLastConfig()
+      const lastModel =
+        last?.providerId && last?.modelId
+          ? { providerId: last.providerId, modelId: last.modelId }
+          : null
+      const model =
+        settings && lastModel && isModelUsable(settings, lastModel)
+          ? lastModel
+          : settings
+            ? (resolveDefaultModel(settings) ?? null)
+            : null
+      if (!model) throw new Error(t('agent.noModel'))
+      const skillId = last?.skillId ?? DEFAULT_SKILL_ID
+      const session = await createChatSession(project.id, skillId, model.providerId, model.modelId)
       const client = createAgentServerClient(port)
       await client.createSession({
         sessionId: session.id,
-        agentId: project.agent_id,
+        skillId,
         projectRoot: project.path,
-        providerId: assignment.providerId,
-        modelId: assignment.modelId,
+        providerId: model.providerId,
+        modelId: model.modelId,
         history: [],
       })
       return session
@@ -186,6 +287,7 @@ export function StudioLayout() {
       try {
         const settings = await getAiSettings()
         settingsRef.current = settings
+        if (!cancelled) setAiSettingsState(settings)
 
         const client = createAgentServerClient(port)
         // The server keeps provider credentials in memory only — push the
@@ -198,6 +300,20 @@ export function StudioLayout() {
               enabled: provider.enabled,
             })
           }
+        }
+
+        // Skills + provider names feed the chat pickers (best effort).
+        try {
+          const [skillList, providerList] = await Promise.all([
+            client.getSkills(),
+            client.getProviders(),
+          ])
+          if (!cancelled) {
+            setSkills(skillList)
+            setProviders(providerList)
+          }
+        } catch {
+          // Pickers fall back to ids.
         }
 
         const allProjects = await listProjects()
@@ -368,6 +484,63 @@ export function StudioLayout() {
     }
   }
 
+  /**
+   * Switch the active session's skill and/or model. The server-side agent is
+   * rebuilt in place (same session id, transcript preserved). Pickers are
+   * disabled while a run is active, so no abort handling is needed here.
+   */
+  const handleSessionConfigChange = async (update: {
+    skillId?: string
+    providerId?: string
+    modelId?: string
+  }) => {
+    if (!serverPort || !activeSession || !activeProject || agentRunning) return
+    const next: SessionConfig = {
+      skillId: update.skillId ?? activeSession.skill_id,
+      providerId: update.providerId ?? activeSession.provider_id ?? '',
+      modelId: update.modelId ?? activeSession.model_id ?? '',
+    }
+    if (!next.providerId || !next.modelId) {
+      const fallback = resolveSessionModel(activeSession)
+      if (!fallback) {
+        setSessionError(t('agent.noModel'))
+        return
+      }
+      next.providerId = fallback.providerId
+      next.modelId = fallback.modelId
+    }
+    try {
+      await updateChatSessionConfig(activeSession.id, next)
+      writeLastConfig(next)
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === activeSession.id
+            ? {
+                ...s,
+                skill_id: next.skillId,
+                provider_id: next.providerId,
+                model_id: next.modelId,
+              }
+            : s,
+        ),
+      )
+      const client = createAgentServerClient(serverPort)
+      await client.destroySession(activeSession.id).catch(() => {})
+      const rows = await listChatMessages(activeSession.id)
+      const history = rows.map((r) => JSON.parse(r.message) as UiMessage)
+      await client.createSession({
+        sessionId: activeSession.id,
+        skillId: next.skillId,
+        projectRoot: activeProject.path,
+        providerId: next.providerId,
+        modelId: next.modelId,
+        history,
+      })
+    } catch (e) {
+      setSessionError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
   const handleConfirm = async () => {
     const action = confirmAction
     setConfirmAction(null)
@@ -378,7 +551,7 @@ export function StudioLayout() {
     else await performDeleteProject(action.projectId)
   }
 
-  const AgentBadgeIcon = activeProject ? agentIcon(activeProject.agent_id) : null
+  const AgentBadgeIcon = activeSession ? skillIcon(activeSession.skill_id) : null
 
   const sidebarToggle = (
     <Button
@@ -433,10 +606,10 @@ export function StudioLayout() {
                     <span className="truncate text-xs font-medium">
                       {activeSession.title || t('agent.untitled')}
                     </span>
-                    {AgentBadgeIcon && (
+                    {AgentBadgeIcon && activeSession && (
                       <span className="ml-1 flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
                         <AgentBadgeIcon className="size-3" />
-                        {agentName(activeProject.agent_id)}
+                        {skillName(activeSession.skill_id)}
                       </span>
                     )}
                   </div>
@@ -462,11 +635,20 @@ export function StudioLayout() {
                 <CenteredNote text={t('agent.serverStopped')} />
               ) : sessionError ? (
                 <CenteredNote text={sessionError} />
-              ) : activeSessionId && activeProject ? (
+              ) : activeSession && activeProject ? (
                 <AgentPanel
-                  key={activeSessionId}
-                  sessionId={activeSessionId}
-                  agentId={activeProject.agent_id}
+                  key={activeSession.id}
+                  sessionId={activeSession.id}
+                  skillId={activeSession.skill_id}
+                  modelRef={
+                    activeSession.provider_id && activeSession.model_id
+                      ? { providerId: activeSession.provider_id, modelId: activeSession.model_id }
+                      : null
+                  }
+                  skills={skills}
+                  providers={providers}
+                  settings={aiSettings}
+                  onConfigChange={(update) => void handleSessionConfigChange(update)}
                   serverPort={serverPort}
                   initialMessages={historyMessages}
                   onFileActivity={bumpTree}

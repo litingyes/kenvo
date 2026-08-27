@@ -52,7 +52,7 @@
     "stop": "Stop",
     "thinking": "Thinking",
     "connecting": "Connecting to agent…",
-    "noModel": "No model configured. Enable a model in Settings → AI → Models and assign it to a writing agent.",
+    "noModel": "No model configured. Enable one in Settings → AI → Models.",
     "serverStopped": "Agent server is not running. Start it in Settings → AI → Basic.",
     "sessions": "Sessions",
     "newSession": "New Session",
@@ -87,7 +87,10 @@
         "Write a prompt for an image-generation model",
         "Help me critique and improve an existing prompt"
       ]
-    }
+    },
+    "skill": "Skill",
+    "model": "Model",
+    "noModelShort": "No model"
   },
   "settings": {
     "title": "Settings",
@@ -186,26 +189,6 @@
         "title": "Models",
         "description": "Enable or disable models per provider.",
         "empty": "Connect a provider in Providers first to see available models."
-      },
-      "agents": {
-        "title": "Agents",
-        "description": "Built-in writing agents and the model each one uses.",
-        "model": "Model",
-        "auto": "Auto",
-        "autoHint": "Uses {{model}} (the first enabled model)",
-        "noModel": "No models enabled yet — enable some on the Models page first.",
-        "writer": {
-          "description": "General-purpose writing: articles, essays, notes, and any text."
-        },
-        "novelist": {
-          "description": "Long-form fiction: chapters, characters, and worldbuilding."
-        },
-        "screenwriter": {
-          "description": "Screenplays: scenes, dialogue, and act structure in standard format."
-        },
-        "prompt-engineer": {
-          "description": "Design and iterate LLM prompts: templates, variables, and evals."
-        }
       }
     }
   },

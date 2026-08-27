@@ -25,9 +25,9 @@ function notifyStopped(): void {
 
 function getAgentServerEntry(): string {
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'agent-server', 'index.cjs')
+    return path.join(process.resourcesPath, 'agent-server', 'index.mjs')
   }
-  return path.join(__dirname, '../../../../packages/agent-server/dist/index.cjs')
+  return path.join(__dirname, '../../../../packages/agent-server/dist/index.mjs')
 }
 
 async function isAgentServerRunning(port: number): Promise<boolean> {
@@ -104,14 +104,15 @@ export async function startAgentServer(): Promise<{ port: number } | null> {
 }
 
 export async function stopAgentServer(): Promise<void> {
-  if (!child) return
-  child.kill()
+  child?.kill()
   child = null
   currentPort = null
 }
 
 export function getAgentServerStatus(): { running: boolean; port: number | null } {
-  return { running: child !== null, port: currentPort }
+  // A non-null port means the server is up — either our own child or an
+  // externally started server we adopted (dev mode runs it via tsx).
+  return { running: currentPort !== null, port: currentPort }
 }
 
 export function getAgentServerPort(): number | null {

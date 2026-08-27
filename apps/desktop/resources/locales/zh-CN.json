@@ -52,7 +52,7 @@
     "stop": "停止",
     "thinking": "思考过程",
     "connecting": "正在连接 Agent…",
-    "noModel": "尚未配置模型。请在 设置 → AI → Models 启用模型，并在 Agents 页分配给写作 Agent。",
+    "noModel": "尚未配置模型。请在 设置 → AI → Models 页启用模型。",
     "serverStopped": "Agent 服务未运行。请在 设置 → AI → 基础配置 中启动。",
     "sessions": "会话",
     "newSession": "新会话",
@@ -87,7 +87,10 @@
         "为图像生成模型写一个 prompt",
         "帮我评审并改进一个现有 prompt"
       ]
-    }
+    },
+    "skill": "技能",
+    "model": "模型",
+    "noModelShort": "未配置模型"
   },
   "settings": {
     "title": "设置",
@@ -186,26 +189,6 @@
         "title": "Models",
         "description": "按 provider 启用或禁用模型。",
         "empty": "先在 Providers 中连接一个 provider 才能查看可用模型。"
-      },
-      "agents": {
-        "title": "智能体",
-        "description": "内置写作智能体及其各自使用的模型。",
-        "model": "模型",
-        "auto": "自动",
-        "autoHint": "使用 {{model}}（第一个启用的模型）",
-        "noModel": "尚未启用任何模型，请先在 Models 页启用。",
-        "writer": {
-          "description": "通用写作：文章、随笔、笔记与各类文本。"
-        },
-        "novelist": {
-          "description": "长篇与短篇虚构创作：章节、人物与世界观管理。"
-        },
-        "screenwriter": {
-          "description": "剧本创作：标准剧本格式的场景、对白与幕结构。"
-        },
-        "prompt-engineer": {
-          "description": "设计与迭代 LLM Prompt：模板、变量与评估用例。"
-        }
       }
     }
   },

@@ -7,7 +7,7 @@ export interface AiProviderSettings {
   enabled: boolean
 }
 
-export interface AgentModelAssignment {
+export interface ModelRef {
   providerId: string
   modelId: string
 }
@@ -17,7 +17,6 @@ export interface AiSettings {
   serverAutoStart: boolean
   providers: AiProviderSettings[]
   enabledModels: Record<string, string[]>
-  agentModels: Record<string, AgentModelAssignment>
 }
 
 export interface AgentServerStatus {
@@ -104,40 +103,31 @@ export function toggleModelEnabled(
   }
 }
 
-export function setAgentModel(
-  settings: AiSettings,
-  agentId: string,
-  assignment: AgentModelAssignment | null,
-): AiSettings {
-  const agentModels = { ...settings.agentModels }
-  if (assignment) {
-    agentModels[agentId] = assignment
-  } else {
-    delete agentModels[agentId]
-  }
-  return { ...settings, agentModels }
+/**
+ * Default model for new sessions: the first enabled model whose provider has
+ * an API key. Sessions override this with their own stored model.
+ */
+export function resolveDefaultModel(settings: AiSettings): ModelRef | undefined {
+  return listUsableModels(settings)[0]
 }
 
-export function resolveAgentModel(
-  settings: AiSettings,
-  agentId: string,
-): AgentModelAssignment | undefined {
+/** True when the model is usable: provider configured + model still enabled. */
+export function isModelUsable(settings: AiSettings, ref: ModelRef): boolean {
+  const hasApiKey = Boolean(settings.providers.find((p) => p.id === ref.providerId)?.apiKey)
+  return hasApiKey && (settings.enabledModels[ref.providerId]?.includes(ref.modelId) ?? false)
+}
+
+/** Every enabled model whose provider has an API key, in settings order. */
+export function listUsableModels(settings: AiSettings): ModelRef[] {
   const hasApiKey = (providerId: string) =>
     Boolean(settings.providers.find((p) => p.id === providerId)?.apiKey)
 
-  const assigned = settings.agentModels[agentId]
-  if (
-    assigned &&
-    hasApiKey(assigned.providerId) &&
-    settings.enabledModels[assigned.providerId]?.includes(assigned.modelId)
-  ) {
-    return assigned
-  }
+  const result: ModelRef[] = []
   for (const [providerId, models] of Object.entries(settings.enabledModels)) {
-    const modelId = models[0]
-    if (modelId && hasApiKey(providerId)) {
-      return { providerId, modelId }
+    if (!hasApiKey(providerId)) continue
+    for (const modelId of models) {
+      result.push({ providerId, modelId })
     }
   }
-  return undefined
+  return result
 }

@@ -7,17 +7,11 @@ interface AiProviderSettings {
   enabled: boolean
 }
 
-interface AgentModelAssignment {
-  providerId: string
-  modelId: string
-}
-
 export interface AiSettings {
   serverPort: number
   serverAutoStart: boolean
   providers: AiProviderSettings[]
   enabledModels: Record<string, string[]>
-  agentModels: Record<string, AgentModelAssignment>
 }
 
 export interface ThemeSettings {
@@ -39,7 +33,6 @@ const DEFAULT_AI_SETTINGS: AiSettings = {
   serverAutoStart: true,
   providers: [],
   enabledModels: {},
-  agentModels: {},
 }
 
 export function getTheme(): ThemeSettings {
@@ -72,7 +65,6 @@ export function getAiSettings(): AiSettings {
     serverAutoStart: raw.serverAutoStart ?? DEFAULT_AI_SETTINGS.serverAutoStart,
     providers: raw.providers ?? DEFAULT_AI_SETTINGS.providers,
     enabledModels: raw.enabledModels ?? DEFAULT_AI_SETTINGS.enabledModels,
-    agentModels: raw.agentModels ?? DEFAULT_AI_SETTINGS.agentModels,
   }
 }
 

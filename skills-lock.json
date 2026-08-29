@@ -13,6 +13,12 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
     },
+    "markstream-react": {
+      "source": "Simon-He95/markstream-vue",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/markstream-react/SKILL.md",
+      "computedHash": "da24f84741ea154e893b49569cf6196fb3d68534817bd835044451fdffe84778"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",

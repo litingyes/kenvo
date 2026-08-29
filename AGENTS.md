@@ -12,6 +12,7 @@ A local-first AI writing studio: autonomous writing agents create novels, screen
 - **Build tool**: Vite + electron-vite + vite-plus (ESLint, auto-formatting, pre-commit hooks)
 - **Theming**: next-themes with dark/light mode via CSS variables
 - **Editor**: CodeMirror 6 (`@uiw/react-codemirror` + `@codemirror/lang-markdown`)
+- **Chat markdown**: markstream-react (streaming-friendly renderer, Mermaid enabled) via `src/components/agent/markdown-stream.tsx`
 - **Agent runtime**: `@earendil-works/pi-agent-core` (tool loop, steering, abort) + `@earendil-works/pi-ai` (30+ providers, model catalogs with cost/context metadata)
 - **Local AI service**: Hono server in `packages/agent-server`, streaming raw pi agent events over SSE
 - **Storage**: better-sqlite3 (projects, tabs, chat sessions/messages) + Electron Store (settings)

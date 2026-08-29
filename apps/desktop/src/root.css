@@ -74,76 +74,100 @@
 /*
  * Typography for agent-authored Markdown in the chat view.
  * Long-form output (novels, screenplays, prompts) must read like a document.
+ * NOTE: deliberately unlayered — markstream-react ships unlayered scoped CSS
+ * which would otherwise beat @layer rules regardless of specificity.
  */
-@layer components {
-  .prose-agent {
-    @apply text-sm leading-7 break-words text-foreground;
-  }
-  .prose-agent > :first-child {
-    margin-top: 0;
-  }
-  .prose-agent > :last-child {
-    margin-bottom: 0;
-  }
-  .prose-agent h1 {
-    @apply mt-6 mb-3 text-xl font-semibold tracking-tight;
-  }
-  .prose-agent h2 {
-    @apply mt-5 mb-2.5 text-lg font-semibold tracking-tight;
-  }
-  .prose-agent h3 {
-    @apply mt-4 mb-2 text-base font-semibold;
-  }
-  .prose-agent h4 {
-    @apply mt-3 mb-1.5 text-sm font-semibold;
-  }
-  .prose-agent p {
-    @apply my-2.5;
-  }
-  .prose-agent ul {
-    @apply my-2.5 list-disc pl-5;
-  }
-  .prose-agent ol {
-    @apply my-2.5 list-decimal pl-5;
-  }
-  .prose-agent li {
-    @apply my-1;
-  }
-  .prose-agent li > ul,
-  .prose-agent li > ol {
-    @apply my-1;
-  }
-  .prose-agent strong {
-    @apply font-semibold;
-  }
-  .prose-agent a {
-    @apply text-primary underline underline-offset-2;
-  }
-  .prose-agent blockquote {
-    @apply my-2.5 border-l-2 border-border pl-3 text-muted-foreground;
-  }
-  .prose-agent hr {
-    @apply my-4 border-border;
-  }
-  .prose-agent code {
-    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
-  }
-  .prose-agent pre {
-    @apply my-3 overflow-x-auto rounded-md bg-muted p-3 text-xs leading-relaxed;
-  }
-  .prose-agent pre code {
-    @apply bg-transparent p-0 text-inherit;
-  }
-  .prose-agent table {
-    @apply my-3 w-full border-collapse text-xs;
-  }
-  .prose-agent th,
-  .prose-agent td {
-    @apply border border-border px-2 py-1 text-left;
-  }
-  .prose-agent th {
-    @apply bg-muted font-medium;
-  }
+.prose-agent {
+  @apply text-sm leading-7 break-words text-foreground;
+}
+.prose-agent > :first-child {
+  margin-top: 0;
+}
+.prose-agent > :last-child {
+  margin-bottom: 0;
+}
+.prose-agent h1 {
+  @apply mt-6 mb-3 text-xl font-semibold tracking-tight;
+}
+.prose-agent h2 {
+  @apply mt-5 mb-2.5 text-lg font-semibold tracking-tight;
+}
+.prose-agent h3 {
+  @apply mt-4 mb-2 text-base font-semibold;
+}
+.prose-agent h4 {
+  @apply mt-3 mb-1.5 text-sm font-semibold;
+}
+.prose-agent p {
+  @apply my-2.5 leading-7;
+}
+.prose-agent ul {
+  @apply my-2.5 list-disc pl-5;
+}
+.prose-agent ol {
+  @apply my-2.5 list-decimal pl-5;
+}
+.prose-agent li {
+  @apply my-1;
+}
+.prose-agent li > ul,
+.prose-agent li > ol {
+  @apply my-1;
+}
+.prose-agent strong {
+  @apply font-semibold;
+}
+.prose-agent a {
+  @apply text-primary underline underline-offset-2;
+}
+.prose-agent blockquote {
+  @apply my-2.5 border-l-2 pl-3 font-normal not-italic;
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+.prose-agent hr {
+  @apply my-4;
+  border-color: hsl(var(--border));
+}
+
+/*
+ * markstream-react styles content nodes via its own scoped utility classes
+ * (specificity 0,2,0, unlayered). Re-assert the chat design on the nodes
+ * where those diverge, with higher specificity. Colors go through
+ * hsl(var(...)) because markstream themes its container with HSL triplets
+ * (aligned with our palette in the block below).
+ */
+.prose-agent .markstream-react table {
+  @apply my-3 text-xs;
+}
+.prose-agent .markstream-react th,
+.prose-agent .markstream-react td {
+  @apply px-2 py-1 text-left;
+  border: 1px solid hsl(var(--border));
+}
+.prose-agent .markstream-react th {
+  @apply font-medium;
+  background-color: hsl(var(--muted));
+}
+.prose-agent .markstream-react code.inline-code {
+  @apply rounded px-1 py-0.5 font-mono text-[0.85em];
+  background-color: hsl(var(--muted));
+}
+
+/*
+ * markstream-react themes its container with HSL-triplet vars; align them
+ * with the app's zinc palette (HSL equivalents of the oklch values in
+ * :root / .dark below) so both its internals and our overrides resolve.
+ */
+.prose-agent .markstream-react {
+  --muted: 240 4.8% 95.9%; /* zinc-100 ≈ oklch(0.967 0.001 286) */
+  --border: 240 5.9% 90%; /* zinc-200 ≈ oklch(0.92 0.004 286) */
+  --muted-foreground: 240 3.8% 46.1%; /* zinc-500 ≈ oklch(0.552 0.016 286) */
+}
+.dark .prose-agent .markstream-react {
+  --muted: 240 3.7% 15.9%; /* zinc-800 ≈ oklch(0.274 0.006 286) */
+  --border: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%; /* zinc-400 ≈ oklch(0.705 0.015 286) */
 }
 
 :root {

@@ -10,8 +10,8 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import Markdown from 'react-markdown'
 
+import { MarkdownStream } from '@/components/agent/markdown-stream'
 import { skillIcon, skillName } from '@/components/agent/skill-meta'
 import { Button } from '@/components/ui/button'
 import {
@@ -423,7 +423,7 @@ function AssistantMessageView({
         if (block.type === 'text') {
           return (
             <div key={i} className="prose-agent">
-              <Markdown>{block.text}</Markdown>
+              <MarkdownStream content={block.text} final={!streaming} />
             </div>
           )
         }

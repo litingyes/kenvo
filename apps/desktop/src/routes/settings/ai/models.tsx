@@ -8,6 +8,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import {
   createAgentServerClient,
@@ -104,60 +105,62 @@ function AiModelsPage() {
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-2xl space-y-8">
-          {groupedModels.length === 0 && !loading && (
-            <div className="text-sm text-muted-foreground">
-              {t('settings.aiCapabilities.models.empty')}
-            </div>
-          )}
-
-          {groupedModels.map(({ provider, models }) => {
-            const Icon = ICONS[provider.iconKey]
-
-            return (
-              <div key={provider.id} className="space-y-3">
-                <div className="flex items-center gap-2 font-medium">
-                  {Icon && <Icon size={18} />}
-                  {provider.name}
-                </div>
-                <div className="space-y-1 rounded-lg border border-border">
-                  {models.map((model) => {
-                    const enabled =
-                      settings?.enabledModels[provider.id]?.includes(model.id) ?? false
-
-                    return (
-                      <div
-                        key={model.id}
-                        className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
-                      >
-                        <div className="flex min-w-0 flex-col">
-                          <span className="truncate font-mono text-sm">{model.id}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {[
-                              model.contextWindow
-                                ? `${Math.round(model.contextWindow / 1000)}k ctx`
-                                : null,
-                              model.reasoning ? 'reasoning' : null,
-                              model.input.includes('image') ? 'vision' : null,
-                            ]
-                              .filter(Boolean)
-                              .join(' · ')}
-                          </span>
-                        </div>
-                        <Switch
-                          checked={enabled}
-                          onCheckedChange={() => handleToggleModel(provider.id, model.id)}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="p-8">
+          <div className="max-w-2xl space-y-8">
+            {groupedModels.length === 0 && !loading && (
+              <div className="text-sm text-muted-foreground">
+                {t('settings.aiCapabilities.models.empty')}
               </div>
-            )
-          })}
+            )}
+
+            {groupedModels.map(({ provider, models }) => {
+              const Icon = ICONS[provider.iconKey]
+
+              return (
+                <div key={provider.id} className="space-y-3">
+                  <div className="flex items-center gap-2 font-medium">
+                    {Icon && <Icon size={18} />}
+                    {provider.name}
+                  </div>
+                  <div className="space-y-1 rounded-lg border border-border">
+                    {models.map((model) => {
+                      const enabled =
+                        settings?.enabledModels[provider.id]?.includes(model.id) ?? false
+
+                      return (
+                        <div
+                          key={model.id}
+                          className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
+                        >
+                          <div className="flex min-w-0 flex-col">
+                            <span className="truncate font-mono text-sm">{model.id}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {[
+                                model.contextWindow
+                                  ? `${Math.round(model.contextWindow / 1000)}k ctx`
+                                  : null,
+                                model.reasoning ? 'reasoning' : null,
+                                model.input.includes('image') ? 'vision' : null,
+                              ]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </span>
+                          </div>
+                          <Switch
+                            checked={enabled}
+                            onCheckedChange={() => handleToggleModel(provider.id, model.id)}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     </>
   )
 }

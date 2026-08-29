@@ -281,7 +281,7 @@ export function LogViewer() {
       )}
 
       <div className="relative flex-1 overflow-hidden rounded-lg border">
-        <ScrollArea className="h-full" ref={scrollAreaRef}>
+        <ScrollArea className="h-full" orientation="both" ref={scrollAreaRef}>
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>

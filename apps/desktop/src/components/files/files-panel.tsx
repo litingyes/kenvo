@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { ProjectTree } from '@/components/sidebar/project-tree'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { api } from '@/lib/electron/api'
 import { useProjectStore } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
@@ -68,35 +69,37 @@ export function FilesPanel() {
           <FilePlus2Icon className="size-3.5" />
         </Button>
 
-        <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
-          {tabs.map((tab) => (
-            <div
-              key={tab.id}
-              className={cn(
-                'group flex h-6 shrink-0 items-center gap-1 rounded px-2 text-xs',
-                tab.id === activeTabId
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-accent/60',
-              )}
-            >
-              <button
-                type="button"
-                className="max-w-40 truncate"
-                onClick={() => activateTab(tab.id)}
+        <ScrollArea className="min-w-0 flex-1" orientation="horizontal">
+          <div className="flex items-center gap-0.5">
+            {tabs.map((tab) => (
+              <div
+                key={tab.id}
+                className={cn(
+                  'group flex h-6 shrink-0 items-center gap-1 rounded px-2 text-xs',
+                  tab.id === activeTabId
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-accent/60',
+                )}
               >
-                {tab.file_path.split('/').pop()}
-              </button>
-              <button
-                type="button"
-                className="hidden text-muted-foreground group-hover:block hover:text-foreground"
-                onClick={() => void closeFile(tab.id)}
-                aria-label={t('common.close')}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
+                <button
+                  type="button"
+                  className="max-w-40 truncate"
+                  onClick={() => activateTab(tab.id)}
+                >
+                  {tab.file_path.split('/').pop()}
+                </button>
+                <button
+                  type="button"
+                  className="hidden text-muted-foreground group-hover:block hover:text-foreground"
+                  onClick={() => void closeFile(tab.id)}
+                  aria-label={t('common.close')}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
 
         <Button
           variant="ghost"
@@ -118,9 +121,9 @@ export function FilesPanel() {
                 {t('project.files')}
               </span>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <ScrollArea className="min-h-0 flex-1">
               <ProjectTree rootPath={project.path} refreshKey={treeVersion} />
-            </div>
+            </ScrollArea>
           </div>
         )}
 

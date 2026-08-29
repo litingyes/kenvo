@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { MarkdownStream } from '@/components/agent/markdown-stream'
 import { skillIcon, skillName } from '@/components/agent/skill-meta'
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -137,7 +138,12 @@ export function AgentPanel({
   return (
     <div className="relative flex h-full flex-col">
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto">
+        <ScrollArea
+          viewportRef={scrollRef}
+          onScroll={handleScroll}
+          className="min-h-0 flex-1"
+          contentClassName="flex min-h-full flex-col"
+        >
           {empty ? (
             <EmptyState skillId={skillId} onPick={(text) => void submit(text)} />
           ) : (
@@ -157,7 +163,7 @@ export function AgentPanel({
               )}
             </div>
           )}
-        </div>
+        </ScrollArea>
 
         {showBackToBottom && (
           <button
@@ -344,7 +350,7 @@ function EmptyState({ skillId, onPick }: { skillId: string; onPick: (text: strin
   }) as string[]
 
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
       <Icon className="size-8 text-muted-foreground" />
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium">{skillName(skillId)}</p>
@@ -544,9 +550,11 @@ function ToolCallView({
       </div>
       {open && (
         <div className="border-t border-border px-2 py-1.5">
-          <pre className="max-h-40 overflow-auto text-[10px] whitespace-pre-wrap text-muted-foreground">
-            {JSON.stringify(args, null, 2)}
-          </pre>
+          <ScrollArea viewportClassName="h-auto max-h-40">
+            <pre className="text-[10px] whitespace-pre-wrap text-muted-foreground">
+              {JSON.stringify(args, null, 2)}
+            </pre>
+          </ScrollArea>
           {execution?.summary && (
             <p className="mt-1 text-[10px] text-muted-foreground">{execution.summary}</p>
           )}

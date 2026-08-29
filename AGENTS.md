@@ -48,6 +48,7 @@ A local-first AI writing studio: autonomous writing agents create novels, screen
 
 - All source files, scripts, and tooling are written in TypeScript.
 - Do not create new `.js` files; always use `.ts` and run Node scripts with `tsx`.
+- All scroll containers must use `@/components/ui/scroll-area` (`ScrollArea`) instead of native `overflow-auto`/`overflow-scroll` scrollbars. Exceptions: base-ui popup layers (dropdown-menu/select/context-menu scroll within the popup itself), primitives already using `no-scrollbar`/`scrollbar-none`, and CodeMirror's internal scrolling.
 
 ## Testing
 

@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import type { ChatSession } from '@/lib/db/chat-repo'
 import type { Project } from '@/lib/db/project-repo'
 import {
@@ -156,131 +157,133 @@ export function StudioSidebar({
       </div>
 
       {/* Session history */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-1">
-        {/* Projects section header: hover reveals new-project + sort/view actions */}
-        <div className="group flex items-center justify-between px-2 pt-1 pb-1.5">
-          <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-            {t('studio.projects')}
-          </span>
-          <div
-            className={cn(
-              'flex items-center gap-0.5 transition-opacity',
-              sortMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-            )}
-          >
-            <button
-              type="button"
-              className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-              onClick={onNewProject}
-              aria-label={t('studio.newProject')}
-              title={t('studio.newProject')}
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="px-1.5 py-1">
+          {/* Projects section header: hover reveals new-project + sort/view actions */}
+          <div className="group flex items-center justify-between px-2 pt-1 pb-1.5">
+            <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+              {t('studio.projects')}
+            </span>
+            <div
+              className={cn(
+                'flex items-center gap-0.5 transition-opacity',
+                sortMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+              )}
             >
-              <FolderPlusIcon className="size-3" />
-            </button>
-            <DropdownMenu open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
-              <DropdownMenuTrigger
-                className="rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground"
-                aria-label={t('studio.sort')}
-                title={t('studio.sort')}
+              <button
+                type="button"
+                className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                onClick={onNewProject}
+                aria-label={t('studio.newProject')}
+                title={t('studio.newProject')}
               >
-                <ArrowUpDownIcon className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuRadioGroup
-                  value={listSort}
-                  onValueChange={(value) => setListSort(value as SessionListSort)}
+                <FolderPlusIcon className="size-3" />
+              </button>
+              <DropdownMenu open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
+                <DropdownMenuTrigger
+                  className="rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground"
+                  aria-label={t('studio.sort')}
+                  title={t('studio.sort')}
                 >
-                  <DropdownMenuLabel>{t('studio.sort')}</DropdownMenuLabel>
-                  <DropdownMenuRadioItem value="recent" className="text-xs">
-                    {t('studio.sortRecent')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="name" className="text-xs">
-                    {t('studio.sortName')}
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={listMode}
-                  onValueChange={(value) => setListMode(value as SessionListMode)}
-                >
-                  <DropdownMenuLabel>{t('studio.view')}</DropdownMenuLabel>
-                  <DropdownMenuRadioItem value="grouped" className="text-xs">
-                    {t('studio.groupByProject')}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="flat" className="text-xs">
-                    {t('studio.flatList')}
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <ArrowUpDownIcon className="size-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuRadioGroup
+                    value={listSort}
+                    onValueChange={(value) => setListSort(value as SessionListSort)}
+                  >
+                    <DropdownMenuLabel>{t('studio.sort')}</DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="recent" className="text-xs">
+                      {t('studio.sortRecent')}
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name" className="text-xs">
+                      {t('studio.sortName')}
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup
+                    value={listMode}
+                    onValueChange={(value) => setListMode(value as SessionListMode)}
+                  >
+                    <DropdownMenuLabel>{t('studio.view')}</DropdownMenuLabel>
+                    <DropdownMenuRadioItem value="grouped" className="text-xs">
+                      {t('studio.groupByProject')}
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="flat" className="text-xs">
+                      {t('studio.flatList')}
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
 
-        {projects.length === 0 ? (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-            {t('studio.noProjects')}
-          </p>
-        ) : listMode === 'flat' ? (
-          sortedSessions.length === 0 ? (
+          {projects.length === 0 ? (
             <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-              {t('studio.noChats')}
+              {t('studio.noProjects')}
             </p>
-          ) : (
-            sortedSessions.map((session) => sessionRow(session, false))
-          )
-        ) : (
-          sortedProjects.map((project) => {
-            const projectSessions = sessionsByProject.get(project.id) ?? []
-            const isCollapsed = collapsed.has(project.id)
-            const hasActive = projectSessions.some((s) => s.id === activeSessionId)
-            return (
-              <div key={project.id} className="mb-1">
-                <div className="group relative flex w-full items-center rounded hover:bg-accent/60">
-                  <button
-                    type="button"
-                    className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1.5 text-left"
-                    onClick={() => toggleProject(project.id)}
-                  >
-                    {isCollapsed ? (
-                      <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                    ) : (
-                      <FolderOpenIcon className="size-3.5 shrink-0 text-muted-foreground" />
-                    )}
-                    <span
-                      className={cn(
-                        'truncate text-xs',
-                        hasActive ? 'font-medium' : 'text-muted-foreground',
-                      )}
-                    >
-                      {project.title}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDeleteProject(project.id)
-                    }}
-                    aria-label={t('studio.deleteProject')}
-                    title={t('studio.deleteProject')}
-                  >
-                    <Trash2Icon className="size-3" />
-                  </button>
-                </div>
-                {!isCollapsed &&
-                  (projectSessions.length === 0 ? (
-                    <p className="py-1 pl-9 text-[10px] text-muted-foreground">
-                      {t('studio.noChats')}
-                    </p>
-                  ) : (
-                    projectSessions.map((session) => sessionRow(session, true))
-                  ))}
-              </div>
+          ) : listMode === 'flat' ? (
+            sortedSessions.length === 0 ? (
+              <p className="px-2 py-3 text-center text-xs text-muted-foreground">
+                {t('studio.noChats')}
+              </p>
+            ) : (
+              sortedSessions.map((session) => sessionRow(session, false))
             )
-          })
-        )}
-      </div>
+          ) : (
+            sortedProjects.map((project) => {
+              const projectSessions = sessionsByProject.get(project.id) ?? []
+              const isCollapsed = collapsed.has(project.id)
+              const hasActive = projectSessions.some((s) => s.id === activeSessionId)
+              return (
+                <div key={project.id} className="mb-1">
+                  <div className="group relative flex w-full items-center rounded hover:bg-accent/60">
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1.5 text-left"
+                      onClick={() => toggleProject(project.id)}
+                    >
+                      {isCollapsed ? (
+                        <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <FolderOpenIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      <span
+                        className={cn(
+                          'truncate text-xs',
+                          hasActive ? 'font-medium' : 'text-muted-foreground',
+                        )}
+                      >
+                        {project.title}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteProject(project.id)
+                      }}
+                      aria-label={t('studio.deleteProject')}
+                      title={t('studio.deleteProject')}
+                    >
+                      <Trash2Icon className="size-3" />
+                    </button>
+                  </div>
+                  {!isCollapsed &&
+                    (projectSessions.length === 0 ? (
+                      <p className="py-1 pl-9 text-[10px] text-muted-foreground">
+                        {t('studio.noChats')}
+                      </p>
+                    ) : (
+                      projectSessions.map((session) => sessionRow(session, true))
+                    ))}
+                </div>
+              )
+            })
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Bottom: settings */}
       <div className="shrink-0 border-t border-border p-1.5">

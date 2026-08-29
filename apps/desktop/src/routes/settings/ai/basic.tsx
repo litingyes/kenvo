@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import { isAgentServerRunning } from '@/lib/ai/server-client'
 import {
@@ -91,60 +92,62 @@ function AiBasicPage() {
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-xl space-y-8">
-          <div className="space-y-3">
-            <Label htmlFor="server-port">{t('settings.aiCapabilities.basic.serverPort')}</Label>
-            <Input
-              id="server-port"
-              type="number"
-              value={settings.serverPort}
-              onChange={(e) => {
-                const port = Number(e.target.value)
-                if (!Number.isNaN(port)) {
-                  void handleSave({ ...settings, serverPort: port })
-                }
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="auto-start">{t('settings.aiCapabilities.basic.autoStart')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('settings.aiCapabilities.basic.autoStartDescription')}
-              </p>
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="p-8">
+          <div className="max-w-xl space-y-8">
+            <div className="space-y-3">
+              <Label htmlFor="server-port">{t('settings.aiCapabilities.basic.serverPort')}</Label>
+              <Input
+                id="server-port"
+                type="number"
+                value={settings.serverPort}
+                onChange={(e) => {
+                  const port = Number(e.target.value)
+                  if (!Number.isNaN(port)) {
+                    void handleSave({ ...settings, serverPort: port })
+                  }
+                }}
+              />
             </div>
-            <Switch
-              id="auto-start"
-              checked={settings.serverAutoStart}
-              onCheckedChange={(checked) => {
-                void handleSave({ ...settings, serverAutoStart: checked })
-              }}
-            />
-          </div>
 
-          <div className="space-y-3">
-            <Label>{t('settings.aiCapabilities.basic.status')}</Label>
-            <div className="flex items-center gap-4">
-              <div className="text-sm">
-                {status?.running
-                  ? t('settings.aiCapabilities.basic.running', { port: status.port })
-                  : t('settings.aiCapabilities.basic.stopped')}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="auto-start">{t('settings.aiCapabilities.basic.autoStart')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('settings.aiCapabilities.basic.autoStartDescription')}
+                </p>
               </div>
-              <Button
-                variant={status?.running ? 'destructive' : 'default'}
-                onClick={status?.running ? handleStop : handleStart}
-                disabled={loading}
-              >
-                {status?.running
-                  ? t('settings.aiCapabilities.basic.stop')
-                  : t('settings.aiCapabilities.basic.start')}
-              </Button>
+              <Switch
+                id="auto-start"
+                checked={settings.serverAutoStart}
+                onCheckedChange={(checked) => {
+                  void handleSave({ ...settings, serverAutoStart: checked })
+                }}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label>{t('settings.aiCapabilities.basic.status')}</Label>
+              <div className="flex items-center gap-4">
+                <div className="text-sm">
+                  {status?.running
+                    ? t('settings.aiCapabilities.basic.running', { port: status.port })
+                    : t('settings.aiCapabilities.basic.stopped')}
+                </div>
+                <Button
+                  variant={status?.running ? 'destructive' : 'default'}
+                  onClick={status?.running ? handleStop : handleStart}
+                  disabled={loading}
+                >
+                  {status?.running
+                    ? t('settings.aiCapabilities.basic.stop')
+                    : t('settings.aiCapabilities.basic.start')}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScrollArea>
     </>
   )
 }

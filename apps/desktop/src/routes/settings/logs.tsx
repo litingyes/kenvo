@@ -8,7 +8,7 @@ export const Route = createFileRoute('/settings/logs')({
 
 function LogsPage() {
   return (
-    <div className="flex-1 overflow-y-auto p-8">
+    <div className="flex min-h-0 flex-1 flex-col p-8">
       <LogViewer />
     </div>
   )

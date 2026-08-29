@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AppearanceSettings } from '@/components/settings/appearance-settings'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export const Route = createFileRoute('/settings/appearance')({
   component: AppearancePage,
@@ -8,8 +9,10 @@ export const Route = createFileRoute('/settings/appearance')({
 
 function AppearancePage() {
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <AppearanceSettings />
-    </div>
+    <ScrollArea className="min-h-0 flex-1">
+      <div className="p-8">
+        <AppearanceSettings />
+      </div>
+    </ScrollArea>
   )
 }

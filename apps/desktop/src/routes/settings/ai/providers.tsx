@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import {
   createAgentServerClient,
@@ -200,78 +201,83 @@ function AiProvidersPage() {
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-2xl space-y-4">
-          {loading && <div className="text-sm text-muted-foreground">{t('ui.loading')}...</div>}
-          {error && (
-            <div className="space-y-2">
-              <div className="text-sm text-red-600">{error}</div>
-              <Button variant="outline" size="sm" onClick={() => init()}>
-                {t('ui.retry')}
-              </Button>
-            </div>
-          )}
-          {!loading && !error && providers.length === 0 && (
-            <div className="text-sm text-muted-foreground">
-              {t('settings.aiCapabilities.providers.empty')}
-            </div>
-          )}
-          {providers.map((provider) => {
-            const Icon = ICONS[provider.iconKey]
-            const connected = Boolean(settings?.providers.find((p) => p.id === provider.id)?.apiKey)
-            const enabled = settings?.providers.find((p) => p.id === provider.id)?.enabled ?? false
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="p-8">
+          <div className="max-w-2xl space-y-4">
+            {loading && <div className="text-sm text-muted-foreground">{t('ui.loading')}...</div>}
+            {error && (
+              <div className="space-y-2">
+                <div className="text-sm text-red-600">{error}</div>
+                <Button variant="outline" size="sm" onClick={() => init()}>
+                  {t('ui.retry')}
+                </Button>
+              </div>
+            )}
+            {!loading && !error && providers.length === 0 && (
+              <div className="text-sm text-muted-foreground">
+                {t('settings.aiCapabilities.providers.empty')}
+              </div>
+            )}
+            {providers.map((provider) => {
+              const Icon = ICONS[provider.iconKey]
+              const connected = Boolean(
+                settings?.providers.find((p) => p.id === provider.id)?.apiKey,
+              )
+              const enabled =
+                settings?.providers.find((p) => p.id === provider.id)?.enabled ?? false
 
-            return (
-              <div
-                key={provider.id}
-                className="flex items-center justify-between rounded-lg border border-border p-4"
-              >
-                <div className="flex items-center gap-3">
-                  {Icon && <Icon size={24} />}
-                  <div>
-                    <div className="font-medium">{provider.name}</div>
-                    <div className="text-sm text-muted-foreground">{provider.description}</div>
+              return (
+                <div
+                  key={provider.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    {Icon && <Icon size={24} />}
+                    <div>
+                      <div className="font-medium">{provider.name}</div>
+                      <div className="text-sm text-muted-foreground">{provider.description}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={enabled}
+                      onCheckedChange={(checked) => handleToggleEnabled(provider, checked)}
+                      disabled={!connected}
+                    />
+                    {connected ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleTest(provider)}
+                          disabled={loading}
+                        >
+                          {t('settings.aiCapabilities.providers.test')}
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleConnect(provider)}>
+                          {t('settings.aiCapabilities.providers.edit')}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDisconnect(provider)}
+                        >
+                          {t('settings.aiCapabilities.providers.disconnect')}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => handleConnect(provider)} disabled={loading}>
+                        {t('settings.aiCapabilities.providers.connect')}
+                      </Button>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={enabled}
-                    onCheckedChange={(checked) => handleToggleEnabled(provider, checked)}
-                    disabled={!connected}
-                  />
-                  {connected ? (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleTest(provider)}
-                        disabled={loading}
-                      >
-                        {t('settings.aiCapabilities.providers.test')}
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleConnect(provider)}>
-                        {t('settings.aiCapabilities.providers.edit')}
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDisconnect(provider)}
-                      >
-                        {t('settings.aiCapabilities.providers.disconnect')}
-                      </Button>
-                    </>
-                  ) : (
-                    <Button onClick={() => handleConnect(provider)} disabled={loading}>
-                      {t('settings.aiCapabilities.providers.connect')}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
 
       <Dialog open={Boolean(selectedProvider)} onOpenChange={() => setSelectedProvider(null)}>
         <DialogContent>

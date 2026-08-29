@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { AboutSettings } from '@/components/settings/about-settings'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export const Route = createFileRoute('/settings/about')({
   component: AboutPage,
@@ -8,8 +9,10 @@ export const Route = createFileRoute('/settings/about')({
 
 function AboutPage() {
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <AboutSettings />
-    </div>
+    <ScrollArea className="min-h-0 flex-1">
+      <div className="p-8">
+        <AboutSettings />
+      </div>
+    </ScrollArea>
   )
 }

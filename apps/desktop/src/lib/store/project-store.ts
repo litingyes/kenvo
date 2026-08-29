@@ -6,6 +6,9 @@ import { closeTab, listTabs, openTab } from '@/lib/db/project-repo'
 /** How the studio sidebar lists chat sessions. */
 export type SessionListMode = 'grouped' | 'flat'
 
+/** How the studio sidebar sorts projects / sessions. */
+export type SessionListSort = 'recent' | 'name'
+
 interface ProjectState {
   project: Project | null
   tabs: ProjectTab[]
@@ -15,6 +18,8 @@ interface ProjectState {
   rightPanelOpen: boolean
   /** Sidebar session list presentation: grouped by project or flat. */
   sessionListMode: SessionListMode
+  /** Sidebar project/session ordering: by recent activity or by name. */
+  sessionListSort: SessionListSort
   /** Bump to force the project file tree to reload (e.g. agent file activity). */
   treeVersion: number
 
@@ -27,6 +32,8 @@ interface ProjectState {
   toggleRightPanel: () => void
   setRightPanelOpen: (open: boolean) => void
   toggleSessionListMode: () => void
+  setSessionListMode: (mode: SessionListMode) => void
+  setSessionListSort: (sort: SessionListSort) => void
   bumpTree: () => void
 }
 
@@ -37,6 +44,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   leftSidebarOpen: true,
   rightPanelOpen: false,
   sessionListMode: 'grouped',
+  sessionListSort: 'recent',
   treeVersion: 0,
 
   hydrate: (project, tabs) => {
@@ -84,5 +92,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
   toggleSessionListMode: () =>
     set((s) => ({ sessionListMode: s.sessionListMode === 'grouped' ? 'flat' : 'grouped' })),
+  setSessionListMode: (mode) => set({ sessionListMode: mode }),
+  setSessionListSort: (sort) => set({ sessionListSort: sort }),
   bumpTree: () => set((s) => ({ treeVersion: s.treeVersion + 1 })),
 }))

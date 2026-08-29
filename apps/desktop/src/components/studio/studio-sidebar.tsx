@@ -1,13 +1,9 @@
 import { useNavigate } from '@tanstack/react-router'
-import { formatDistanceToNow } from 'date-fns'
-import { enUS, zhCN } from 'date-fns/locale'
 import {
-  ChevronDownIcon,
-  ChevronRightIcon,
+  ArrowUpDownIcon,
   FolderIcon,
+  FolderOpenIcon,
   FolderPlusIcon,
-  ListIcon,
-  MessageSquareIcon,
   SettingsIcon,
   SquarePenIcon,
   Trash2Icon,
@@ -16,9 +12,22 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { ChatSession } from '@/lib/db/chat-repo'
 import type { Project } from '@/lib/db/project-repo'
-import { useProjectStore } from '@/lib/store/project-store'
+import {
+  useProjectStore,
+  type SessionListMode,
+  type SessionListSort,
+} from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
 
 interface StudioSidebarProps {
@@ -32,10 +41,20 @@ interface StudioSidebarProps {
   onNewProject: () => void
 }
 
+function compareBySort(sort: SessionListSort) {
+  return (
+    a: { last_active_at: number; title: string | null },
+    b: { last_active_at: number; title: string | null },
+  ) =>
+    sort === 'name'
+      ? (a.title ?? '').localeCompare(b.title ?? '')
+      : b.last_active_at - a.last_active_at
+}
+
 /**
  * Codex-style studio sidebar: chat sessions across all projects, either
- * grouped under their project (collapsible sections) or as a flat,
- * time-sorted list. Settings and project creation live here too.
+ * grouped under their project (collapsible sections) or as a flat list.
+ * The "项目" section header exposes new-project / sort / view actions on hover.
  */
 export function StudioSidebar({
   projects,
@@ -47,27 +66,33 @@ export function StudioSidebar({
   onDeleteProject,
   onNewProject,
 }: StudioSidebarProps) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const listMode = useProjectStore((s) => s.sessionListMode)
-  const toggleListMode = useProjectStore((s) => s.toggleSessionListMode)
+  const setListMode = useProjectStore((s) => s.setSessionListMode)
+  const listSort = useProjectStore((s) => s.sessionListSort)
+  const setListSort = useProjectStore((s) => s.setSessionListSort)
   const [collapsed, setCollapsed] = React.useState<Set<string>>(new Set())
+  const [sortMenuOpen, setSortMenuOpen] = React.useState(false)
 
-  const locale = i18n.language.startsWith('zh') ? zhCN : enUS
-  const relativeTime = (timestamp: number) =>
-    formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale })
+  const sortedProjects = React.useMemo(
+    () => [...projects].sort(compareBySort(listSort)),
+    [projects, listSort],
+  )
+  const sortedSessions = React.useMemo(
+    () => [...sessions].sort(compareBySort(listSort)),
+    [sessions, listSort],
+  )
 
   const sessionsByProject = React.useMemo(() => {
     const map = new Map<string, ChatSession[]>()
-    for (const session of sessions) {
+    for (const session of sortedSessions) {
       const list = map.get(session.project_id) ?? []
       list.push(session)
       map.set(session.project_id, list)
     }
     return map
-  }, [sessions])
-
-  const projectById = React.useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects])
+  }, [sortedSessions])
 
   const toggleProject = (projectId: string) => {
     setCollapsed((prev) => {
@@ -80,7 +105,7 @@ export function StudioSidebar({
 
   const sessionRow = (session: ChatSession, indent: boolean) => {
     const active = session.id === activeSessionId
-    const project = projectById.get(session.project_id)
+    const title = session.title || t('agent.untitled')
     return (
       <div
         key={session.id}
@@ -91,21 +116,11 @@ export function StudioSidebar({
       >
         <button
           type="button"
-          className={cn(
-            'flex min-w-0 flex-1 flex-col gap-0.5 py-1.5 pr-6',
-            indent ? 'pl-7' : 'px-2',
-          )}
+          className={cn('min-w-0 flex-1 py-1.5 pr-6 text-left', indent ? 'pl-7' : 'px-2')}
           onClick={() => onSelectSession(session.id)}
         >
-          <span className="flex items-center gap-1.5">
-            <MessageSquareIcon className="size-3 shrink-0 text-muted-foreground" />
-            <span className="truncate text-xs font-medium">
-              {session.title || t('agent.untitled')}
-            </span>
-          </span>
-          <span className="truncate pl-[18px] text-[10px] text-muted-foreground">
-            {listMode === 'flat' && project ? `${project.title} · ` : ''}
-            {relativeTime(session.last_active_at)}
+          <span className="block truncate text-xs font-medium" title={title}>
+            {title}
           </span>
         </button>
         <button
@@ -129,38 +144,76 @@ export function StudioSidebar({
       {/* Brand + actions */}
       <div className="flex h-9 shrink-0 items-center justify-between px-3">
         <span className="text-xs font-semibold">Kenvo</span>
-        <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={toggleListMode}
-            aria-label={listMode === 'grouped' ? t('studio.flatList') : t('studio.groupByProject')}
-            title={listMode === 'grouped' ? t('studio.flatList') : t('studio.groupByProject')}
-          >
-            {listMode === 'grouped' ? (
-              <ListIcon className="size-3.5" />
-            ) : (
-              <FolderIcon className="size-3.5" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onNewSession}
-            aria-label={t('studio.newChat')}
-            title={t('studio.newChat')}
-          >
-            <SquarePenIcon className="size-3.5" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onNewSession}
+          aria-label={t('studio.newChat')}
+          title={t('studio.newChat')}
+        >
+          <SquarePenIcon className="size-3.5" />
+        </Button>
       </div>
 
       {/* Session history */}
       <div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-1">
-        <div className="px-2 pt-1 pb-1.5">
+        {/* Projects section header: hover reveals new-project + sort/view actions */}
+        <div className="group flex items-center justify-between px-2 pt-1 pb-1.5">
           <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-            {t('agent.sessions')}
+            {t('studio.projects')}
           </span>
+          <div
+            className={cn(
+              'flex items-center gap-0.5 transition-opacity',
+              sortMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+            )}
+          >
+            <button
+              type="button"
+              className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+              onClick={onNewProject}
+              aria-label={t('studio.newProject')}
+              title={t('studio.newProject')}
+            >
+              <FolderPlusIcon className="size-3" />
+            </button>
+            <DropdownMenu open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
+              <DropdownMenuTrigger
+                className="rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground"
+                aria-label={t('studio.sort')}
+                title={t('studio.sort')}
+              >
+                <ArrowUpDownIcon className="size-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuRadioGroup
+                  value={listSort}
+                  onValueChange={(value) => setListSort(value as SessionListSort)}
+                >
+                  <DropdownMenuLabel>{t('studio.sort')}</DropdownMenuLabel>
+                  <DropdownMenuRadioItem value="recent" className="text-xs">
+                    {t('studio.sortRecent')}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="name" className="text-xs">
+                    {t('studio.sortName')}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={listMode}
+                  onValueChange={(value) => setListMode(value as SessionListMode)}
+                >
+                  <DropdownMenuLabel>{t('studio.view')}</DropdownMenuLabel>
+                  <DropdownMenuRadioItem value="grouped" className="text-xs">
+                    {t('studio.groupByProject')}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="flat" className="text-xs">
+                    {t('studio.flatList')}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {projects.length === 0 ? (
@@ -168,15 +221,15 @@ export function StudioSidebar({
             {t('studio.noProjects')}
           </p>
         ) : listMode === 'flat' ? (
-          sessions.length === 0 ? (
+          sortedSessions.length === 0 ? (
             <p className="px-2 py-3 text-center text-xs text-muted-foreground">
               {t('studio.noChats')}
             </p>
           ) : (
-            sessions.map((session) => sessionRow(session, false))
+            sortedSessions.map((session) => sessionRow(session, false))
           )
         ) : (
-          projects.map((project) => {
+          sortedProjects.map((project) => {
             const projectSessions = sessionsByProject.get(project.id) ?? []
             const isCollapsed = collapsed.has(project.id)
             const hasActive = projectSessions.some((s) => s.id === activeSessionId)
@@ -189,11 +242,10 @@ export function StudioSidebar({
                     onClick={() => toggleProject(project.id)}
                   >
                     {isCollapsed ? (
-                      <ChevronRightIcon className="size-3 shrink-0 text-muted-foreground" />
+                      <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     ) : (
-                      <ChevronDownIcon className="size-3 shrink-0 text-muted-foreground" />
+                      <FolderOpenIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     )}
-                    <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
                     <span
                       className={cn(
                         'truncate text-xs',
@@ -228,15 +280,6 @@ export function StudioSidebar({
             )
           })
         )}
-
-        <button
-          type="button"
-          className="mt-1 flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-          onClick={onNewProject}
-        >
-          <FolderPlusIcon className="size-3.5 shrink-0" />
-          {t('studio.newProject')}
-        </button>
       </div>
 
       {/* Bottom: settings */}

@@ -34,6 +34,11 @@
   "studio": {
     "newChat": "新会话",
     "newProject": "新建项目",
+    "projects": "项目",
+    "sort": "排序",
+    "sortRecent": "最近活跃",
+    "sortName": "按名称",
+    "view": "视图",
     "groupByProject": "按项目分组",
     "flatList": "平铺列表",
     "noProjects": "还没有项目",

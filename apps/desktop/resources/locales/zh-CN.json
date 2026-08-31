@@ -41,6 +41,7 @@
     "view": "视图",
     "groupByProject": "按项目分组",
     "flatList": "平铺列表",
+    "sessionLastActive": "最近活跃",
     "noProjects": "还没有项目",
     "noProjectsHint": "创建一个项目，开始与 Agent 一起写作。",
     "noChats": "暂无会话",

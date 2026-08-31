@@ -1,4 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
+import dayjs from 'dayjs'
+import localizedFormat from 'dayjs/plugin/localizedFormat'
 import {
   ArrowUpDownIcon,
   FolderIcon,
@@ -10,6 +12,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
+import 'dayjs/locale/zh-cn'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { ChatSession } from '@/lib/db/chat-repo'
 import type { Project } from '@/lib/db/project-repo'
 import {
@@ -30,6 +34,8 @@ import {
   type SessionListSort,
 } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
+
+dayjs.extend(localizedFormat)
 
 interface StudioSidebarProps {
   projects: Project[]
@@ -52,6 +58,11 @@ function compareBySort(sort: SessionListSort) {
       : b.last_active_at - a.last_active_at
 }
 
+function formatSessionLastActive(timestamp: number, language: string): string {
+  const locale = language.toLowerCase().startsWith('zh') ? 'zh-cn' : 'en'
+  return dayjs(timestamp).locale(locale).format('lll')
+}
+
 /**
  * Codex-style studio sidebar: chat sessions across all projects, either
  * grouped under their project (collapsible sections) or as a flat list.
@@ -67,7 +78,7 @@ export function StudioSidebar({
   onDeleteProject,
   onNewProject,
 }: StudioSidebarProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const listMode = useProjectStore((s) => s.sessionListMode)
   const setListMode = useProjectStore((s) => s.setSessionListMode)
@@ -107,6 +118,7 @@ export function StudioSidebar({
   const sessionRow = (session: ChatSession, indent: boolean) => {
     const active = session.id === activeSessionId
     const title = session.title || t('agent.untitled')
+    const lastActive = formatSessionLastActive(session.last_active_at, i18n.language)
     return (
       <div
         key={session.id}
@@ -115,15 +127,27 @@ export function StudioSidebar({
           active ? 'bg-accent' : 'hover:bg-accent/60',
         )}
       >
-        <button
-          type="button"
-          className={cn('min-w-0 flex-1 py-1.5 pr-6 text-left', indent ? 'pl-7' : 'px-2')}
-          onClick={() => onSelectSession(session.id)}
-        >
-          <span className="block truncate text-xs font-medium" title={title}>
-            {title}
-          </span>
-        </button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                className={cn('min-w-0 flex-1 py-1.5 pr-6 text-left', indent ? 'pl-7' : 'px-2')}
+                onClick={() => onSelectSession(session.id)}
+              >
+                <span className="block truncate text-xs font-medium">{title}</span>
+              </button>
+            }
+          />
+          <TooltipContent side="right" align="start" sideOffset={8} className="max-w-72 text-left">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="font-medium break-words whitespace-normal">{title}</span>
+              <span className="text-background/70">
+                {t('studio.sessionLastActive')}: {lastActive}
+              </span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
         <button
           type="button"
           className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
@@ -157,7 +181,7 @@ export function StudioSidebar({
       </div>
 
       {/* Session history */}
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 min-w-0 flex-1" contentClassName="min-w-0! w-full">
         <div className="px-1.5 py-1">
           {/* Projects section header: hover reveals new-project + sort/view actions */}
           <div className="group flex items-center justify-between px-2 pt-1 pb-1.5">

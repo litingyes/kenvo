@@ -303,6 +303,9 @@ importers:
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
+      dayjs:
+        specifier: ^1.11.21
+        version: 1.11.21
       electron-log:
         specifier: ^5.4.4
         version: 5.4.4

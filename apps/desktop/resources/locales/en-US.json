@@ -41,6 +41,7 @@
     "view": "View",
     "groupByProject": "Group by project",
     "flatList": "Flat list",
+    "sessionLastActive": "Last active",
     "noProjects": "No projects yet",
     "noProjectsHint": "Create a project to start writing with an agent.",
     "noChats": "No chats",

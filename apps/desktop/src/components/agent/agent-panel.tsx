@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   useAgentChat,
   type ToolExecutionState,
@@ -134,6 +135,18 @@ export function AgentPanel({
   }
 
   const empty = messages.length === 0 && !running
+  const sendDisabled = !input.trim() || !serverPort
+  const sendButton = (
+    <Button
+      variant="default"
+      size="icon-sm"
+      onClick={() => void submit(input)}
+      disabled={sendDisabled}
+      aria-label={t('agent.send')}
+    >
+      <SendHorizonalIcon className="size-3.5" />
+    </Button>
+  )
 
   return (
     <div className="relative flex h-full flex-col">
@@ -166,15 +179,21 @@ export function AgentPanel({
         </ScrollArea>
 
         {showBackToBottom && (
-          <button
-            type="button"
-            className="absolute right-6 bottom-4 z-10 flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:bg-accent hover:text-foreground"
-            onClick={scrollToBottom}
-            aria-label={t('agent.backToBottom')}
-            title={t('agent.backToBottom')}
-          >
-            <ArrowDownIcon className="size-3.5" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  className="absolute right-6 bottom-4 z-10 flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:bg-accent hover:text-foreground"
+                  onClick={scrollToBottom}
+                  aria-label={t('agent.backToBottom')}
+                >
+                  <ArrowDownIcon className="size-3.5" />
+                </button>
+              }
+            />
+            <TooltipContent>{t('agent.backToBottom')}</TooltipContent>
+          </Tooltip>
         )}
       </div>
 
@@ -195,24 +214,30 @@ export function AgentPanel({
               }}
             />
             {running ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => void abort()}
-                aria-label={t('agent.stop')}
-              >
-                <SquareIcon className="size-3.5" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => void abort()}
+                      aria-label={t('agent.stop')}
+                    >
+                      <SquareIcon className="size-3.5" />
+                    </Button>
+                  }
+                />
+                <TooltipContent>{t('agent.stop')}</TooltipContent>
+              </Tooltip>
             ) : null}
-            <Button
-              variant="default"
-              size="icon-sm"
-              onClick={() => void submit(input)}
-              disabled={!input.trim() || !serverPort}
-              aria-label={t('agent.send')}
-            >
-              <SendHorizonalIcon className="size-3.5" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  sendDisabled ? <span className="inline-flex">{sendButton}</span> : sendButton
+                }
+              />
+              <TooltipContent>{t('agent.send')}</TooltipContent>
+            </Tooltip>
           </div>
           <ConfigPickers
             skillId={skillId}
@@ -537,15 +562,21 @@ function ToolCallView({
           </span>
         </button>
         {openable && (
-          <button
-            type="button"
-            className="mr-1 shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-            onClick={() => void openFile(path)}
-            aria-label={t('agent.openFile')}
-            title={t('agent.openFile')}
-          >
-            <SquareArrowOutUpRightIcon className="size-3" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  className="mr-1 shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  onClick={() => void openFile(path)}
+                  aria-label={t('agent.openFile')}
+                >
+                  <SquareArrowOutUpRightIcon className="size-3" />
+                </button>
+              }
+            />
+            <TooltipContent>{t('agent.openFile')}</TooltipContent>
+          </Tooltip>
         )}
       </div>
       {open && (

@@ -6,6 +6,7 @@ import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { ProjectTree } from '@/components/sidebar/project-tree'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/electron/api'
 import { useProjectStore } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
@@ -46,28 +47,40 @@ export function FilesPanel() {
     <div className="flex h-full flex-col bg-background">
       {/* Header: tree toggle + tabs + close */}
       <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border px-2">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setTreeOpen((v) => !v)}
-          aria-label={t('project.toggleFiles')}
-          title={t('project.toggleFiles')}
-        >
-          {treeOpen ? (
-            <PanelLeftCloseIcon className="size-3.5" />
-          ) : (
-            <PanelLeftIcon className="size-3.5" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => void newDocument()}
-          aria-label={t('project.newDocument')}
-          title={t('project.newDocument')}
-        >
-          <FilePlus2Icon className="size-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setTreeOpen((v) => !v)}
+                aria-label={t('project.toggleFiles')}
+              >
+                {treeOpen ? (
+                  <PanelLeftCloseIcon className="size-3.5" />
+                ) : (
+                  <PanelLeftIcon className="size-3.5" />
+                )}
+              </Button>
+            }
+          />
+          <TooltipContent>{t('project.toggleFiles')}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => void newDocument()}
+                aria-label={t('project.newDocument')}
+              >
+                <FilePlus2Icon className="size-3.5" />
+              </Button>
+            }
+          />
+          <TooltipContent>{t('project.newDocument')}</TooltipContent>
+        </Tooltip>
 
         <ScrollArea className="min-w-0 flex-1" orientation="horizontal">
           <div className="flex items-center gap-0.5">
@@ -88,28 +101,41 @@ export function FilesPanel() {
                 >
                   {tab.file_path.split('/').pop()}
                 </button>
-                <button
-                  type="button"
-                  className="hidden text-muted-foreground group-hover:block hover:text-foreground"
-                  onClick={() => void closeFile(tab.id)}
-                  aria-label={t('common.close')}
-                >
-                  ×
-                </button>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        className="hidden text-muted-foreground group-hover:block hover:text-foreground"
+                        onClick={() => void closeFile(tab.id)}
+                        aria-label={t('common.close')}
+                      >
+                        ×
+                      </button>
+                    }
+                  />
+                  <TooltipContent>{t('common.close')}</TooltipContent>
+                </Tooltip>
               </div>
             ))}
           </div>
         </ScrollArea>
 
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={toggleRightPanel}
-          aria-label={t('common.close')}
-          title={t('common.close')}
-        >
-          <XIcon className="size-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={toggleRightPanel}
+                aria-label={t('common.close')}
+              >
+                <XIcon className="size-3.5" />
+              </Button>
+            }
+          />
+          <TooltipContent>{t('common.close')}</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Body: file tree column + editor */}

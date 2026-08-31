@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
 import {
   createAgentServerClient,
@@ -554,15 +555,21 @@ export function StudioLayout() {
   const AgentBadgeIcon = activeSession ? skillIcon(activeSession.skill_id) : null
 
   const sidebarToggle = (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      onClick={toggleLeft}
-      aria-label={t('project.toggleSessions')}
-      title={t('project.toggleSessions')}
-    >
-      <PanelLeftIcon className="size-3.5" />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggleLeft}
+            aria-label={t('project.toggleSessions')}
+          >
+            <PanelLeftIcon className="size-3.5" />
+          </Button>
+        }
+      />
+      <TooltipContent>{t('project.toggleSessions')}</TooltipContent>
+    </Tooltip>
   )
 
   return (
@@ -617,15 +624,21 @@ export function StudioLayout() {
               }
               rightContent={
                 activeSessionId ? (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={toggleRight}
-                    aria-label={t('project.toggleRightPanel')}
-                    title={t('project.toggleRightPanel')}
-                  >
-                    <PanelRightIcon className="size-3.5" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={toggleRight}
+                          aria-label={t('project.toggleRightPanel')}
+                        >
+                          <PanelRightIcon className="size-3.5" />
+                        </Button>
+                      }
+                    />
+                    <TooltipContent>{t('project.toggleRightPanel')}</TooltipContent>
+                  </Tooltip>
                 ) : null
               }
             />

@@ -148,18 +148,26 @@ export function StudioSidebar({
             </div>
           </TooltipContent>
         </Tooltip>
-        <button
-          type="button"
-          className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDeleteSession(session.id)
-          }}
-          aria-label={t('agent.deleteSession')}
-          title={t('agent.deleteSession')}
-        >
-          <Trash2Icon className="size-3" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDeleteSession(session.id)
+                }}
+                aria-label={t('agent.deleteSession')}
+              >
+                <Trash2Icon className="size-3" />
+              </button>
+            }
+          />
+          <TooltipContent side="right" sideOffset={8}>
+            {t('agent.deleteSession')}
+          </TooltipContent>
+        </Tooltip>
       </div>
     )
   }
@@ -169,15 +177,21 @@ export function StudioSidebar({
       {/* Brand + actions */}
       <div className="flex h-9 shrink-0 items-center justify-between px-3">
         <span className="text-xs font-semibold">Kenvo</span>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={onNewSession}
-          aria-label={t('studio.newChat')}
-          title={t('studio.newChat')}
-        >
-          <SquarePenIcon className="size-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={onNewSession}
+                aria-label={t('studio.newChat')}
+              >
+                <SquarePenIcon className="size-3.5" />
+              </Button>
+            }
+          />
+          <TooltipContent>{t('studio.newChat')}</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Session history */}
@@ -194,23 +208,39 @@ export function StudioSidebar({
                 sortMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
               )}
             >
-              <button
-                type="button"
-                className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                onClick={onNewProject}
-                aria-label={t('studio.newProject')}
-                title={t('studio.newProject')}
-              >
-                <FolderPlusIcon className="size-3" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      onClick={onNewProject}
+                      aria-label={t('studio.newProject')}
+                    >
+                      <FolderPlusIcon className="size-3" />
+                    </button>
+                  }
+                />
+                <TooltipContent side="right" sideOffset={8}>
+                  {t('studio.newProject')}
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenu open={sortMenuOpen} onOpenChange={setSortMenuOpen}>
-                <DropdownMenuTrigger
-                  className="rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground"
-                  aria-label={t('studio.sort')}
-                  title={t('studio.sort')}
-                >
-                  <ArrowUpDownIcon className="size-3" />
-                </DropdownMenuTrigger>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <DropdownMenuTrigger
+                        className="rounded p-0.5 text-muted-foreground outline-none hover:bg-accent hover:text-foreground"
+                        aria-label={t('studio.sort')}
+                      >
+                        <ArrowUpDownIcon className="size-3" />
+                      </DropdownMenuTrigger>
+                    }
+                  />
+                  <TooltipContent side="right" sideOffset={8}>
+                    {t('studio.sort')}
+                  </TooltipContent>
+                </Tooltip>
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuRadioGroup
                     value={listSort}
@@ -281,18 +311,26 @@ export function StudioSidebar({
                         {project.title}
                       </span>
                     </button>
-                    <button
-                      type="button"
-                      className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDeleteProject(project.id)
-                      }}
-                      aria-label={t('studio.deleteProject')}
-                      title={t('studio.deleteProject')}
-                    >
-                      <Trash2Icon className="size-3" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            className="absolute top-1/2 right-1 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDeleteProject(project.id)
+                            }}
+                            aria-label={t('studio.deleteProject')}
+                          >
+                            <Trash2Icon className="size-3" />
+                          </button>
+                        }
+                      />
+                      <TooltipContent side="right" sideOffset={8}>
+                        {t('studio.deleteProject')}
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                   {!isCollapsed &&
                     (projectSessions.length === 0 ? (

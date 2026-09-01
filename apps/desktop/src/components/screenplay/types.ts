@@ -1,6 +1,8 @@
 export type ScreenplayStatus = 'idea' | 'outline' | 'draft' | 'revision' | 'locked'
 
-export type ScreenplayView = 'canvas' | 'editor' | 'audit'
+export type ScreenplayMode = 'canvas' | 'editor' | 'audit'
+/** @deprecated Use ScreenplayMode for the screenplay workbench sub-view. */
+export type ScreenplayView = ScreenplayMode
 
 export type ScreenplayAction =
   | 'outline'
@@ -9,6 +11,7 @@ export type ScreenplayAction =
   | 'scene-draft'
   | 'revision'
   | 'continuity-audit'
+  | 'organize'
 
 export interface ShotCard {
   id: string
@@ -99,7 +102,8 @@ export interface ContinuityIssue {
 
 export interface ProposedFileChange {
   path: string
-  operation: 'create' | 'update' | 'delete'
+  fromPath?: string
+  operation: 'create' | 'update' | 'delete' | 'move'
   beforeHash: string | null
   beforeText?: string
   afterText?: string

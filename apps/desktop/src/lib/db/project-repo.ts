@@ -129,3 +129,16 @@ export async function moveTab(id: string, position: number): Promise<void> {
   const db = await getDatabase()
   await db.execute(`UPDATE project_tabs SET position = ? WHERE id = ?`, [position, id])
 }
+
+export async function updateTabFilePath(
+  projectId: string,
+  fromPath: string,
+  toPath: string,
+): Promise<void> {
+  const db = await getDatabase()
+  await db.execute(
+    `UPDATE project_tabs SET file_path = ?, last_active_at = ?
+     WHERE project_id = ? AND file_path = ?`,
+    [toPath, Date.now(), projectId, fromPath],
+  )
+}

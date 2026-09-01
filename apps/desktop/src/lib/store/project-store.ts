@@ -1,12 +1,9 @@
 import { create } from 'zustand'
 
 import type { Project, ProjectTab } from '@/lib/db/project-repo'
-import { closeTab, listTabs, openTab } from '@/lib/db/project-repo'
+import { closeTab, listTabs, openTab, updateTabFilePath } from '@/lib/db/project-repo'
 
-/** How the studio sidebar lists chat sessions. */
-export type SessionListMode = 'grouped' | 'flat'
-
-/** How the studio sidebar sorts projects / sessions. */
+/** How the project launcher sorts projects. */
 export type SessionListSort = 'recent' | 'name'
 
 interface ProjectState {
@@ -16,8 +13,6 @@ interface ProjectState {
   leftSidebarOpen: boolean
   /** Whether the right-side feature panel (Files) is visible. */
   rightPanelOpen: boolean
-  /** Sidebar session list presentation: grouped by project or flat. */
-  sessionListMode: SessionListMode
   /** Sidebar project/session ordering: by recent activity or by name. */
   sessionListSort: SessionListSort
   /** Bump to force the project file tree to reload (e.g. agent file activity). */
@@ -28,11 +23,10 @@ interface ProjectState {
   closeFile: (tabId: string) => Promise<void>
   activateTab: (tabId: string) => void
   reloadTabs: () => Promise<void>
+  remapFilePath: (fromPath: string, toPath: string) => Promise<void>
   toggleLeftSidebar: () => void
   toggleRightPanel: () => void
   setRightPanelOpen: (open: boolean) => void
-  toggleSessionListMode: () => void
-  setSessionListMode: (mode: SessionListMode) => void
   setSessionListSort: (sort: SessionListSort) => void
   bumpTree: () => void
 }
@@ -43,7 +37,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   activeTabId: null,
   leftSidebarOpen: true,
   rightPanelOpen: false,
-  sessionListMode: 'grouped',
   sessionListSort: 'recent',
   treeVersion: 0,
 
@@ -87,12 +80,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ tabs })
   },
 
+  remapFilePath: async (fromPath, toPath) => {
+    const project = get().project
+    if (!project) return
+    await updateTabFilePath(project.id, fromPath, toPath)
+    const tabs = await listTabs(project.id)
+    set({ tabs })
+  },
+
   toggleLeftSidebar: () => set((s) => ({ leftSidebarOpen: !s.leftSidebarOpen })),
   toggleRightPanel: () => set((s) => ({ rightPanelOpen: !s.rightPanelOpen })),
   setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
-  toggleSessionListMode: () =>
-    set((s) => ({ sessionListMode: s.sessionListMode === 'grouped' ? 'flat' : 'grouped' })),
-  setSessionListMode: (mode) => set({ sessionListMode: mode }),
   setSessionListSort: (sort) => set({ sessionListSort: sort }),
   bumpTree: () => set((s) => ({ treeVersion: s.treeVersion + 1 })),
 }))

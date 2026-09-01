@@ -11,7 +11,7 @@ function defineTool<P extends TSchema, D>(def: AgentTool<P, D>): AgentTool<P, D>
   return def
 }
 
-const IGNORED_DIRS = new Set(['node_modules', '.git', '.DS_Store'])
+const IGNORED_DIRS = new Set(['node_modules', '.git', '.kenvo', '.DS_Store'])
 const MAX_LIST_ENTRIES = 500
 const MAX_READ_LINES = 2000
 const MAX_SEARCH_RESULTS = 100
@@ -21,6 +21,13 @@ const MAX_SEARCH_RESULTS = 100
  * anything that escapes it.
  */
 function resolveInProject(projectRoot: string, relPath: string): string {
+  const normalizedPath = relPath.replaceAll('\\', '/')
+  const includesHiddenSegment = normalizedPath
+    .split('/')
+    .some((segment) => segment.startsWith('.') && segment !== '.' && segment !== '..')
+  if (includesHiddenSegment) {
+    throw new Error(`Hidden paths are not available to the agent: ${relPath}`)
+  }
   const resolved = path.resolve(projectRoot, relPath)
   const rootWithSep = projectRoot.endsWith(path.sep) ? projectRoot : projectRoot + path.sep
   if (resolved !== projectRoot && !resolved.startsWith(rootWithSep)) {
@@ -48,7 +55,7 @@ async function listDirRecursive(
   })
   for (const entry of entries) {
     if (out.length >= MAX_LIST_ENTRIES) return
-    if (IGNORED_DIRS.has(entry.name)) continue
+    if (IGNORED_DIRS.has(entry.name) || entry.name.startsWith('.')) continue
     const abs = path.join(dir, entry.name)
     const rel = toRel(root, abs)
     if (entry.isDirectory()) {
@@ -254,14 +261,20 @@ export function createFsTools(
     name: 'propose_file_change',
     label: 'Propose File Change',
     description:
-      'Prepare a create, update, or delete for user review. Never writes to disk. For updates, provide the complete replacement content.',
+      'Prepare a create, update, delete, or move for user review. Never writes to disk. For updates, provide the complete replacement content; for moves, provide from_path.',
     parameters: Type.Object({
       path: Type.String({ description: 'File path relative to the project root.' }),
       operation: Type.Union([
         Type.Literal('create'),
         Type.Literal('update'),
         Type.Literal('delete'),
+        Type.Literal('move'),
       ]),
+      from_path: Type.Optional(
+        Type.String({
+          description: 'Existing source path for move operations, relative to the project root.',
+        }),
+      ),
       content: Type.Optional(Type.String({ description: 'Complete new file content.' })),
       summary: Type.Optional(Type.String({ description: 'Short human-readable change summary.' })),
     }),
@@ -269,6 +282,7 @@ export function createFsTools(
       const result = await proposeFileChange(options.sessionId as string, projectRoot, {
         path: params.path,
         operation: params.operation as ProposalOperation,
+        fromPath: params.from_path,
         content: params.content,
         summary: params.summary,
       })

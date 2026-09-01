@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { createProject } from '@/lib/db/project-repo'
 import { api } from '@/lib/electron/api'
+import { ensureProjectConfig } from '@/lib/project/project-config'
 
 interface NewProjectDialogProps {
   open: boolean
@@ -61,6 +62,8 @@ export function NewProjectDialog({ open, onOpenChange, onCreated }: NewProjectDi
           await api.fs.writeTextFile(readmePath, `# ${projectTitle}\n\nManaged by Kenvo.\n`)
         }
       }
+
+      await ensureProjectConfig(dir, template)
 
       const project = await createProject(dir, projectTitle)
       onOpenChange(false)

@@ -33,6 +33,7 @@
     "editor": "Editor",
     "toggleEditor": "Toggle editor",
     "toggleSessions": "Toggle session sidebar",
+    "toggleProjects": "Toggle project sidebar",
     "toggleRightPanel": "Toggle right panel",
     "openInEditor": "Open in editor",
     "editorMode": "Editor mode",
@@ -42,24 +43,31 @@
     "editorSourceOnly": "Source only",
     "editorSourceOnlyReason": "This file contains Markdown syntax that cannot be safely preserved. Use Source mode to edit it."
   },
+  "projectViews": {
+    "pickerTitle": "Choose a project view",
+    "pickerDescription": "Choose how Kenvo should open this project. You can switch inside the project later.",
+    "openView": "Enter project",
+    "invalidConfig": "The project view config could not be read. The original file was kept; choose a view to save a new config.",
+    "screenplay": {
+      "title": "Screenplay workbench",
+      "description": "Manage AI-video-ready screenplays across the overview, scene editor, and maintenance checks."
+    },
+    "switchView": "Switch project view"
+  },
   "studio": {
-    "newChat": "New chat",
     "newProject": "New project",
-    "openScreenplay": "Open screenplay workbench",
     "projects": "Projects",
     "sort": "Sort",
     "sortRecent": "Recent activity",
     "sortName": "Name",
-    "view": "View",
-    "groupByProject": "Group by project",
-    "flatList": "Flat list",
-    "sessionLastActive": "Last active",
     "noProjects": "No projects yet",
     "noProjectsHint": "Create a project to start writing with an agent.",
-    "noChats": "No chats",
+    "launcherTitle": "Choose a project and continue the story",
+    "launcherDescription": "Kenvo turns the Markdown in your project folder into a screenplay workspace you can browse, edit, and keep organized.",
     "deleteProject": "Delete project",
     "deleteProjectTitle": "Delete this project?",
-    "deleteProjectDesc": "The project and all its chat sessions will be removed from Kenvo. Files on disk are not deleted."
+    "deleteProjectDesc": "The project will be removed from Kenvo. Files on disk are not deleted.",
+    "openProject": "Open project"
   },
   "screenplay": {
     "canvas": {

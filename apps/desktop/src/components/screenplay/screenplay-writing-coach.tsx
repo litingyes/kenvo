@@ -8,6 +8,7 @@ import {
   RefreshCwIcon,
   SparklesIcon,
   WandSparklesIcon,
+  FolderTreeIcon,
 } from 'lucide-react'
 import * as React from 'react'
 
@@ -31,6 +32,7 @@ interface ScreenplayWritingCoachProps {
   selectedScene: SceneSummary | null
   proposals: AgentProposal[]
   proposalBusy: boolean
+  organizeRequest: { id: string; text: string } | null
   onConfigChange: (update: { skillId?: string; providerId?: string; modelId?: string }) => void
   onFileActivity: () => void
   onSessionActivity: () => void
@@ -62,6 +64,7 @@ const ACTIONS: Array<{
     hint: '找出人物与镜头衔接问题',
     icon: CheckCircle2Icon,
   },
+  { id: 'organize', label: '整理结构', hint: '归档未识别的剧本文件', icon: FolderTreeIcon },
 ]
 
 function actionPrompt(action: ScreenplayAction, scene: SceneSummary | null): string {
@@ -77,12 +80,18 @@ function actionPrompt(action: ScreenplayAction, scene: SceneSummary | null): str
     revision: '请提出并准备一轮节奏改稿，重点改善前三秒钩子、冲突升级、可视化动作和结尾牵引。',
     'continuity-audit':
       '请只读检查人物外观、服装、道具、空间、时间、镜头衔接和集尾卡点，并给出可定位的问题。',
+    organize:
+      '请整理当前项目中的剧本 Markdown 结构。扫描并识别总纲、故事设定、人物、连续性、分集大纲和场景文件；优先只移动或改名文件，保留正文内容和未知字段，必要时只补齐最小 frontmatter 或索引。不要重写正文、拆分或合并文档，不要删除文件，不要覆盖已存在的目标路径。所有移动和修改都必须使用提案工具，移动使用 operation=move 和 from_path。',
   }
   return `${instructions[action]}\n${context}\n所有文件修改必须使用提案工具，先展示改动再等待确认。`
 }
 
 export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
   const [quickPrompt, setQuickPrompt] = React.useState<{ id: string; text: string } | null>(null)
+
+  React.useEffect(() => {
+    if (props.organizeRequest) setQuickPrompt(props.organizeRequest)
+  }, [props.organizeRequest])
 
   const triggerAction = (action: ScreenplayAction) => {
     setQuickPrompt({ id: crypto.randomUUID(), text: actionPrompt(action, props.selectedScene) })

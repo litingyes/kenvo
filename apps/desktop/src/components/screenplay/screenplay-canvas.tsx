@@ -12,6 +12,7 @@ import {
   Layers3Icon,
   PencilLineIcon,
   SparklesIcon,
+  WandSparklesIcon,
 } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -28,6 +29,8 @@ interface ScreenplayCanvasProps {
   episodes: EpisodeSummary[]
   unorganized: ScreenplayDocumentRef[]
   selectedSceneId: string | null
+  onOrganize: () => void
+  organizeDisabled?: boolean
   onSelectScene: (scene: SceneSummary) => void
   onEditScene: (scene: SceneSummary) => void
   onOpenDocument: (document: ScreenplayDocumentRef) => void
@@ -326,6 +329,8 @@ export function ScreenplayCanvas({
   episodes,
   unorganized,
   selectedSceneId,
+  onOrganize,
+  organizeDisabled = false,
   onSelectScene,
   onEditScene,
   onOpenDocument,
@@ -477,7 +482,21 @@ export function ScreenplayCanvas({
                 <AlertTriangleIcon className="size-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold">未整理文件</h2>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold">未整理文件</h2>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={onOrganize}
+                    disabled={organizeDisabled}
+                    title={
+                      organizeDisabled ? '需要可用的写作教练，且当前没有正在运行的任务' : undefined
+                    }
+                  >
+                    <WandSparklesIcon />
+                    一键整理
+                  </Button>
+                </div>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   这些 Markdown 仍被保留，但尚未识别出分集、场景或镜头结构。打开文件即可继续整理。
                 </p>

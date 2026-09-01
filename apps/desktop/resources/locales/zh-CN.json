@@ -33,6 +33,7 @@
     "editor": "编辑器",
     "toggleEditor": "切换编辑器",
     "toggleSessions": "切换会话栏",
+    "toggleProjects": "切换项目栏",
     "toggleRightPanel": "切换右侧面板",
     "openInEditor": "在编辑器中打开",
     "editorMode": "编辑模式",
@@ -42,24 +43,31 @@
     "editorSourceOnly": "仅支持源码",
     "editorSourceOnlyReason": "此文件包含无法安全保留的 Markdown 语法，请使用源码模式编辑。"
   },
+  "projectViews": {
+    "pickerTitle": "选择项目视图",
+    "pickerDescription": "选择打开这个项目时使用的工作方式。之后可以在项目中切换。",
+    "openView": "进入项目",
+    "invalidConfig": "项目视图配置无法读取。原配置已保留，请选择一个视图重新保存。",
+    "screenplay": {
+      "title": "剧本工作台",
+      "description": "从总览、场景编辑到维护检查，集中管理可用于 AI 视频生成的剧本。"
+    },
+    "switchView": "切换项目视图"
+  },
   "studio": {
-    "newChat": "新会话",
     "newProject": "新建项目",
-    "openScreenplay": "打开剧本工作台",
     "projects": "项目",
     "sort": "排序",
     "sortRecent": "最近活跃",
     "sortName": "按名称",
-    "view": "视图",
-    "groupByProject": "按项目分组",
-    "flatList": "平铺列表",
-    "sessionLastActive": "最近活跃",
     "noProjects": "还没有项目",
     "noProjectsHint": "创建一个项目，开始与 Agent 一起写作。",
-    "noChats": "暂无会话",
+    "launcherTitle": "选择一个项目，继续你的故事",
+    "launcherDescription": "Kenvo 会把项目目录里的 Markdown 变成可浏览、可编辑、可持续整理的剧本工作空间。",
     "deleteProject": "删除项目",
     "deleteProjectTitle": "删除该项目？",
-    "deleteProjectDesc": "项目及其所有会话将从 Kenvo 中移除，磁盘上的文件不会被删除。"
+    "deleteProjectDesc": "项目将从 Kenvo 中移除，磁盘上的文件不会被删除。",
+    "openProject": "打开项目"
   },
   "screenplay": {
     "canvas": {

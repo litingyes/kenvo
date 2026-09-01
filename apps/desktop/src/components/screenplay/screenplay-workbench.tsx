@@ -3,6 +3,7 @@ import {
   AlertTriangleIcon,
   ArrowLeftIcon,
   CheckCircle2Icon,
+  ChevronDownIcon,
   ClapperboardIcon,
   FileTextIcon,
   GaugeIcon,
@@ -20,6 +21,13 @@ import { useTranslation } from 'react-i18next'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { AppHeader } from '@/components/layout/app-header'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
 import { createAgentServerClient, type AgentProposal } from '@/lib/ai/server-client'
@@ -39,6 +47,13 @@ import {
 } from '@/lib/db/chat-repo'
 import { getProject, listTabs, type Project } from '@/lib/db/project-repo'
 import { api } from '@/lib/electron/api'
+import {
+  defaultProjectConfig,
+  readProjectConfig,
+  withProjectDefaultMode,
+  writeProjectConfig,
+  type ProjectDefaultMode,
+} from '@/lib/project/project-config'
 import { useProjectStore } from '@/lib/store/project-store'
 
 import { ScreenplayCanvas } from './screenplay-canvas'
@@ -56,11 +71,13 @@ import type {
   SceneSummary,
   ScreenplayCanvasData,
   ScreenplayDocumentRef,
-  ScreenplayView,
+  ScreenplayMode,
 } from './types'
 
 interface ScreenplayWorkbenchProps {
   projectId: string
+  initialMode?: ScreenplayMode
+  initialDocumentPath?: string
 }
 
 interface ScriptMapProps {
@@ -124,6 +141,12 @@ function makeLocalProposal(
     })),
   }
 }
+
+const ORGANIZE_PROMPT = `请整理当前项目中的剧本 Markdown 结构。
+
+先使用 list_files 和 read_file 扫描项目中的 Markdown 文件，并忽略 .kenvo、.git 以及其他隐藏目录。根据剧本约定识别总纲、故事设定、人物、连续性、分集大纲和场景文件。
+
+整理边界：优先只移动或改名文件，保留正文内容和未知字段；只有为了让剧本索引识别文件时，才补齐最小 frontmatter 或索引。不要重写正文，不要拆分或合并文档，不要删除文件。所有移动和修改都必须使用 propose_file_change，移动使用 operation=move 和 from_path。目标路径已存在时不要覆盖，保留为未整理并说明原因。完成后生成一份可审核的结构整理提案。`
 
 async function applyLocalProposal(rootPath: string, proposal: AgentProposal): Promise<void> {
   for (const change of proposal.changes) {
@@ -408,14 +431,18 @@ function AuditStat({
   )
 }
 
-export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
+export function ScreenplayWorkbench({
+  projectId,
+  initialMode,
+  initialDocumentPath,
+}: ScreenplayWorkbenchProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [project, setProject] = React.useState<Project | null>(null)
   const [data, setData] = React.useState<ScreenplayCanvasData>(EMPTY_CANVAS)
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null)
-  const [view, setView] = React.useState<ScreenplayView>('canvas')
-  const [documentPath, setDocumentPath] = React.useState<string | null>(null)
+  const [view, setView] = React.useState<ScreenplayMode>(initialMode ?? 'canvas')
+  const [documentPath, setDocumentPath] = React.useState<string | null>(initialDocumentPath ?? null)
   const [serverPort, setServerPort] = React.useState<number | null>(null)
   const [session, setSession] = React.useState<ChatSession | null>(null)
   const [historyMessages, setHistoryMessages] = React.useState<UiMessage[]>([])
@@ -440,6 +467,11 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
   const [serverProposals, setServerProposals] = React.useState<AgentProposal[]>([])
   const [localProposals, setLocalProposals] = React.useState<AgentProposal[]>([])
   const [proposalBusy, setProposalBusy] = React.useState(false)
+  const [agentRunning, setAgentRunning] = React.useState(false)
+  const [organizeRequest, setOrganizeRequest] = React.useState<{
+    id: string
+    text: string
+  } | null>(null)
 
   const selectedScene = findScene(data, selectedSceneId)
   const allProposals = [...serverProposals, ...localProposals]
@@ -459,6 +491,46 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
       setServerProposals([])
     }
   }, [serverPort, session])
+
+  const persistDefaultMode = React.useCallback(
+    async (mode: ProjectDefaultMode) => {
+      if (!project) return
+      const result = await readProjectConfig(project.path)
+      if (result.status === 'invalid') return
+      const config = result.status === 'valid' ? result.config : defaultProjectConfig('blank')
+      await writeProjectConfig(project.path, withProjectDefaultMode(config, mode))
+    },
+    [project],
+  )
+
+  const changeMode = React.useCallback(
+    (next: ScreenplayMode, nextDocumentPath: string | null = null) => {
+      setView(next)
+      setDocumentPath(next === 'editor' ? nextDocumentPath : null)
+      void navigate({
+        to: '/screenplay/$projectId',
+        params: { projectId },
+        search:
+          next === 'editor' && nextDocumentPath
+            ? { mode: next, file: nextDocumentPath }
+            : { mode: next },
+      }).catch((error: unknown) => {
+        setServerError(error instanceof Error ? error.message : String(error))
+      })
+      if (next === 'canvas' || next === 'audit') {
+        void persistDefaultMode(next).catch((error: unknown) => {
+          setServerError(error instanceof Error ? error.message : String(error))
+        })
+      }
+    },
+    [navigate, persistDefaultMode, projectId],
+  )
+
+  React.useEffect(() => {
+    if (!initialMode) return
+    setView(initialMode)
+    setDocumentPath(initialMode === 'editor' ? (initialDocumentPath ?? null) : null)
+  }, [initialDocumentPath, initialMode])
 
   React.useEffect(() => {
     let cancelled = false
@@ -489,6 +561,11 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
       try {
         const foundProject = await getProject(projectId)
         if (!foundProject) throw new Error('找不到这个项目。')
+        const projectConfig = await readProjectConfig(foundProject.path)
+        if (!initialMode && projectConfig.status === 'valid') {
+          setView(projectConfig.config.screenplay.defaultMode)
+          setDocumentPath(null)
+        }
         const nextData = await loadScreenplayIndex(foundProject.path, foundProject.title)
         const aiSettings = await getAiSettings()
         const client = serverPort ? createAgentServerClient(serverPort) : null
@@ -573,7 +650,7 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
           .catch(() => {})
       }
     }
-  }, [projectId, serverPort, t])
+  }, [initialMode, projectId, serverPort, t])
 
   React.useEffect(() => {
     if (!project) return
@@ -590,13 +667,17 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
 
   const handleEditScene = (scene: SceneSummary) => {
     setSelectedSceneId(scene.id)
-    setDocumentPath(null)
-    setView('editor')
+    changeMode('editor', scene.path)
   }
 
   const handleOpenDocument = (document: ScreenplayDocumentRef) => {
-    setDocumentPath(document.path)
-    setView('editor')
+    changeMode('editor', document.path)
+  }
+
+  const handleOrganize = () => {
+    if (!session || !serverPort || agentRunning || proposalBusy) return
+    setServerError(null)
+    setOrganizeRequest({ id: crypto.randomUUID(), text: ORGANIZE_PROMPT })
   }
 
   const handleReorderScene = async (episode: EpisodeSummary, from: number, to: number) => {
@@ -664,7 +745,15 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
         setLocalProposals((previous) => previous.filter((item) => item.id !== proposal.id))
       } else {
         if (!session) return
-        await createAgentServerClient(serverPort).applyProposal(session.id, proposal.id)
+        const applied = await createAgentServerClient(serverPort).applyProposal(
+          session.id,
+          proposal.id,
+        )
+        for (const change of applied.changes) {
+          if (change.operation === 'move' && change.fromPath) {
+            await useProjectStore.getState().remapFilePath(change.fromPath, change.path)
+          }
+        }
         await refreshProposals()
       }
       await refreshIndex()
@@ -774,7 +863,22 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
           <div className="flex min-w-0 items-center gap-2">
             <ClapperboardIcon className="size-3.5 shrink-0 text-amber-600" />
             <span className="truncate text-xs font-medium">{project.title}</span>
-            <span className="hidden text-[10px] text-muted-foreground sm:inline">/ 剧本工作台</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={t('projectViews.switchView')}
+              >
+                <span>/ {t('projectViews.screenplay.title')}</span>
+                <ChevronDownIcon className="size-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuRadioGroup value="screenplay">
+                  <DropdownMenuRadioItem value="screenplay" className="text-xs">
+                    {t('projectViews.screenplay.title')}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
         rightContent={
@@ -796,23 +900,20 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
           <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-3">
             <ViewButton
               active={view === 'canvas'}
-              onClick={() => {
-                setView('canvas')
-                setDocumentPath(null)
-              }}
+              onClick={() => changeMode('canvas')}
               icon={<GaugeIcon />}
               label="总览 Canvas"
             />
             <ViewButton
               active={view === 'editor'}
-              onClick={() => setView('editor')}
+              onClick={() => changeMode('editor', documentPath)}
               icon={<FileTextIcon />}
               label="场景编辑"
               disabled={!selectedScene && !documentPath}
             />
             <ViewButton
               active={view === 'audit'}
-              onClick={() => setView('audit')}
+              onClick={() => changeMode('audit')}
               icon={<ListChecksIcon />}
               label="维护检查"
             />
@@ -820,12 +921,23 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
               {data.warningCount > 0 ? `${data.warningCount} 个提醒` : '结构清晰'}
             </span>
           </div>
+          {serverError && (
+            <div
+              role="alert"
+              className="mx-3 mt-3 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+            >
+              <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0" />
+              <span className="min-w-0 flex-1">{serverError}</span>
+            </div>
+          )}
           <div className="min-h-0 flex-1">
             {view === 'canvas' && (
               <ScreenplayCanvas
                 episodes={data.episodes}
                 unorganized={data.unorganized}
                 selectedSceneId={selectedSceneId}
+                onOrganize={handleOrganize}
+                organizeDisabled={!session || !serverPort || agentRunning || proposalBusy}
                 onSelectScene={handleSelectScene}
                 onEditScene={handleEditScene}
                 onOpenDocument={handleOpenDocument}
@@ -844,7 +956,7 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
               <ScreenplaySceneEditor
                 rootPath={project.path}
                 scene={sceneForEditor}
-                onBack={() => setView('canvas')}
+                onBack={() => changeMode('canvas')}
                 onSaved={() => void refreshIndex()}
                 onNavigate={(direction) => {
                   const scenes = allScenes(data)
@@ -875,12 +987,13 @@ export function ScreenplayWorkbench({ projectId }: ScreenplayWorkbenchProps) {
             serverPort={serverPort}
             initialMessages={historyMessages}
             selectedScene={selectedScene}
+            organizeRequest={organizeRequest}
             proposals={allProposals}
             proposalBusy={proposalBusy}
             onConfigChange={(update) => void handleConfigChange(update)}
             onFileActivity={() => void refreshIndex()}
             onSessionActivity={() => {}}
-            onRunningChange={() => {}}
+            onRunningChange={setAgentRunning}
             onAgentEnd={onAgentEnd}
             onApplyProposal={(proposal) => void handleApplyProposal(proposal)}
             onDiscardProposal={(proposal) => void handleDiscardProposal(proposal)}

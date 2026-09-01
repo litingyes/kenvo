@@ -2,6 +2,7 @@ import {
   CheckIcon,
   FilePlus2Icon,
   FileTextIcon,
+  FolderInputIcon,
   LoaderCircleIcon,
   Trash2Icon,
   XIcon,
@@ -17,6 +18,13 @@ interface ScreenplayChangePreviewProps {
   busy: boolean
   onApply: (proposal: AgentProposal) => void
   onDiscard: (proposal: AgentProposal) => void
+}
+
+function operationLabel(operation: AgentProposal['changes'][number]['operation']): string {
+  if (operation === 'create') return '新建'
+  if (operation === 'update') return '更新'
+  if (operation === 'delete') return '删除'
+  return '移动'
 }
 
 export function ScreenplayChangePreview({
@@ -59,11 +67,19 @@ export function ScreenplayChangePreview({
                   <FilePlus2Icon className="size-3 text-emerald-600" />
                 ) : change.operation === 'delete' ? (
                   <Trash2Icon className="size-3 text-destructive" />
+                ) : change.operation === 'move' ? (
+                  <FolderInputIcon className="size-3 text-blue-600" />
                 ) : (
                   <FileTextIcon className="size-3 text-amber-600" />
                 )}
-                <span className="min-w-0 flex-1 truncate font-mono text-[10px]">{change.path}</span>
-                <span className="text-[10px] text-muted-foreground">{change.operation}</span>
+                <span className="min-w-0 flex-1 truncate font-mono text-[10px]">
+                  {change.operation === 'move' && change.fromPath
+                    ? `${change.fromPath} → ${change.path}`
+                    : change.path}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {operationLabel(change.operation)}
+                </span>
               </div>
               <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{change.summary}</p>
               {change.operation !== 'delete' && change.afterText && (

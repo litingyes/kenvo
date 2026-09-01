@@ -42,7 +42,8 @@ export interface CreateSessionRequest {
 
 export interface AgentProposalChange {
   path: string
-  operation: 'create' | 'update' | 'delete'
+  fromPath?: string
+  operation: 'create' | 'update' | 'delete' | 'move'
   beforeHash: string | null
   beforeText?: string
   afterText?: string

@@ -2,10 +2,11 @@ import { createHash } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-export type ProposalOperation = 'create' | 'update' | 'delete'
+export type ProposalOperation = 'create' | 'update' | 'delete' | 'move'
 
 export interface ProposedFileChange {
   path: string
+  fromPath?: string
   operation: ProposalOperation
   beforeHash: string | null
   beforeText?: string
@@ -28,12 +29,22 @@ export class ProposalConflictError extends Error {
 const proposals = new Map<string, ChangeSet[]>()
 
 function resolveInProject(projectRoot: string, relativePath: string): string {
+  if (isHiddenPath(relativePath)) {
+    throw new Error(`Hidden paths are not available for proposals: ${relativePath}`)
+  }
   const resolved = path.resolve(projectRoot, relativePath)
   const normalizedRoot = path.resolve(projectRoot)
   if (resolved !== normalizedRoot && !resolved.startsWith(`${normalizedRoot}${path.sep}`)) {
     throw new Error(`Path escapes project root: ${relativePath}`)
   }
   return resolved
+}
+
+function isHiddenPath(relativePath: string): boolean {
+  return relativePath
+    .replaceAll('\\', '/')
+    .split('/')
+    .some((segment) => segment.startsWith('.') && segment !== '.' && segment !== '..')
 }
 
 function hashText(text: string): string {
@@ -57,6 +68,7 @@ export async function proposeFileChange(
   input: {
     path: string
     operation: ProposalOperation
+    fromPath?: string
     content?: string
     summary?: string
   },
@@ -66,19 +78,40 @@ export async function proposeFileChange(
     throw new Error(`Invalid project-relative path: ${input.path}`)
   }
 
-  const current = await readCurrent(projectRoot, relativePath)
+  const fromPath = input.operation === 'move' ? input.fromPath?.replaceAll('\\', '/') : undefined
+  if (
+    input.operation === 'move' &&
+    (!fromPath || fromPath.startsWith('/') || fromPath.includes('..'))
+  ) {
+    throw new Error(`Invalid move source path: ${input.fromPath ?? ''}`)
+  }
+  if (isHiddenPath(relativePath) || (fromPath !== undefined && isHiddenPath(fromPath))) {
+    throw new Error(`Hidden paths are not available for proposals: ${relativePath}`)
+  }
+  if (input.operation === 'move' && fromPath === relativePath) {
+    throw new Error(`Move source and destination must differ: ${relativePath}`)
+  }
+
+  const current = await readCurrent(projectRoot, fromPath ?? relativePath)
+  if (
+    (input.operation === 'update' || input.operation === 'delete' || input.operation === 'move') &&
+    current === null
+  ) {
+    throw new Error(`Cannot propose ${input.operation}; file does not exist: ${relativePath}`)
+  }
   if (input.operation === 'create' && current !== null) {
     throw new Error(`Cannot propose create; file already exists: ${relativePath}`)
   }
-  if ((input.operation === 'update' || input.operation === 'delete') && current === null) {
-    throw new Error(`Cannot propose ${input.operation}; file does not exist: ${relativePath}`)
+  if (input.operation === 'move' && (await readCurrent(projectRoot, relativePath)) !== null) {
+    throw new Error(`Cannot propose move; destination already exists: ${relativePath}`)
   }
-  if (input.operation !== 'delete' && input.content === undefined) {
+  if (input.operation !== 'delete' && input.operation !== 'move' && input.content === undefined) {
     throw new Error(`Content is required for ${input.operation}: ${relativePath}`)
   }
 
   const change: ProposedFileChange = {
     path: relativePath,
+    fromPath,
     operation: input.operation,
     beforeHash: current === null ? null : hashText(current),
     beforeText: current ?? undefined,
@@ -121,9 +154,13 @@ export async function applyProposal(
 
   const conflicts: string[] = []
   for (const change of proposal.changes) {
-    const current = await readCurrent(projectRoot, change.path)
+    const sourcePath = change.operation === 'move' ? change.fromPath : change.path
+    const current = await readCurrent(projectRoot, sourcePath ?? change.path)
     const currentHash = current === null ? null : hashText(current)
-    if (currentHash !== change.beforeHash) conflicts.push(change.path)
+    if (currentHash !== change.beforeHash) conflicts.push(sourcePath ?? change.path)
+    if (change.operation === 'move' && (await readCurrent(projectRoot, change.path)) !== null) {
+      conflicts.push(change.path)
+    }
   }
   if (conflicts.length > 0) throw new ProposalConflictError(conflicts)
 
@@ -131,6 +168,13 @@ export async function applyProposal(
     const absolute = resolveInProject(projectRoot, change.path)
     if (change.operation === 'delete') {
       await fs.rm(absolute)
+      continue
+    }
+    if (change.operation === 'move') {
+      const source = resolveInProject(projectRoot, change.fromPath ?? '')
+      await fs.mkdir(path.dirname(absolute), { recursive: true })
+      await fs.rename(source, absolute)
+      if (change.afterText !== undefined) await fs.writeFile(absolute, change.afterText, 'utf8')
       continue
     }
     await fs.mkdir(path.dirname(absolute), { recursive: true })

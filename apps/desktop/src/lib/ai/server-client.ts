@@ -37,6 +37,22 @@ export interface CreateSessionRequest {
   providerId: string
   modelId: string
   history?: unknown[]
+  writePolicy?: 'direct' | 'proposal'
+}
+
+export interface AgentProposalChange {
+  path: string
+  operation: 'create' | 'update' | 'delete'
+  beforeHash: string | null
+  beforeText?: string
+  afterText?: string
+  summary: string
+}
+
+export interface AgentProposal {
+  id: string
+  title: string
+  changes: AgentProposalChange[]
 }
 
 /** One server-sent agent event (pi-agent-core event + sequence number). */
@@ -118,6 +134,33 @@ export class AgentServerClient {
         typeof data.error === 'string' ? data.error : `Session create failed (${response.status})`,
       )
     }
+  }
+
+  async getProposals(sessionId: string): Promise<AgentProposal[]> {
+    const response = await this.request(`/sessions/${sessionId}/proposals`)
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(typeof data.error === 'string' ? data.error : 'Failed to load proposals')
+    }
+    return data.proposals
+  }
+
+  async applyProposal(sessionId: string, proposalId: string): Promise<AgentProposal> {
+    const response = await this.request(`/sessions/${sessionId}/proposals/${proposalId}/apply`, {
+      method: 'POST',
+    })
+    const data = await response.json()
+    if (!response.ok) {
+      const conflicts = Array.isArray(data.conflicts) ? `: ${data.conflicts.join(', ')}` : ''
+      throw new Error(
+        (typeof data.error === 'string' ? data.error : 'Failed to apply proposal') + conflicts,
+      )
+    }
+    return data.proposal
+  }
+
+  async discardProposal(sessionId: string, proposalId: string): Promise<void> {
+    await this.request(`/sessions/${sessionId}/proposals/${proposalId}`, { method: 'DELETE' })
   }
 
   async destroySession(sessionId: string): Promise<void> {

@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router'
 import { FolderIcon, PanelLeftIcon, PanelRightIcon } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -7,6 +8,7 @@ import { skillIcon, skillName } from '@/components/agent/skill-meta'
 import { FilesPanel } from '@/components/files/files-panel'
 import { AppHeader } from '@/components/layout/app-header'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
+import type { ProjectTemplate } from '@/components/screenplay/screenplay-template'
 import { StudioSidebar } from '@/components/studio/studio-sidebar'
 import {
   AlertDialog,
@@ -95,6 +97,7 @@ function writeLastConfig(config: SessionConfig): void {
  */
 export function StudioLayout() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const leftOpen = useProjectStore((s) => s.leftSidebarOpen)
   const toggleLeft = useProjectStore((s) => s.toggleLeftSidebar)
   const rightOpen = useProjectStore((s) => s.rightPanelOpen)
@@ -247,7 +250,7 @@ export function StudioLayout() {
 
   /** Create a fresh chat session under the given project and activate it. */
   const createSessionForProject = React.useCallback(
-    async (project: Project, port: number): Promise<ChatSession> => {
+    async (project: Project, port: number, skillId = DEFAULT_SKILL_ID): Promise<ChatSession> => {
       const settings = settingsRef.current
       const last = readLastConfig()
       const lastModel =
@@ -261,12 +264,17 @@ export function StudioLayout() {
             ? (resolveDefaultModel(settings) ?? null)
             : null
       if (!model) throw new Error(t('agent.noModel'))
-      const skillId = last?.skillId ?? DEFAULT_SKILL_ID
-      const session = await createChatSession(project.id, skillId, model.providerId, model.modelId)
+      const effectiveSkillId = skillId || last?.skillId || DEFAULT_SKILL_ID
+      const session = await createChatSession(
+        project.id,
+        effectiveSkillId,
+        model.providerId,
+        model.modelId,
+      )
       const client = createAgentServerClient(port)
       await client.createSession({
         sessionId: session.id,
-        skillId,
+        skillId: effectiveSkillId,
         projectRoot: project.path,
         providerId: model.providerId,
         modelId: model.modelId,
@@ -467,19 +475,26 @@ export function StudioLayout() {
     }
   }
 
-  const handleProjectCreated = async (projectId: string) => {
+  const handleProjectCreated = async (projectId: string, template: ProjectTemplate) => {
     if (!serverPort) return
     try {
       await refreshProjects()
       const project = await getProject(projectId)
       if (!project) return
       await stopServerSession(activeSessionId, serverPort)
-      const session = await createSessionForProject(project, serverPort)
+      const session = await createSessionForProject(
+        project,
+        serverPort,
+        template === 'short-video-drama' ? 'screenwriter' : undefined,
+      )
       await hydrateProject(project)
       setHistoryMessages([])
       setActiveSessionId(session.id)
       setSessionError(null)
       await refreshSessions()
+      if (template === 'short-video-drama') {
+        await navigate({ to: '/screenplay/$projectId', params: { projectId } })
+      }
     } catch (e) {
       setSessionError(e instanceof Error ? e.message : String(e))
     }
@@ -593,6 +608,9 @@ export function StudioLayout() {
                       setConfirmAction({ type: 'deleteProject', projectId: id })
                     }
                     onNewProject={() => setNewProjectOpen(true)}
+                    onOpenScreenplay={(projectId) =>
+                      void navigate({ to: '/screenplay/$projectId', params: { projectId } })
+                    }
                   />
                 </div>
               </div>
@@ -693,7 +711,7 @@ export function StudioLayout() {
       <NewProjectDialog
         open={newProjectOpen}
         onOpenChange={setNewProjectOpen}
-        onCreated={(id) => void handleProjectCreated(id)}
+        onCreated={(id, template) => void handleProjectCreated(id, template)}
       />
 
       <AlertDialog

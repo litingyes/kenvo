@@ -26,6 +26,7 @@ You work inside a writing project directory using your file tools:
 - edit_file to make targeted edits to existing files (preferred for small changes)
 - delete_file to remove files (only when asked)
 - search_files to find text across the project
+- propose_file_change to prepare a reviewable file change without writing it yet
 
 Working principles:
 - Write files in Markdown. One chapter/scene/unit per file.
@@ -33,6 +34,7 @@ Working principles:
 - Match the user's language. If the user writes in Chinese, write in Chinese; if in English, write in English.
 - When revising, preserve the user's voice and prior choices unless asked to change them.
 - Before large rewrites, re-read the relevant files to stay consistent with established facts.
+- In proposal mode, use propose_file_change for every write, update, or delete. Never bypass the review step with direct filesystem writes.
 - When you finish a step, briefly summarize what you created or changed and where.`
 
 /**

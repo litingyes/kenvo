@@ -1,6 +1,10 @@
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
+import {
+  bootstrapShortDramaProject,
+  type ProjectTemplate,
+} from '@/components/screenplay/screenplay-template'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,13 +15,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createProject } from '@/lib/db/project-repo'
 import { api } from '@/lib/electron/api'
 
 interface NewProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated: (projectId: string) => void
+  onCreated: (projectId: string, template: ProjectTemplate) => void
 }
 
 export function NewProjectDialog({ open, onOpenChange, onCreated }: NewProjectDialogProps) {
@@ -25,6 +36,7 @@ export function NewProjectDialog({ open, onOpenChange, onCreated }: NewProjectDi
   const [title, setTitle] = React.useState('')
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [template, setTemplate] = React.useState<ProjectTemplate>('short-video-drama')
 
   const create = async () => {
     setBusy(true)
@@ -41,19 +53,18 @@ export function NewProjectDialog({ open, onOpenChange, onCreated }: NewProjectDi
       const dir = result.filePaths[0]
       const projectTitle = title.trim() || dir.split('/').pop() || 'Untitled'
 
-      // Seed an empty folder with a minimal README so the project is navigable.
-      const readmePath = `${dir}/README.md`
-      try {
+      if (template === 'short-video-drama') {
+        await bootstrapShortDramaProject(dir, projectTitle)
+      } else {
+        const readmePath = `${dir}/README.md`
         if (!(await api.fs.exists(readmePath))) {
           await api.fs.writeTextFile(readmePath, `# ${projectTitle}\n\nManaged by Kenvo.\n`)
         }
-      } catch {
-        // README seeding is best-effort.
       }
 
       const project = await createProject(dir, projectTitle)
       onOpenChange(false)
-      onCreated(project.id)
+      onCreated(project.id, template)
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -75,6 +86,23 @@ export function NewProjectDialog({ open, onOpenChange, onCreated }: NewProjectDi
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t('home.projectTitle')}
           />
+          <div className="grid gap-1.5">
+            <label className="text-xs font-medium">{t('home.projectTemplate')}</label>
+            <Select
+              value={template}
+              onValueChange={(value) => setTemplate(value as ProjectTemplate)}
+            >
+              <SelectTrigger aria-label={t('home.projectTemplate')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="short-video-drama">
+                  {t('home.templates.shortVideoDrama')}
+                </SelectItem>
+                <SelectItem value="blank">{t('home.templates.blank')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
 

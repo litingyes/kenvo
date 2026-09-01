@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import {
   ArrowUpDownIcon,
+  ClapperboardIcon,
   FolderIcon,
   FolderOpenIcon,
   FolderPlusIcon,
@@ -46,6 +47,7 @@ interface StudioSidebarProps {
   onDeleteSession: (sessionId: string) => void
   onDeleteProject: (projectId: string) => void
   onNewProject: () => void
+  onOpenScreenplay: (projectId: string) => void
 }
 
 function compareBySort(sort: SessionListSort) {
@@ -77,6 +79,7 @@ export function StudioSidebar({
   onDeleteSession,
   onDeleteProject,
   onNewProject,
+  onOpenScreenplay,
 }: StudioSidebarProps) {
   const { t, i18n } = useTranslation()
   const listMode = useProjectStore((s) => s.sessionListMode)
@@ -328,6 +331,26 @@ export function StudioSidebar({
                       />
                       <TooltipContent side="right" sideOffset={8}>
                         {t('studio.deleteProject')}
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            className="absolute top-1/2 right-7 hidden -translate-y-1/2 rounded p-1 text-muted-foreground group-hover:block hover:bg-background hover:text-foreground"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onOpenScreenplay(project.id)
+                            }}
+                            aria-label={t('studio.openScreenplay')}
+                          >
+                            <ClapperboardIcon className="size-3" />
+                          </button>
+                        }
+                      />
+                      <TooltipContent side="right" sideOffset={8}>
+                        {t('studio.openScreenplay')}
                       </TooltipContent>
                     </Tooltip>
                   </div>

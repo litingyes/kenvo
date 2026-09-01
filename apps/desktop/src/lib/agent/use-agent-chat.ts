@@ -69,6 +69,8 @@ interface UseAgentChatOptions {
   onFileActivity?: () => void
   /** Fired when the session list should refresh (title set, activity timestamp bumped). */
   onSessionActivity?: () => void
+  /** Fired after a run settles so feature panels can refresh derived state. */
+  onAgentEnd?: () => void
   /** Fired whenever the run state changes (for session-switch guards). */
   onRunningChange?: (running: boolean) => void
 }
@@ -99,7 +101,8 @@ function sessionTitleFrom(text: string): string {
 }
 
 export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
-  const { sessionId, serverPort, onFileActivity, onSessionActivity, onRunningChange } = options
+  const { sessionId, serverPort, onFileActivity, onSessionActivity, onRunningChange, onAgentEnd } =
+    options
   const [messages, setMessages] = React.useState<UiMessage[]>([])
   const [toolExecutions, setToolExecutions] = React.useState<Map<string, ToolExecutionState>>(
     new Map(),
@@ -111,6 +114,8 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
   fileActivityRef.current = onFileActivity
   const sessionActivityRef = React.useRef(onSessionActivity)
   sessionActivityRef.current = onSessionActivity
+  const agentEndRef = React.useRef(onAgentEnd)
+  agentEndRef.current = onAgentEnd
   const hasUserMessageRef = React.useRef(false)
 
   React.useEffect(() => {
@@ -236,6 +241,7 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
             .then(() => sessionActivityRef.current?.())
             .catch(() => {})
           fileActivityRef.current?.()
+          agentEndRef.current?.()
           break
       }
     },

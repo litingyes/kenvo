@@ -4,6 +4,8 @@ import path from 'node:path'
 import type { AgentTool } from '@earendil-works/pi-agent-core'
 import { Type, type TSchema } from '@earendil-works/pi-ai'
 
+import { proposeFileChange, type ProposalOperation } from '../proposals.js'
+
 /** Identity helper that preserves TypeBox parameter inference for AgentTool objects. */
 function defineTool<P extends TSchema, D>(def: AgentTool<P, D>): AgentTool<P, D> {
   return def
@@ -58,7 +60,10 @@ async function listDirRecursive(
   }
 }
 
-export function createFsTools(projectRoot: string): AgentTool<any>[] {
+export function createFsTools(
+  projectRoot: string,
+  options: { sessionId?: string; writePolicy?: 'direct' | 'proposal' } = {},
+): AgentTool<any>[] {
   const listFiles = defineTool({
     name: 'list_files',
     label: 'List Files',
@@ -241,5 +246,43 @@ export function createFsTools(projectRoot: string): AgentTool<any>[] {
     },
   })
 
-  return [listFiles, readFile, writeFile, editFile, deleteFile, searchFiles]
+  if (options.writePolicy !== 'proposal' || !options.sessionId) {
+    return [listFiles, readFile, writeFile, editFile, deleteFile, searchFiles]
+  }
+
+  const proposeChange = defineTool({
+    name: 'propose_file_change',
+    label: 'Propose File Change',
+    description:
+      'Prepare a create, update, or delete for user review. Never writes to disk. For updates, provide the complete replacement content.',
+    parameters: Type.Object({
+      path: Type.String({ description: 'File path relative to the project root.' }),
+      operation: Type.Union([
+        Type.Literal('create'),
+        Type.Literal('update'),
+        Type.Literal('delete'),
+      ]),
+      content: Type.Optional(Type.String({ description: 'Complete new file content.' })),
+      summary: Type.Optional(Type.String({ description: 'Short human-readable change summary.' })),
+    }),
+    execute: async (_id, params) => {
+      const result = await proposeFileChange(options.sessionId as string, projectRoot, {
+        path: params.path,
+        operation: params.operation as ProposalOperation,
+        content: params.content,
+        summary: params.summary,
+      })
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Prepared ${result.change.operation} ${result.change.path} for review.`,
+          },
+        ],
+        details: { proposalId: result.proposal.id, change: result.change },
+      }
+    },
+  })
+
+  return [listFiles, readFile, searchFiles, proposeChange]
 }

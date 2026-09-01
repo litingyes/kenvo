@@ -15,6 +15,11 @@
     "newProject": "New Project",
     "newProjectDesc": "Pick a folder as the project directory. Everything is saved locally as Markdown files.",
     "projectTitle": "Project title (optional)",
+    "projectTemplate": "Project template",
+    "templates": {
+      "shortVideoDrama": "Short-form drama",
+      "blank": "Blank writing project"
+    },
     "pickFolder": "Choose project folder",
     "pickFolderAndCreate": "Choose folder & create"
   },
@@ -40,6 +45,7 @@
   "studio": {
     "newChat": "New chat",
     "newProject": "New project",
+    "openScreenplay": "Open screenplay workbench",
     "projects": "Projects",
     "sort": "Sort",
     "sortRecent": "Recent activity",
@@ -54,6 +60,11 @@
     "deleteProject": "Delete project",
     "deleteProjectTitle": "Delete this project?",
     "deleteProjectDesc": "The project and all its chat sessions will be removed from Kenvo. Files on disk are not deleted."
+  },
+  "screenplay": {
+    "canvas": {
+      "emptyHint": "Plan the first episode with the writing coach, or open the outline from the map."
+    }
   },
   "agent": {
     "title": "Agent",

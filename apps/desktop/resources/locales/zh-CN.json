@@ -15,6 +15,11 @@
     "newProject": "新建项目",
     "newProjectDesc": "选择一个文件夹作为项目目录，所有作品都会以 Markdown 文件保存在本地。",
     "projectTitle": "项目名称（可选）",
+    "projectTemplate": "项目模板",
+    "templates": {
+      "shortVideoDrama": "短视频网剧",
+      "blank": "空白写作项目"
+    },
     "pickFolder": "选择项目文件夹",
     "pickFolderAndCreate": "选择文件夹并创建"
   },
@@ -40,6 +45,7 @@
   "studio": {
     "newChat": "新会话",
     "newProject": "新建项目",
+    "openScreenplay": "打开剧本工作台",
     "projects": "项目",
     "sort": "排序",
     "sortRecent": "最近活跃",
@@ -54,6 +60,11 @@
     "deleteProject": "删除项目",
     "deleteProjectTitle": "删除该项目？",
     "deleteProjectDesc": "项目及其所有会话将从 Kenvo 中移除，磁盘上的文件不会被删除。"
+  },
+  "screenplay": {
+    "canvas": {
+      "emptyHint": "先从写作教练规划第一集，或打开左侧的总纲开始。"
+    }
   },
   "agent": {
     "title": "Agent",

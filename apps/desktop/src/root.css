@@ -160,9 +160,19 @@
  * :root / .dark below) so both its internals and our overrides resolve.
  */
 .prose-agent .markstream-react {
+  min-width: 0;
+  overflow-wrap: anywhere;
   --muted: 240 4.8% 95.9%; /* zinc-100 ≈ oklch(0.967 0.001 286) */
   --border: 240 5.9% 90%; /* zinc-200 ≈ oklch(0.92 0.004 286) */
   --muted-foreground: 240 3.8% 46.1%; /* zinc-500 ≈ oklch(0.552 0.016 286) */
+}
+.prose-agent .markstream-react .text-node,
+.prose-agent .markstream-react code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.prose-agent .markstream-react code {
+  word-break: break-all;
 }
 .dark .prose-agent .markstream-react {
   --muted: 240 3.7% 15.9%; /* zinc-800 ≈ oklch(0.274 0.006 286) */

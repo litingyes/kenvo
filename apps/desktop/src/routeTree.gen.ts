@@ -15,6 +15,7 @@ import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as SettingsLogsRouteImport } from './routes/settings/logs'
 import { Route as SettingsAppearanceRouteImport } from './routes/settings/appearance'
 import { Route as SettingsAboutRouteImport } from './routes/settings/about'
+import { Route as ScreenplayProjectIdRouteImport } from './routes/screenplay.$projectId'
 import { Route as SettingsAiIndexRouteImport } from './routes/settings/ai/index'
 import { Route as SettingsAiProvidersRouteImport } from './routes/settings/ai/providers'
 import { Route as SettingsAiModelsRouteImport } from './routes/settings/ai/models'
@@ -50,6 +51,11 @@ const SettingsAboutRoute = SettingsAboutRouteImport.update({
   path: '/about',
   getParentRoute: () => SettingsRoute,
 } as any)
+const ScreenplayProjectIdRoute = ScreenplayProjectIdRouteImport.update({
+  id: '/screenplay/$projectId',
+  path: '/screenplay/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsAiIndexRoute = SettingsAiIndexRouteImport.update({
   id: '/ai/',
   path: '/ai/',
@@ -74,6 +80,7 @@ const SettingsAiBasicRoute = SettingsAiBasicRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/screenplay/$projectId': typeof ScreenplayProjectIdRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/screenplay/$projectId': typeof ScreenplayProjectIdRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/screenplay/$projectId': typeof ScreenplayProjectIdRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/appearance': typeof SettingsAppearanceRoute
   '/settings/logs': typeof SettingsLogsRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/screenplay/$projectId'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/screenplay/$projectId'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/settings'
+    | '/screenplay/$projectId'
     | '/settings/about'
     | '/settings/appearance'
     | '/settings/logs'
@@ -148,6 +160,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SettingsRoute: typeof SettingsRouteWithChildren
+  ScreenplayProjectIdRoute: typeof ScreenplayProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/about'
       preLoaderRoute: typeof SettingsAboutRouteImport
       parentRoute: typeof SettingsRoute
+    }
+    '/screenplay/$projectId': {
+      id: '/screenplay/$projectId'
+      path: '/screenplay/$projectId'
+      fullPath: '/screenplay/$projectId'
+      preLoaderRoute: typeof ScreenplayProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/settings/ai/': {
       id: '/settings/ai/'
@@ -254,6 +274,7 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SettingsRoute: SettingsRouteWithChildren,
+  ScreenplayProjectIdRoute: ScreenplayProjectIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

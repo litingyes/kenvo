@@ -3,6 +3,7 @@ import type { AgentMessage } from '@earendil-works/pi-agent-core'
 import type { Model } from '@earendil-works/pi-ai'
 
 import { serverLog, writeAiRecord } from './logging.js'
+import { clearProposals } from './proposals.js'
 import {
   getModelsCollection,
   getProviderInstance,
@@ -19,6 +20,7 @@ interface SessionEntry {
   providerId: string
   modelId: string
   createdAt: number
+  writePolicy: 'direct' | 'proposal'
 }
 
 const sessions = new Map<string, SessionEntry>()
@@ -55,6 +57,7 @@ export interface CreateSessionOptions {
   modelId: string
   /** Prior transcript to resume from (pi AgentMessage JSON). */
   history?: AgentMessage[]
+  writePolicy?: 'direct' | 'proposal'
 }
 
 export async function createSession(options: CreateSessionOptions): Promise<void> {
@@ -65,12 +68,17 @@ export async function createSession(options: CreateSessionOptions): Promise<void
 
   const model = await resolveModel(options.providerId, options.modelId)
   const models = getModelsCollection()
+  const writePolicy =
+    options.writePolicy ?? (options.skillId === 'screenwriter' ? 'proposal' : 'direct')
 
   const agent = new Agent({
     initialState: {
       systemPrompt: buildSystemPrompt(skill),
       model,
-      tools: createFsTools(options.projectRoot),
+      tools: createFsTools(options.projectRoot, {
+        sessionId: options.sessionId,
+        writePolicy,
+      }),
       messages: options.history ?? [],
     },
     streamFn: models.streamSimple.bind(models),
@@ -84,6 +92,7 @@ export async function createSession(options: CreateSessionOptions): Promise<void
     providerId: options.providerId,
     modelId: options.modelId,
     createdAt: Date.now(),
+    writePolicy,
   })
 
   serverLog('info', 'session created', {
@@ -106,6 +115,7 @@ export function destroySession(sessionId: string): void {
     entry.agent.abort()
   }
   sessions.delete(sessionId)
+  clearProposals(sessionId)
   serverLog('info', 'session destroyed', { sessionId })
 }
 

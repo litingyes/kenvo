@@ -6,6 +6,12 @@ import { z } from 'zod'
 
 import { serverLog } from './logging.js'
 import {
+  applyProposal,
+  discardProposal,
+  listProposals,
+  ProposalConflictError,
+} from './proposals.js'
+import {
   configureProvider,
   fetchModelIds,
   getAllProviders,
@@ -47,6 +53,7 @@ const createSessionSchema = z.object({
   providerId: z.string().min(1),
   modelId: z.string().min(1),
   history: z.array(z.unknown()).optional(),
+  writePolicy: z.enum(['direct', 'proposal']).optional(),
 })
 
 const messageSchema = z.object({
@@ -159,7 +166,8 @@ export function createApp() {
       return c.json({ error: parsed.error.errors }, 400)
     }
 
-    const { sessionId, skillId, projectRoot, providerId, modelId, history } = parsed.data
+    const { sessionId, skillId, projectRoot, providerId, modelId, history, writePolicy } =
+      parsed.data
 
     try {
       await createSession({
@@ -169,6 +177,7 @@ export function createApp() {
         providerId,
         modelId,
         history: history as never,
+        writePolicy,
       })
       return c.json({ success: true })
     } catch (error) {
@@ -191,6 +200,29 @@ export function createApp() {
       }
       throw error
     }
+  })
+
+  app.get('/sessions/:id/proposals', (c) => {
+    return c.json({ proposals: listProposals(c.req.param('id')) })
+  })
+
+  app.post('/sessions/:id/proposals/:proposalId/apply', async (c) => {
+    const sessionId = c.req.param('id')
+    const entry = getSession(sessionId)
+    if (!entry) return c.json({ error: `Unknown session: ${sessionId}` }, 404)
+    try {
+      const proposal = await applyProposal(sessionId, entry.projectRoot, c.req.param('proposalId'))
+      return c.json({ proposal })
+    } catch (error) {
+      if (error instanceof ProposalConflictError) {
+        return c.json({ error: error.message, conflicts: error.conflicts }, 409)
+      }
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400)
+    }
+  })
+
+  app.delete('/sessions/:id/proposals/:proposalId', (c) => {
+    return c.json({ removed: discardProposal(c.req.param('id'), c.req.param('proposalId')) })
   })
 
   app.post('/sessions/:id/messages', async (c) => {

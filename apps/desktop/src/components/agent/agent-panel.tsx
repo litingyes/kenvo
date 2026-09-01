@@ -60,6 +60,8 @@ interface AgentPanelProps {
   onFileActivity?: () => void
   onSessionActivity?: () => void
   onRunningChange?: (running: boolean) => void
+  onAgentEnd?: () => void
+  quickPrompt?: { id: string; text: string } | null
 }
 
 /**
@@ -79,6 +81,8 @@ export function AgentPanel({
   onFileActivity,
   onSessionActivity,
   onRunningChange,
+  onAgentEnd,
+  quickPrompt,
 }: AgentPanelProps) {
   const { t } = useTranslation()
   const { messages, toolExecutions, running, error, send, steer, abort, hydrate } = useAgentChat({
@@ -87,12 +91,14 @@ export function AgentPanel({
     onFileActivity,
     onSessionActivity,
     onRunningChange,
+    onAgentEnd,
   })
   const [input, setInput] = React.useState('')
   const scrollRef = React.useRef<HTMLDivElement>(null)
   const pinnedRef = React.useRef(true)
   const [showBackToBottom, setShowBackToBottom] = React.useState(false)
   const hydratedRef = React.useRef(false)
+  const handledPromptRef = React.useRef<string | null>(null)
 
   React.useEffect(() => {
     if (!hydratedRef.current && initialMessages) {
@@ -123,16 +129,25 @@ export function AgentPanel({
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, [])
 
-  const submit = async (text: string) => {
-    const trimmed = text.trim()
-    if (!trimmed) return
-    setInput('')
-    if (running) {
-      await steer(trimmed)
-    } else {
-      await send(trimmed)
-    }
-  }
+  const submit = React.useCallback(
+    async (text: string) => {
+      const trimmed = text.trim()
+      if (!trimmed) return
+      setInput('')
+      if (running) {
+        await steer(trimmed)
+      } else {
+        await send(trimmed)
+      }
+    },
+    [running, send, steer],
+  )
+
+  React.useEffect(() => {
+    if (!quickPrompt || handledPromptRef.current === quickPrompt.id) return
+    handledPromptRef.current = quickPrompt.id
+    void submit(quickPrompt.text)
+  }, [quickPrompt, submit])
 
   const empty = messages.length === 0 && !running
   const sendDisabled = !input.trim() || !serverPort

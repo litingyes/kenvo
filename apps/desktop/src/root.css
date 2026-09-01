@@ -170,6 +170,102 @@
   --muted-foreground: 240 5% 64.9%; /* zinc-400 ≈ oklch(0.705 0.015 286) */
 }
 
+/*
+ * Visual Markdown editor. Tiptap owns the document structure while these
+ * rules keep its output aligned with the app's quiet, document-first palette.
+ */
+.tiptap-document {
+  @apply min-h-full text-sm leading-7 break-words text-foreground outline-none;
+}
+.tiptap-document > :first-child {
+  margin-top: 0;
+}
+.tiptap-document > :last-child {
+  margin-bottom: 0;
+}
+.tiptap-document h1 {
+  @apply mt-7 mb-3 text-2xl font-semibold tracking-tight;
+}
+.tiptap-document h2 {
+  @apply mt-6 mb-2.5 text-xl font-semibold tracking-tight;
+}
+.tiptap-document h3 {
+  @apply mt-5 mb-2 text-lg font-semibold;
+}
+.tiptap-document h4,
+.tiptap-document h5,
+.tiptap-document h6 {
+  @apply mt-4 mb-1.5 text-base font-semibold;
+}
+.tiptap-document p {
+  @apply my-3;
+}
+.tiptap-document ul {
+  @apply my-3 list-disc pl-6;
+}
+.tiptap-document ol {
+  @apply my-3 list-decimal pl-6;
+}
+.tiptap-document li {
+  @apply my-1;
+}
+.tiptap-document li > ul,
+.tiptap-document li > ol {
+  @apply my-1;
+}
+.tiptap-document ul[data-type='taskList'] {
+  @apply list-none pl-0;
+}
+.tiptap-document ul[data-type='taskList'] li {
+  @apply flex items-start gap-2;
+}
+.tiptap-document ul[data-type='taskList'] li > label {
+  @apply mt-1;
+}
+.tiptap-document ul[data-type='taskList'] li > div {
+  @apply min-w-0 flex-1;
+}
+.tiptap-document ul[data-type='taskList'] input[type='checkbox'] {
+  accent-color: var(--primary);
+}
+.tiptap-document strong {
+  @apply font-semibold;
+}
+.tiptap-document a {
+  @apply text-primary underline underline-offset-2;
+}
+.tiptap-document blockquote {
+  @apply my-4 border-l-2 pl-4 text-muted-foreground;
+  border-color: var(--border);
+}
+.tiptap-document hr {
+  @apply my-6;
+  border-color: var(--border);
+}
+.tiptap-document code {
+  @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+}
+.tiptap-document pre {
+  @apply my-4 overflow-hidden rounded-lg border border-border bg-muted p-4 font-mono text-xs leading-6 break-words whitespace-pre-wrap;
+}
+.tiptap-document pre code {
+  @apply bg-transparent p-0;
+}
+.tiptap-document img {
+  @apply my-4 max-w-full rounded-md;
+}
+.tiptap-document table {
+  @apply my-4 w-full border-collapse text-xs;
+}
+.tiptap-document th,
+.tiptap-document td {
+  @apply px-2.5 py-1.5 text-left align-top;
+  border: 1px solid var(--border);
+}
+.tiptap-document th {
+  @apply bg-muted font-medium;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);

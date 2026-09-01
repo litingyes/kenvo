@@ -117,7 +117,15 @@ function cleanup() {
 const agent = spawnInherit(
   'pnpm',
   ['--filter', '@kenvo/agent-server', 'dev', '--', '--port', String(DEFAULT_AGENT_PORT)],
-  { KENVO_LOG_DIR: logDir, KENVO_DATA_DIR: dataDir },
+  {
+    KENVO_LOG_DIR: logDir,
+    KENVO_DATA_DIR: dataDir,
+    KENVO_DB_PATH: join(dataDir, 'kenvo.db'),
+    KENVO_SQLITE_NATIVE_BINDING: join(
+      process.cwd(),
+      'packages/agent-server/node_modules/better-sqlite3/build/Release/better_sqlite3.node',
+    ),
+  },
 )
 
 await waitForAgentServer(DEFAULT_AGENT_PORT)

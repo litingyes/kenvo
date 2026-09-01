@@ -39,6 +39,20 @@ export interface StreamOptions {
   tail?: boolean
 }
 
+export interface LogQueryOptions {
+  afterId?: number
+  limit?: number
+  level?: LogLevel
+  keyword?: string
+  fromTimestampMs?: number
+  toTimestampMs?: number
+}
+
+export interface LogStreamHandle {
+  streamId: string
+  unsubscribe: () => void
+}
+
 export interface LogFilter {
   keyword: string
   level: LogLevel | 'all'
@@ -50,15 +64,17 @@ export async function streamLog(
   sources: LogSource[],
   options: StreamOptions,
   onEvent: (event: LogStreamEvent) => void,
-): Promise<string> {
+): Promise<LogStreamHandle> {
   const unsubscribe = listen<LogStreamEvent>(IPC_CHANNELS.LOG_EVENT, (event) => {
     onEvent(event)
   })
 
   try {
-    return await invoke<string>(IPC_CHANNELS.STREAM_LOG, { sources, options })
-  } finally {
+    const streamId = await invoke<string>(IPC_CHANNELS.STREAM_LOG, { sources, options })
+    return { streamId, unsubscribe }
+  } catch (error) {
     unsubscribe()
+    throw error
   }
 }
 
@@ -68,6 +84,14 @@ export function stopLogStream(streamId: string): Promise<void> {
 
 export function exportLog(source: LogSource, destPath: string): Promise<void> {
   return invoke(IPC_CHANNELS.EXPORT_LOG, source, destPath)
+}
+
+export function queryLogs(sources: LogSource[], options?: LogQueryOptions): Promise<RawLogLine[]> {
+  return invoke(IPC_CHANNELS.QUERY_LOGS, sources, options)
+}
+
+export function clearStoredLogs(sources: LogSource[]): Promise<number> {
+  return invoke(IPC_CHANNELS.CLEAR_LOGS, sources)
 }
 
 export function isHigherOrEqualLevel(level: LogLevel, threshold: LogLevel): boolean {

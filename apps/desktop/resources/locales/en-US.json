@@ -29,7 +29,13 @@
     "toggleEditor": "Toggle editor",
     "toggleSessions": "Toggle session sidebar",
     "toggleRightPanel": "Toggle right panel",
-    "openInEditor": "Open in editor"
+    "openInEditor": "Open in editor",
+    "editorMode": "Editor mode",
+    "editorVisual": "Visual",
+    "editorSource": "Source",
+    "editorUnsaved": "Unsaved",
+    "editorSourceOnly": "Source only",
+    "editorSourceOnlyReason": "This file contains Markdown syntax that cannot be safely preserved. Use Source mode to edit it."
   },
   "studio": {
     "newChat": "New chat",

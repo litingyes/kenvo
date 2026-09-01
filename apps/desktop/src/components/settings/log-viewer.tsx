@@ -31,7 +31,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLogViewer, type ActiveLogSource } from '@/hooks/use-log-viewer'
 import { openAppFolder } from '@/lib/app-paths'
 import { api } from '@/lib/electron/api'
-import { exportLog, type LogLevel, type LogSource } from '@/lib/log-viewer'
+import { exportLog, type LogLevel, type LogLine, type LogSource } from '@/lib/log-viewer'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 
@@ -94,6 +94,51 @@ function formatTimestamp(iso: string): string {
     return iso
   }
 }
+
+interface LogTableRowProps {
+  line: LogLine
+  showSourceColumn: boolean
+  sourceLabel: string
+  wrapLines: boolean
+  showRaw: boolean
+}
+
+const LogTableRow = React.memo(function LogTableRow({
+  line,
+  showSourceColumn,
+  sourceLabel,
+  wrapLines,
+  showRaw,
+}: LogTableRowProps) {
+  const { variant, className } = levelBadgeProps(line.level)
+  return (
+    <TableRow className="font-mono text-xs">
+      <TableCell className="text-muted-foreground tabular-nums">
+        {formatTimestamp(line.timestamp)}
+      </TableCell>
+      <TableCell>
+        <Badge variant={variant} className={className}>
+          {line.level}
+        </Badge>
+      </TableCell>
+      {showSourceColumn && (
+        <TableCell>
+          <Badge variant="outline" className={sourceBadgeClass(line.source)}>
+            {sourceLabel}
+          </Badge>
+        </TableCell>
+      )}
+      <TableCell className="max-w-32 truncate text-muted-foreground">
+        {line.target ?? '-'}
+      </TableCell>
+      <TableCell
+        className={cn('w-full', wrapLines ? 'whitespace-pre-wrap break-all' : 'whitespace-pre')}
+      >
+        {showRaw ? line.raw : line.message}
+      </TableCell>
+    </TableRow>
+  )
+})
 
 export function LogViewer() {
   const { t } = useTranslation()
@@ -193,11 +238,6 @@ export function LogViewer() {
 
   return (
     <div className="flex h-full flex-col gap-4" data-testid="log-viewer">
-      <div className="space-y-1">
-        <Label>{t('settings.logs.title')}</Label>
-        <p className="text-xs text-muted-foreground">{t('settings.logs.description')}</p>
-      </div>
-
       <Tabs
         value={activeSource}
         onValueChange={(value) => setActiveSource(value as ActiveLogSource)}
@@ -267,7 +307,7 @@ export function LogViewer() {
             <DownloadIcon className="size-3.5" />
             {t('settings.logs.export')}
           </Button>
-          <Button variant="outline" size="sm" onClick={clearLogs}>
+          <Button variant="outline" size="sm" onClick={() => void clearLogs()}>
             <RotateCcwIcon className="size-3.5" />
             {t('settings.logs.clear')}
           </Button>
@@ -334,41 +374,18 @@ export function LogViewer() {
                 </TableRow>
               )}
 
-              {lines.map((line) => {
-                const { variant, className } = levelBadgeProps(line.level)
-                return (
-                  <TableRow key={line.id} className="font-mono text-xs">
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      {formatTimestamp(line.timestamp)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={variant} className={className}>
-                        {line.level}
-                      </Badge>
-                    </TableCell>
-                    {showSourceColumn && (
-                      <TableCell>
-                        <Badge variant="outline" className={sourceBadgeClass(line.source)}>
-                          {t(
-                            `settings.logs.${line.source === 'agentServer' ? 'agentServer' : line.source === 'aiConversations' ? 'aiConversations' : 'app'}`,
-                          )}
-                        </Badge>
-                      </TableCell>
-                    )}
-                    <TableCell className="max-w-32 truncate text-muted-foreground">
-                      {line.target ?? '-'}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        'w-full',
-                        wrapLines ? 'whitespace-pre-wrap break-all' : 'whitespace-pre',
-                      )}
-                    >
-                      {showRaw ? line.raw : line.message}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+              {lines.map((line) => (
+                <LogTableRow
+                  key={line.id}
+                  line={line}
+                  showSourceColumn={showSourceColumn}
+                  sourceLabel={t(
+                    `settings.logs.${line.source === 'agentServer' ? 'agentServer' : line.source === 'aiConversations' ? 'aiConversations' : 'app'}`,
+                  )}
+                  wrapLines={wrapLines}
+                  showRaw={showRaw}
+                />
+              ))}
             </TableBody>
           </Table>
         </ScrollArea>

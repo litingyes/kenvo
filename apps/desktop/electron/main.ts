@@ -28,7 +28,13 @@ import {
   writeTextFile,
 } from './fs'
 import { IPC_CHANNELS } from './ipc-channels'
-import { exportLog, startLogStream, stopLogStream } from './log-viewer'
+import {
+  clearLogRecords,
+  exportLog,
+  queryLogRecords,
+  startLogStream,
+  stopLogStream,
+} from './log-viewer'
 import { initLogger, logMessage } from './logger'
 import { sendLanguageChangedToAllWindows, setupMenu } from './menu'
 import { getAppPaths, homeDir, setTauriPaths } from './paths'
@@ -43,7 +49,7 @@ import {
   relaunchApp,
   setupUpdater,
 } from './updater'
-import { createMainWindow, getMainWindow } from './window'
+import { createMainWindow, createSettingsWindow, getMainWindow, getSettingsWindow } from './window'
 
 setTauriPaths()
 
@@ -89,7 +95,12 @@ ipcMain.handle(IPC_CHANNELS.PATH_GET_HOME_DIR, () => homeDir())
 ipcMain.handle(IPC_CHANNELS.WINDOW_GET_LABEL, (event) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   if (win === getMainWindow()) return 'main'
+  if (win === getSettingsWindow()) return 'settings'
   return 'unknown'
+})
+ipcMain.handle(IPC_CHANNELS.OPEN_SETTINGS_WINDOW, (_event, route = 'settings') => {
+  const safeRoute = typeof route === 'string' && route.startsWith('settings') ? route : 'settings'
+  createSettingsWindow(safeRoute)
 })
 ipcMain.handle(IPC_CHANNELS.WINDOW_GET_TRAFFIC_LIGHT_INSET, (event) => {
   const win = BrowserWindow.fromWebContents(event.sender)
@@ -323,6 +334,17 @@ ipcMain.handle(
   ) => startLogStream(event.sender, sources, options),
 )
 ipcMain.handle(IPC_CHANNELS.STOP_LOG_STREAM, (_event, streamId: string) => stopLogStream(streamId))
+ipcMain.handle(
+  IPC_CHANNELS.QUERY_LOGS,
+  (
+    _event,
+    sources: import('./log-viewer').LogSource[],
+    options?: import('./log-viewer').LogQueryOptions,
+  ) => queryLogRecords(sources, options),
+)
+ipcMain.handle(IPC_CHANNELS.CLEAR_LOGS, (_event, sources: import('./log-viewer').LogSource[]) =>
+  clearLogRecords(sources),
+)
 ipcMain.handle(
   IPC_CHANNELS.EXPORT_LOG,
   (_event, source: import('./log-viewer').LogSource, destPath: string) =>

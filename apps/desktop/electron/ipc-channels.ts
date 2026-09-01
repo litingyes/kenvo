@@ -26,6 +26,8 @@ export const IPC_CHANNELS = {
   // Log viewer
   STREAM_LOG: 'stream_log',
   STOP_LOG_STREAM: 'stop_log_stream',
+  QUERY_LOGS: 'query_logs',
+  CLEAR_LOGS: 'clear_logs',
   EXPORT_LOG: 'export_log',
   LOG_EVENT: 'log:event',
 
@@ -37,6 +39,7 @@ export const IPC_CHANNELS = {
   OS_GET_LOCALE: 'os:get_locale',
   PATH_GET_HOME_DIR: 'path:get_home_dir',
   WINDOW_GET_LABEL: 'window:get_label',
+  OPEN_SETTINGS_WINDOW: 'window:open_settings',
   WINDOW_GET_TRAFFIC_LIGHT_INSET: 'window:get-traffic-light-inset',
   RESOURCES_READ_LOCALE: 'resources:read_locale',
 

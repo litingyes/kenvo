@@ -42,6 +42,8 @@ const api = {
 
   window: {
     getLabel: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_GET_LABEL),
+    openSettings: (route = 'settings') =>
+      ipcRenderer.invoke(IPC_CHANNELS.OPEN_SETTINGS_WINDOW, route),
     getTrafficLightInset: (): Promise<TrafficLightInset> =>
       ipcRenderer.invoke(IPC_CHANNELS.WINDOW_GET_TRAFFIC_LIGHT_INSET),
   },

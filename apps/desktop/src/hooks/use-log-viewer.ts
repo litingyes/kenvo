@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   ALL_SOURCES,
+  clearStoredLogs,
   isHigherOrEqualLevel,
   stopLogStream,
   streamLog,
@@ -41,7 +42,9 @@ export function useLogViewer() {
   const [wrapLines, setWrapLines] = useState(false)
   const [showRaw, setShowRaw] = useState(false)
 
-  const streamRef = useRef<{ streamId: string; requestId: number } | null>(null)
+  const streamRef = useRef<{ streamId: string; requestId: number; unsubscribe: () => void } | null>(
+    null,
+  )
   const requestIdRef = useRef(0)
 
   const activeSources = useMemo<LogSource[]>(
@@ -85,6 +88,7 @@ export function useLogViewer() {
     const prev = streamRef.current
     streamRef.current = null
     if (prev) {
+      prev.unsubscribe()
       stopLogStream(prev.streamId).catch(() => {})
     }
 
@@ -95,11 +99,12 @@ export function useLogViewer() {
     })
 
     streamLog(activeSources, { tail: true }, handleEvent(requestId))
-      .then((streamId) => {
+      .then((stream) => {
         if (requestId === requestIdRef.current) {
-          streamRef.current = { streamId, requestId }
+          streamRef.current = { ...stream, requestId }
         } else {
-          stopLogStream(streamId).catch(() => {})
+          stream.unsubscribe()
+          stopLogStream(stream.streamId).catch(() => {})
         }
       })
       .catch((err) => {
@@ -117,6 +122,7 @@ export function useLogViewer() {
       const prev = streamRef.current
       streamRef.current = null
       if (prev) {
+        prev.unsubscribe()
         stopLogStream(prev.streamId).catch(() => {})
       }
     }
@@ -127,8 +133,10 @@ export function useLogViewer() {
     return sources.flatMap((source) => linesBySource[source] ?? [])
   }, [linesBySource, activeSource])
 
+  const deferredKeyword = useDeferredValue(keyword)
+
   const filteredLines = useMemo(() => {
-    const kw = keyword.trim().toLowerCase()
+    const kw = deferredKeyword.trim().toLowerCase()
     let result = allLines
 
     if (level !== 'all') {
@@ -143,14 +151,20 @@ export function useLogViewer() {
     }
 
     return result.slice().sort((a, b) => a.timestampMs - b.timestampMs)
-  }, [allLines, keyword, level])
+  }, [allLines, deferredKeyword, level])
 
-  const clearLogs = useCallback(() => {
-    setLinesBySource((prev) => {
-      const next = { ...prev }
-      activeSources.forEach((source) => (next[source] = []))
-      return next
-    })
+  const clearLogs = useCallback(async () => {
+    try {
+      await clearStoredLogs(activeSources)
+      setLinesBySource((prev) => {
+        const next = { ...prev }
+        activeSources.forEach((source) => (next[source] = []))
+        return next
+      })
+      setError(null)
+    } catch (err) {
+      setError(String(err))
+    }
   }, [activeSources])
 
   return {

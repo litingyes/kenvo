@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { openAppFolder } from '@/lib/app-paths'
 import { api } from '@/lib/electron/api'
 import { logger } from '@/lib/logger'
@@ -44,7 +43,6 @@ export function AboutSettings() {
 
   return (
     <div className="space-y-4">
-      <Label>{t('settings.about.title')}</Label>
       <p className="text-sm text-muted-foreground">{t('settings.about.appDescription')}</p>
       <div className="grid gap-2">
         <div className="flex items-center gap-2 text-sm">
@@ -75,7 +73,6 @@ export function AboutSettings() {
           {t('settings.about.openDataFolder')}
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">{t('settings.about.description')}</p>
     </div>
   )
 }

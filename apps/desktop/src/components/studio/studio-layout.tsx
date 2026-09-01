@@ -577,7 +577,7 @@ export function StudioLayout() {
       <ResizablePanelGroup orientation="horizontal" className="h-full">
         {leftOpen && (
           <>
-            <ResizablePanel defaultSize="18%" minSize="14%" maxSize="30%">
+            <ResizablePanel defaultSize="22%" minSize="17%" maxSize="32%">
               <div className="flex h-full flex-col">
                 {/* Sidebar top bar: hosts the macOS traffic lights + sidebar toggle. */}
                 <AppHeader leftContent={sidebarToggle} bordered={false} />

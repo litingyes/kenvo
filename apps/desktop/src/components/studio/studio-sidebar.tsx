@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router'
 import dayjs from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import {
@@ -28,6 +27,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { ChatSession } from '@/lib/db/chat-repo'
 import type { Project } from '@/lib/db/project-repo'
+import { api } from '@/lib/electron/api'
 import {
   useProjectStore,
   type SessionListMode,
@@ -79,7 +79,6 @@ export function StudioSidebar({
   onNewProject,
 }: StudioSidebarProps) {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
   const listMode = useProjectStore((s) => s.sessionListMode)
   const setListMode = useProjectStore((s) => s.setSessionListMode)
   const listSort = useProjectStore((s) => s.sessionListSort)
@@ -352,7 +351,7 @@ export function StudioSidebar({
         <button
           type="button"
           className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-          onClick={() => void navigate({ to: '/settings' })}
+          onClick={() => void api.window.openSettings()}
         >
           <SettingsIcon className="size-3.5 shrink-0" />
           {t('settings.title')}

@@ -30,6 +30,16 @@ function getAgentServerEntry(): string {
   return path.join(__dirname, '../../../../packages/agent-server/dist/index.mjs')
 }
 
+function getAgentServerNativeBinding(): string {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, 'agent-server', 'better_sqlite3.node')
+  }
+  return path.join(
+    __dirname,
+    '../../../../packages/agent-server/node_modules/better-sqlite3/build/Release/better_sqlite3.node',
+  )
+}
+
 async function isAgentServerRunning(port: number): Promise<boolean> {
   try {
     const response = await fetch(`http://localhost:${port}/health`)
@@ -56,12 +66,16 @@ export async function startAgentServer(): Promise<{ port: number } | null> {
   })
 
   const logDir = app.getPath('logs')
+  const dataDir = app.getPath('userData')
   await fs.mkdir(logDir, { recursive: true })
 
   const newChild = fork(entry, ['--port', String(defaultPort)], {
     env: {
       ...process.env,
-      AGENT_SERVER_LOG_DIR: logDir,
+      KENVO_LOG_DIR: logDir,
+      KENVO_DATA_DIR: dataDir,
+      KENVO_DB_PATH: path.join(dataDir, 'kenvo.db'),
+      KENVO_SQLITE_NATIVE_BINDING: getAgentServerNativeBinding(),
     },
     silent: true,
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],

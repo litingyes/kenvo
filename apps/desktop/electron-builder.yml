@@ -19,6 +19,8 @@ extraResources:
     to: agent-server
     filter:
       - '**/*'
+  - from: ../../packages/agent-server/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+    to: agent-server/better_sqlite3.node
 mac:
   category: public.app-category.productivity
   target:

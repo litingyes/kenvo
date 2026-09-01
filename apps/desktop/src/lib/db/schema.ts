@@ -54,6 +54,19 @@ const SCHEMA_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_chat_messages_session
      ON chat_messages(session_id, seq)`,
+  `CREATE TABLE IF NOT EXISTS logs (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    source       TEXT NOT NULL,
+    timestamp_ms INTEGER NOT NULL,
+    level        TEXT NOT NULL,
+    target       TEXT,
+    message      TEXT NOT NULL,
+    raw          TEXT NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_logs_source_timestamp
+     ON logs(source, timestamp_ms DESC, id DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_logs_level_timestamp
+     ON logs(level, timestamp_ms DESC, id DESC)`,
 ]
 
 async function tableColumns(table: string): Promise<string[]> {

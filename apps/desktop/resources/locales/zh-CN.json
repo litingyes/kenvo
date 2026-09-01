@@ -29,7 +29,13 @@
     "toggleEditor": "切换编辑器",
     "toggleSessions": "切换会话栏",
     "toggleRightPanel": "切换右侧面板",
-    "openInEditor": "在编辑器中打开"
+    "openInEditor": "在编辑器中打开",
+    "editorMode": "编辑模式",
+    "editorVisual": "可视化",
+    "editorSource": "源码",
+    "editorUnsaved": "未保存",
+    "editorSourceOnly": "仅支持源码",
+    "editorSourceOnlyReason": "此文件包含无法安全保留的 Markdown 语法，请使用源码模式编辑。"
   },
   "studio": {
     "newChat": "新会话",

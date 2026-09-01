@@ -2,7 +2,7 @@ import { useTheme } from 'next-themes'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { SettingsRow, SettingsSection } from '@/components/settings/section'
+import { SettingsRow } from '@/components/settings/section'
 import {
   Select,
   SelectContent,
@@ -41,48 +41,43 @@ export function AppearanceSettings() {
   }
 
   return (
-    <div className="max-w-xl">
-      <SettingsSection
-        title={t('settings.appearance.title')}
-        description={t('settings.appearance.description')}
-      >
-        <SettingsRow label={t('settings.appearance.theme')} htmlFor="theme">
-          <Select value={mode} onValueChange={(value) => value && handleModeChange(value)}>
-            <SelectTrigger id="theme" className="w-40">
-              <SelectValue>{t(`settings.appearance.modes.${mode}`)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {THEME_OPTIONS.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {t(`settings.appearance.modes.${value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SettingsRow>
+    <div className="max-w-xl overflow-hidden rounded-xl border border-border">
+      <SettingsRow label={t('settings.appearance.theme')} htmlFor="theme">
+        <Select value={mode} onValueChange={(value) => value && handleModeChange(value)}>
+          <SelectTrigger id="theme" className="w-40">
+            <SelectValue>{t(`settings.appearance.modes.${mode}`)}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {THEME_OPTIONS.map((value) => (
+              <SelectItem key={value} value={value}>
+                {t(`settings.appearance.modes.${value}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingsRow>
 
-        <SettingsRow
-          label={t('settings.appearance.language')}
-          description={t('settings.appearance.languageDescription')}
-          htmlFor="language"
+      <SettingsRow
+        label={t('settings.appearance.language')}
+        description={t('settings.appearance.languageDescription')}
+        htmlFor="language"
+      >
+        <Select
+          value={currentLanguage}
+          onValueChange={(value) => value && void handleLanguageChange(value)}
         >
-          <Select
-            value={currentLanguage}
-            onValueChange={(value) => value && void handleLanguageChange(value)}
-          >
-            <SelectTrigger id="language" className="w-40">
-              <SelectValue>{currentLanguageName}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  {lang.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SettingsRow>
-      </SettingsSection>
+          <SelectTrigger id="language" className="w-40">
+            <SelectValue>{currentLanguageName}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <SelectItem key={lang.code} value={lang.code}>
+                {lang.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingsRow>
     </div>
   )
 }

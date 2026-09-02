@@ -30,7 +30,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
-import { createAgentServerClient, type AgentProposal } from '@/lib/ai/server-client'
+import {
+  createAgentServerClient,
+  type AgentProposal,
+  type ModelMetadata,
+} from '@/lib/ai/server-client'
 import {
   getAiSettings,
   isModelUsable,
@@ -447,9 +451,6 @@ export function ScreenplayWorkbench({
   const [session, setSession] = React.useState<ChatSession | null>(null)
   const [historyMessages, setHistoryMessages] = React.useState<UiMessage[]>([])
   const [settings, setSettings] = React.useState<AiSettings | null>(null)
-  const [skills, setSkills] = React.useState<{ id: string; name: string; description: string }[]>(
-    [],
-  )
   const [providers, setProviders] = React.useState<
     {
       id: string
@@ -462,6 +463,7 @@ export function ScreenplayWorkbench({
       enabled: boolean
     }[]
   >([])
+  const [modelInputs, setModelInputs] = React.useState<Record<string, ModelMetadata['input']>>({})
   const [serverError, setServerError] = React.useState<string | null>(null)
   const [serverReady, setServerReady] = React.useState(false)
   const [serverProposals, setServerProposals] = React.useState<AgentProposal[]>([])
@@ -579,14 +581,25 @@ export function ScreenplayWorkbench({
               })
           }
         }
-        const availableSkills = client ? await client.getSkills().catch(() => []) : []
         const availableProviders = client ? await client.getProviders().catch(() => []) : []
+        const modelEntries = client
+          ? await Promise.all(
+              aiSettings.providers
+                .filter((provider) => provider.apiKey)
+                .map(async (provider) => {
+                  const models = await client.getModels(provider.id).catch(() => [])
+                  return models.map(
+                    (model) => [`${provider.id}::${model.id}`, model.input] as const,
+                  )
+                }),
+            )
+          : []
         if (cancelled) return
         setProject(foundProject)
         setData(nextData)
         setSettings(aiSettings)
-        setSkills(availableSkills)
         setProviders(availableProviders)
+        setModelInputs(Object.fromEntries(modelEntries.flat()))
         const tabs = await listTabs(foundProject.id)
         useProjectStore.getState().hydrate(foundProject, tabs)
 
@@ -776,18 +789,13 @@ export function ScreenplayWorkbench({
     await refreshProposals()
   }
 
-  const handleConfigChange = async (update: {
-    skillId?: string
-    providerId?: string
-    modelId?: string
-  }) => {
+  const handleConfigChange = async (update: { providerId?: string; modelId?: string }) => {
     if (!session || !project || !serverPort || !settings || !update.providerId || !update.modelId)
       return
-    const nextSkill = update.skillId ?? 'screenwriter'
+    const nextSkill = session.skill_id
     const client = createAgentServerClient(serverPort)
     const rows = await listChatMessages(session.id)
     await updateChatSessionConfig(session.id, {
-      skillId: nextSkill,
       providerId: update.providerId,
       modelId: update.modelId,
     })
@@ -805,7 +813,6 @@ export function ScreenplayWorkbench({
       previous
         ? {
             ...previous,
-            skill_id: nextSkill,
             provider_id: update.providerId ?? previous.provider_id,
             model_id: update.modelId ?? previous.model_id,
           }
@@ -981,9 +988,12 @@ export function ScreenplayWorkbench({
             sessionId={session.id}
             skillId={session.skill_id}
             modelRef={modelRef}
-            skills={skills}
             providers={providers}
             settings={settings}
+            modelSupportsImages={Boolean(
+              modelRef &&
+              modelInputs[`${modelRef.providerId}::${modelRef.modelId}`]?.includes('image'),
+            )}
             serverPort={serverPort}
             initialMessages={historyMessages}
             selectedScene={selectedScene}

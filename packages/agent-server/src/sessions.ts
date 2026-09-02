@@ -2,6 +2,7 @@ import { Agent, type AgentEvent } from '@earendil-works/pi-agent-core'
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
 import type { Model } from '@earendil-works/pi-ai'
 
+import { buildAgentUserMessage, type ChatAttachmentInput } from './chat-attachments.js'
 import { serverLog, writeAiRecord } from './logging.js'
 import { clearProposals } from './proposals.js'
 import {
@@ -126,6 +127,7 @@ export function destroySession(sessionId: string): void {
 export async function runPrompt(
   sessionId: string,
   input: string,
+  attachments: ChatAttachmentInput[],
   onEvent: (event: AgentEvent) => void,
 ): Promise<AgentMessage[]> {
   const entry = sessions.get(sessionId)
@@ -134,6 +136,12 @@ export async function runPrompt(
   }
   if (entry.agent.state.isStreaming) {
     throw new SessionError('Session is busy; steer or abort the current run first', 409)
+  }
+  if (
+    attachments.some((attachment) => attachment.kind === 'image') &&
+    !entry.agent.state.model.input.includes('image')
+  ) {
+    throw new SessionError('The selected model does not support image input', 400)
   }
 
   const startedAt = Date.now()
@@ -160,7 +168,7 @@ export async function runPrompt(
   })
 
   try {
-    await entry.agent.prompt(input)
+    await entry.agent.prompt(buildAgentUserMessage(input, attachments))
     serverLog('info', 'prompt run finished', {
       sessionId,
       durationMs: Date.now() - startedAt,
@@ -172,7 +180,11 @@ export async function runPrompt(
   }
 }
 
-export function steerSession(sessionId: string, input: string): void {
+export function steerSession(
+  sessionId: string,
+  input: string,
+  attachments: ChatAttachmentInput[],
+): void {
   const entry = sessions.get(sessionId)
   if (!entry) {
     throw new SessionError(`Unknown session: ${sessionId}`, 404)
@@ -180,7 +192,13 @@ export function steerSession(sessionId: string, input: string): void {
   if (!entry.agent.state.isStreaming) {
     throw new SessionError('Session is not running; send a normal message instead', 409)
   }
-  entry.agent.steer({ role: 'user', content: input, timestamp: Date.now() })
+  if (
+    attachments.some((attachment) => attachment.kind === 'image') &&
+    !entry.agent.state.model.input.includes('image')
+  ) {
+    throw new SessionError('The selected model does not support image input', 400)
+  }
+  entry.agent.steer(buildAgentUserMessage(input, attachments))
   serverLog('info', 'steer queued', { sessionId })
 }
 

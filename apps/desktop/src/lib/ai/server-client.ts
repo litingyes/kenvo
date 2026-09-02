@@ -30,6 +30,15 @@ export interface SkillMetadata {
   description: string
 }
 
+export interface ChatAttachmentPayload {
+  name: string
+  kind: 'text' | 'image'
+  mimeType: string
+  size: number
+  text?: string
+  data?: string
+}
+
 export interface CreateSessionRequest {
   sessionId: string
   skillId: string
@@ -168,10 +177,14 @@ export class AgentServerClient {
     await this.request(`/sessions/${sessionId}`, { method: 'DELETE' })
   }
 
-  async steerSession(sessionId: string, input: string): Promise<void> {
+  async steerSession(
+    sessionId: string,
+    input: string,
+    attachments: ChatAttachmentPayload[] = [],
+  ): Promise<void> {
     const response = await this.request(`/sessions/${sessionId}/steer`, {
       method: 'POST',
-      body: JSON.stringify({ input }),
+      body: JSON.stringify({ input, attachments }),
     })
     const data = await response.json()
     if (!response.ok) {
@@ -191,13 +204,14 @@ export class AgentServerClient {
   async sendMessage(
     sessionId: string,
     input: string,
+    attachments: ChatAttachmentPayload[],
     onEvent: (event: AgentStreamEvent) => void,
     signal?: AbortSignal,
   ): Promise<void> {
     const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ input }),
+      body: JSON.stringify({ input, attachments }),
       signal,
     })
 

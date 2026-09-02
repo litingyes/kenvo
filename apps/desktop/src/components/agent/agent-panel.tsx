@@ -1,19 +1,56 @@
 import {
-  ArrowDownIcon,
   BrainIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  FileCode2Icon,
+  FileImageIcon,
+  FileTextIcon,
+  ImageIcon,
+  PaperclipIcon,
   SendHorizonalIcon,
   SquareArrowOutUpRightIcon,
   SquareIcon,
   WrenchIcon,
+  XIcon,
 } from 'lucide-react'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { MarkdownStream } from '@/components/agent/markdown-stream'
 import { skillIcon, skillName } from '@/components/agent/skill-meta'
+import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentTitle,
+} from '@/components/ui/attachment'
+import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
+import { Message, MessageContent } from '@/components/ui/message'
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from '@/components/ui/message-scroller'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
@@ -24,10 +61,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   useAgentChat,
+  type ChatAttachmentMeta,
   type ToolExecutionState,
   type UiAssistantMessage,
   type UiMessage,
@@ -36,25 +73,159 @@ import {
 } from '@/lib/agent/use-agent-chat'
 import {
   createAgentServerClient,
+  type ChatAttachmentPayload,
   type ProviderMetadata,
-  type SkillMetadata,
 } from '@/lib/ai/server-client'
 import type { AiSettings, ModelRef } from '@/lib/ai/settings-bridge'
+import { api } from '@/lib/electron/api'
 import { useProjectStore } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
 
-/** Distance from the bottom (px) within which the stream keeps auto-scrolling. */
-const PIN_THRESHOLD = 80
+const MAX_ATTACHMENTS = 5
+const MAX_TEXT_ATTACHMENT_BYTES = 200 * 1024
+const MAX_IMAGE_ATTACHMENT_BYTES = 5 * 1024 * 1024
+const TEXT_EXTENSIONS = new Set([
+  'bash',
+  'c',
+  'cjs',
+  'cpp',
+  'cs',
+  'css',
+  'csv',
+  'dart',
+  'go',
+  'h',
+  'hpp',
+  'htm',
+  'html',
+  'ini',
+  'java',
+  'js',
+  'json',
+  'jsx',
+  'kotlin',
+  'kt',
+  'kts',
+  'less',
+  'lua',
+  'markdown',
+  'md',
+  'mdx',
+  'mjs',
+  'php',
+  'py',
+  'rb',
+  'rs',
+  'sass',
+  'scss',
+  'sh',
+  'sql',
+  'svelte',
+  'swift',
+  'toml',
+  'ts',
+  'tsx',
+  'tsv',
+  'txt',
+  'vue',
+  'xml',
+  'yaml',
+  'yml',
+  'zsh',
+])
+const IMAGE_EXTENSIONS = new Set(['gif', 'jpeg', 'jpg', 'png', 'webp'])
+const IMAGE_MIME_TYPES: Record<string, string> = {
+  gif: 'image/gif',
+  jpeg: 'image/jpeg',
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+}
+
+type AttachmentErrorKey = 'format' | 'tooLarge' | 'read' | 'vision' | 'limit'
+
+class AttachmentError extends Error {
+  constructor(readonly key: AttachmentErrorKey) {
+    super(key)
+  }
+}
+
+interface PendingAttachment extends ChatAttachmentPayload {
+  id: string
+  previewUrl?: string
+}
+
+function fileName(filePath: string): string {
+  return filePath.split(/[\\/]/).pop() || filePath
+}
+
+function fileExtension(filePath: string): string {
+  const name = fileName(filePath).toLowerCase()
+  const index = name.lastIndexOf('.')
+  return index >= 0 ? name.slice(index + 1) : ''
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = ''
+  const chunkSize = 0x8000
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize))
+  }
+  return btoa(binary)
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+async function readAttachment(
+  filePath: string,
+  canAttachImages: boolean,
+): Promise<PendingAttachment> {
+  const name = fileName(filePath)
+  const extension = fileExtension(filePath)
+  if (IMAGE_EXTENSIONS.has(extension)) {
+    if (!canAttachImages) throw new AttachmentError('vision')
+    const bytes = new Uint8Array(await api.fs.readFile(filePath))
+    if (bytes.byteLength > MAX_IMAGE_ATTACHMENT_BYTES) throw new AttachmentError('tooLarge')
+    const mimeType = IMAGE_MIME_TYPES[extension]
+    const data = bytesToBase64(bytes)
+    return {
+      id: crypto.randomUUID(),
+      name,
+      kind: 'image',
+      mimeType,
+      size: bytes.byteLength,
+      data,
+      previewUrl: `data:${mimeType};base64,${data}`,
+    }
+  }
+
+  if (!TEXT_EXTENSIONS.has(extension)) throw new AttachmentError('format')
+  const text = await api.fs.readTextFile(filePath)
+  const size = new TextEncoder().encode(text).byteLength
+  if (size > MAX_TEXT_ATTACHMENT_BYTES) throw new AttachmentError('tooLarge')
+  return {
+    id: crypto.randomUUID(),
+    name,
+    kind: 'text',
+    mimeType: extension === 'md' || extension === 'markdown' ? 'text/markdown' : 'text/plain',
+    size,
+    text,
+  }
+}
 
 interface AgentPanelProps {
   sessionId: string
   skillId: string
   /** The session's stored model; null for legacy sessions (falls back visually). */
   modelRef: ModelRef | null
-  skills: SkillMetadata[]
   providers: ProviderMetadata[]
   settings: AiSettings | null
-  onConfigChange: (update: { skillId?: string; providerId?: string; modelId?: string }) => void
+  modelSupportsImages: boolean
+  onConfigChange: (update: { providerId?: string; modelId?: string }) => void
   serverPort: number | null
   initialMessages?: UiMessage[]
   onFileActivity?: () => void
@@ -72,9 +243,9 @@ export function AgentPanel({
   sessionId,
   skillId,
   modelRef,
-  skills,
   providers,
   settings,
+  modelSupportsImages,
   onConfigChange,
   serverPort,
   initialMessages,
@@ -94,9 +265,9 @@ export function AgentPanel({
     onAgentEnd,
   })
   const [input, setInput] = React.useState('')
-  const scrollRef = React.useRef<HTMLDivElement>(null)
-  const pinnedRef = React.useRef(true)
-  const [showBackToBottom, setShowBackToBottom] = React.useState(false)
+  const [pendingAttachments, setPendingAttachments] = React.useState<PendingAttachment[]>([])
+  const [attachmentError, setAttachmentError] = React.useState<AttachmentErrorKey | null>(null)
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null)
   const hydratedRef = React.useRef(false)
   const handledPromptRef = React.useRef<string | null>(null)
 
@@ -107,50 +278,88 @@ export function AgentPanel({
     }
   }, [initialMessages, hydrate])
 
-  // Auto-scroll on new content only while pinned to the bottom.
-  React.useEffect(() => {
-    const el = scrollRef.current
-    if (el && pinnedRef.current) el.scrollTop = el.scrollHeight
-  }, [messages, toolExecutions])
+  React.useLayoutEffect(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.style.height = 'auto'
+    const maxHeight = 176
+    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 76), maxHeight)}px`
+    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden'
+  }, [input])
 
-  const handleScroll = React.useCallback(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const pinned = el.scrollHeight - el.scrollTop - el.clientHeight < PIN_THRESHOLD
-    pinnedRef.current = pinned
-    setShowBackToBottom(!pinned)
-  }, [])
-
-  const scrollToBottom = React.useCallback(() => {
-    const el = scrollRef.current
-    if (!el) return
-    pinnedRef.current = true
-    setShowBackToBottom(false)
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-  }, [])
+  const addAttachments = React.useCallback(
+    async (kind: 'text' | 'image') => {
+      setAttachmentError(null)
+      const result = await api.dialog.showOpenDialog({
+        title: kind === 'image' ? t('agent.attachImage') : t('agent.attachText'),
+        properties: ['openFile', 'multiSelections'],
+        filters:
+          kind === 'image'
+            ? [{ name: t('agent.attachImage'), extensions: Array.from(IMAGE_EXTENSIONS) }]
+            : [{ name: t('agent.attachText'), extensions: Array.from(TEXT_EXTENSIONS) }],
+      })
+      if (result.canceled) return
+      if (pendingAttachments.length >= MAX_ATTACHMENTS) {
+        setAttachmentError('limit')
+        return
+      }
+      const remaining = MAX_ATTACHMENTS - pendingAttachments.length
+      const loaded: PendingAttachment[] = []
+      for (const path of result.filePaths.slice(0, remaining)) {
+        try {
+          loaded.push(await readAttachment(path, modelSupportsImages))
+        } catch (error) {
+          setAttachmentError(error instanceof AttachmentError ? error.key : 'read')
+        }
+      }
+      if (loaded.length > 0) setPendingAttachments((previous) => [...previous, ...loaded])
+      if (result.filePaths.length > remaining) setAttachmentError('limit')
+    },
+    [modelSupportsImages, pendingAttachments.length, t],
+  )
 
   const submit = React.useCallback(
-    async (text: string) => {
+    async (
+      text: string,
+      attachments: PendingAttachment[] = pendingAttachments,
+      clearAttachments = true,
+    ) => {
       const trimmed = text.trim()
-      if (!trimmed) return
-      setInput('')
-      if (running) {
-        await steer(trimmed)
-      } else {
-        await send(trimmed)
+      if (!trimmed && attachments.length === 0) return
+      const payload = attachments.map(
+        (attachment): ChatAttachmentPayload => ({
+          name: attachment.name,
+          kind: attachment.kind,
+          mimeType: attachment.mimeType,
+          size: attachment.size,
+          ...(attachment.text !== undefined ? { text: attachment.text } : {}),
+          ...(attachment.data !== undefined ? { data: attachment.data } : {}),
+        }),
+      )
+      try {
+        if (running) {
+          await steer(trimmed, payload)
+        } else {
+          await send(trimmed, payload)
+        }
+        setInput('')
+        if (clearAttachments) setPendingAttachments([])
+        setAttachmentError(null)
+      } catch {
+        setAttachmentError('read')
       }
     },
-    [running, send, steer],
+    [pendingAttachments, running, send, steer],
   )
 
   React.useEffect(() => {
     if (!quickPrompt || handledPromptRef.current === quickPrompt.id) return
     handledPromptRef.current = quickPrompt.id
-    void submit(quickPrompt.text)
+    void submit(quickPrompt.text, [], false)
   }, [quickPrompt, submit])
 
   const empty = messages.length === 0 && !running
-  const sendDisabled = !input.trim() || !serverPort
+  const sendDisabled = (!input.trim() && pendingAttachments.length === 0) || !serverPort
   const sendButton = (
     <Button
       variant="default"
@@ -165,62 +374,74 @@ export function AgentPanel({
 
   return (
     <div className="relative flex h-full flex-col">
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        <ScrollArea
-          viewportRef={scrollRef}
-          onScroll={handleScroll}
-          className="min-h-0 flex-1"
-          contentClassName="flex min-h-full flex-col"
-        >
-          {empty ? (
-            <EmptyState skillId={skillId} onPick={(text) => void submit(text)} />
-          ) : (
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-6 py-5">
-              {messages.map((message, index) => (
-                <MessageView
-                  key={index}
-                  message={message}
-                  toolExecutions={toolExecutions}
-                  streaming={running && index === messages.length - 1}
-                />
-              ))}
+      <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+        <MessageScroller className="min-h-0 flex-1">
+          <MessageScrollerViewport aria-label={t('agent.title')}>
+            <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-5 px-4 py-5 sm:px-6">
+              {empty ? (
+                <div className="flex min-h-[18rem] flex-1 flex-col justify-center">
+                  <EmptyState skillId={skillId} onPick={(text) => void submit(text)} />
+                </div>
+              ) : (
+                messages.map((message, index) => (
+                  <MessageScrollerItem
+                    key={index}
+                    messageId={`message-${index}`}
+                    scrollAnchor={index === messages.length - 1}
+                  >
+                    <MessageView
+                      message={message}
+                      toolExecutions={toolExecutions}
+                      streaming={running && index === messages.length - 1}
+                    />
+                  </MessageScrollerItem>
+                ))
+              )}
               {error && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                   {error}
                 </div>
               )}
-            </div>
-          )}
-        </ScrollArea>
-
-        {showBackToBottom && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <button
-                  type="button"
-                  className="absolute right-6 bottom-4 z-10 flex size-7 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-md transition-colors hover:bg-accent hover:text-foreground"
-                  onClick={scrollToBottom}
-                  aria-label={t('agent.backToBottom')}
-                >
-                  <ArrowDownIcon className="size-3.5" />
-                </button>
-              }
-            />
-            <TooltipContent>{t('agent.backToBottom')}</TooltipContent>
-          </Tooltip>
-        )}
-      </div>
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+          <MessageScrollerButton
+            direction="end"
+            aria-label={t('agent.backToBottom')}
+            className="right-4 bottom-4"
+          />
+        </MessageScroller>
+      </MessageScrollerProvider>
 
       <div className="shrink-0 border-t border-border">
         <div className="mx-auto w-full max-w-3xl px-6 py-3">
-          <div className="flex items-end gap-2">
-            <Textarea
+          {pendingAttachments.length > 0 && (
+            <AttachmentGroup className="mb-2 gap-2">
+              {pendingAttachments.map((attachment) => (
+                <PendingAttachmentCard
+                  key={attachment.id}
+                  attachment={attachment}
+                  onRemove={() =>
+                    setPendingAttachments((previous) =>
+                      previous.filter((item) => item.id !== attachment.id),
+                    )
+                  }
+                />
+              ))}
+            </AttachmentGroup>
+          )}
+          {attachmentError && (
+            <p className="mb-2 text-[11px] text-destructive">
+              {attachmentErrorMessage(t, attachmentError, modelSupportsImages)}
+            </p>
+          )}
+          <InputGroup>
+            <InputGroupTextarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={running ? t('agent.steerPlaceholder') : t('agent.placeholder')}
-              className="max-h-40 min-h-9 flex-1 resize-none text-sm"
-              rows={1}
+              className="max-h-44 min-h-[76px] px-3 py-3 text-sm leading-5"
+              rows={3}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                   e.preventDefault()
@@ -228,48 +449,159 @@ export function AgentPanel({
                 }
               }}
             />
-            {running ? (
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => void abort()}
-                      aria-label={t('agent.stop')}
+            <InputGroupAddon
+              align="block-end"
+              className="justify-between border-t border-border/60"
+            >
+              <div className="flex min-w-0 items-center gap-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <InputGroupButton
+                        size="icon-sm"
+                        aria-label={t('agent.attach')}
+                        disabled={!serverPort}
+                      />
+                    }
+                  >
+                    <PaperclipIcon className="size-3.5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="top" align="start" className="w-52">
+                    <DropdownMenuItem onClick={() => void addAttachments('text')}>
+                      <FileCode2Icon />
+                      {t('agent.attachText')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={!modelSupportsImages}
+                      onClick={() => void addAttachments('image')}
+                      title={!modelSupportsImages ? t('agent.attachmentVisionRequired') : undefined}
+                    >
+                      <ImageIcon />
+                      <span className="min-w-0 truncate">{t('agent.attachImage')}</span>
+                      {!modelSupportsImages && (
+                        <span className="ml-auto text-[10px] text-muted-foreground">
+                          {t('agent.unavailable')}
+                        </span>
+                      )}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <ConfigPickers
+                  modelRef={modelRef}
+                  providers={providers}
+                  settings={settings}
+                  disabled={running}
+                  onConfigChange={onConfigChange}
+                />
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {running ? (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <InputGroupButton
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => void abort()}
+                          aria-label={t('agent.stop')}
+                        />
+                      }
                     >
                       <SquareIcon className="size-3.5" />
-                    </Button>
-                  }
-                />
-                <TooltipContent>{t('agent.stop')}</TooltipContent>
-              </Tooltip>
-            ) : null}
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  sendDisabled ? <span className="inline-flex">{sendButton}</span> : sendButton
-                }
-              />
-              <TooltipContent>{t('agent.send')}</TooltipContent>
-            </Tooltip>
-          </div>
-          <ConfigPickers
-            skillId={skillId}
-            modelRef={modelRef}
-            skills={skills}
-            providers={providers}
-            settings={settings}
-            disabled={running}
-            onConfigChange={onConfigChange}
-          />
+                    </TooltipTrigger>
+                    <TooltipContent>{t('agent.stop')}</TooltipContent>
+                  </Tooltip>
+                ) : null}
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      sendDisabled ? <span className="inline-flex">{sendButton}</span> : sendButton
+                    }
+                  />
+                  <TooltipContent>{t('agent.send')}</TooltipContent>
+                </Tooltip>
+              </div>
+            </InputGroupAddon>
+          </InputGroup>
         </div>
       </div>
     </div>
   )
 }
 
-// ---------- Skill + model pickers ----------
+function attachmentErrorMessage(
+  translate: ReturnType<typeof useTranslation>['t'],
+  key: AttachmentErrorKey,
+  modelSupportsImages: boolean,
+): string {
+  if (key === 'format') return translate('agent.attachmentUnsupported')
+  if (key === 'tooLarge') return translate('agent.attachmentTooLarge')
+  if (key === 'vision') {
+    return modelSupportsImages
+      ? translate('agent.attachmentReadFailed')
+      : translate('agent.attachmentVisionRequired')
+  }
+  if (key === 'limit') return translate('agent.attachmentLimit')
+  return translate('agent.attachmentReadFailed')
+}
+
+function AttachmentCard({
+  meta,
+  data,
+  onRemove,
+}: {
+  meta: ChatAttachmentMeta
+  data?: string
+  onRemove?: () => void
+}) {
+  const { t } = useTranslation()
+  const isImage = meta.kind === 'image'
+  return (
+    <Attachment size="xs" className="max-w-[13rem]">
+      <AttachmentMedia variant={isImage && data ? 'image' : 'icon'}>
+        {isImage && data ? (
+          <img src={`data:${meta.mimeType};base64,${data}`} alt="" />
+        ) : isImage ? (
+          <FileImageIcon />
+        ) : (
+          <FileTextIcon />
+        )}
+      </AttachmentMedia>
+      <AttachmentContent>
+        <AttachmentTitle>{meta.name}</AttachmentTitle>
+        <AttachmentDescription>
+          {isImage ? t('agent.attachmentImage') : t('agent.attachmentText')} ·{' '}
+          {formatFileSize(meta.size)}
+        </AttachmentDescription>
+      </AttachmentContent>
+      {onRemove && (
+        <AttachmentActions>
+          <AttachmentAction aria-label={t('agent.removeAttachment')} onClick={onRemove}>
+            <XIcon />
+          </AttachmentAction>
+        </AttachmentActions>
+      )}
+    </Attachment>
+  )
+}
+
+function PendingAttachmentCard({
+  attachment,
+  onRemove,
+}: {
+  attachment: PendingAttachment
+  onRemove: () => void
+}) {
+  return (
+    <AttachmentCard
+      meta={attachment}
+      data={attachment.kind === 'image' ? attachment.data : undefined}
+      onRemove={onRemove}
+    />
+  )
+}
+
+// ---------- Model picker ----------
 
 function encodeModel(providerId: string, modelId: string): string {
   return `${providerId}::${modelId}`
@@ -282,9 +614,7 @@ function decodeModel(value: string): ModelRef | null {
 }
 
 interface ConfigPickersProps {
-  skillId: string
   modelRef: ModelRef | null
-  skills: SkillMetadata[]
   providers: ProviderMetadata[]
   settings: AiSettings | null
   disabled: boolean
@@ -292,9 +622,7 @@ interface ConfigPickersProps {
 }
 
 function ConfigPickers({
-  skillId,
   modelRef,
-  skills,
   providers,
   settings,
   disabled,
@@ -320,33 +648,7 @@ function ConfigPickers({
   const modelValue = modelRef ? encodeModel(modelRef.providerId, modelRef.modelId) : undefined
 
   return (
-    <div className="mt-2 flex items-center gap-1.5">
-      <Select
-        value={skillId}
-        onValueChange={(next) => next && next !== skillId && onConfigChange({ skillId: next })}
-        disabled={disabled}
-      >
-        <SelectTrigger
-          size="sm"
-          aria-label={t('agent.skill')}
-          className="h-6 gap-1 border-none px-1.5 text-[11px] text-muted-foreground shadow-none hover:text-foreground"
-        >
-          <SelectValue>{skillName(skillId)}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>{t('agent.skill')}</SelectLabel>
-            {(skills.length > 0 ? skills : [{ id: skillId, name: skillId, description: '' }]).map(
-              (skill) => (
-                <SelectItem key={skill.id} value={skill.id}>
-                  {skillName(skill.id)}
-                </SelectItem>
-              ),
-            )}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
+    <div className="flex min-w-0 items-center">
       <Select
         value={modelValue}
         onValueChange={(next) => {
@@ -358,7 +660,7 @@ function ConfigPickers({
         <SelectTrigger
           size="sm"
           aria-label={t('agent.model')}
-          className="h-6 gap-1 border-none px-1.5 text-[11px] text-muted-foreground shadow-none hover:text-foreground"
+          className="h-7 max-w-[10rem] gap-1 border-none px-1.5 text-[11px] text-muted-foreground shadow-none hover:text-foreground"
         >
           <SelectValue placeholder={t('agent.noModelShort')}>{modelRef?.modelId}</SelectValue>
         </SelectTrigger>
@@ -441,16 +743,40 @@ function MessageView({
 }
 
 function UserMessageView({ message }: { message: UiUserMessage }) {
+  const blocks = typeof message.content === 'string' ? [] : message.content
   const text =
     typeof message.content === 'string'
       ? message.content
-      : message.content.map((c) => c.text ?? '').join('')
+      : blocks
+          .filter((block) => !('attachment' in block && block.attachment))
+          .map((block) => ('text' in block ? (block.text ?? '') : ''))
+          .join('')
+  const attachments = blocks.flatMap((block) => {
+    if (!('attachment' in block) || !block.attachment) return []
+    return [
+      {
+        meta: block.attachment,
+        data: block.type === 'image' && 'data' in block ? block.data : undefined,
+      },
+    ]
+  })
   return (
-    <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-lg bg-primary px-3 py-2 text-sm whitespace-pre-wrap text-primary-foreground">
-        {text}
-      </div>
-    </div>
+    <Message align="end">
+      <MessageContent className="items-end">
+        {text && (
+          <Bubble align="end">
+            <BubbleContent className="whitespace-pre-wrap">{text}</BubbleContent>
+          </Bubble>
+        )}
+        {attachments.length > 0 && (
+          <AttachmentGroup className="max-w-full justify-end gap-2">
+            {attachments.map(({ meta, data }) => (
+              <AttachmentCard key={`${meta.name}-${meta.size}`} meta={meta} data={data} />
+            ))}
+          </AttachmentGroup>
+        )}
+      </MessageContent>
+    </Message>
   )
 }
 

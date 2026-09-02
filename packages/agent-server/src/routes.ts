@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 import { streamSSE } from 'hono/streaming'
 import { z } from 'zod'
 
+import { chatMessageSchema } from './chat-attachments.js'
 import { serverLog } from './logging.js'
 import {
   applyProposal,
@@ -54,10 +55,6 @@ const createSessionSchema = z.object({
   modelId: z.string().min(1),
   history: z.array(z.unknown()).optional(),
   writePolicy: z.enum(['direct', 'proposal']).optional(),
-})
-
-const messageSchema = z.object({
-  input: z.string().min(1),
 })
 
 export function createApp() {
@@ -228,9 +225,9 @@ export function createApp() {
   app.post('/sessions/:id/messages', async (c) => {
     const sessionId = c.req.param('id')
     const body = await c.req.json()
-    const parsed = messageSchema.safeParse(body)
+    const parsed = chatMessageSchema.safeParse(body)
     if (!parsed.success) {
-      return c.json({ error: parsed.error.errors }, 400)
+      return c.json({ error: parsed.error.issues.map((issue) => issue.message).join('; ') }, 400)
     }
 
     if (!getSession(sessionId)) {
@@ -240,7 +237,7 @@ export function createApp() {
     return streamSSE(c, async (stream) => {
       let seq = 0
       try {
-        await runPrompt(sessionId, parsed.data.input, (event) => {
+        await runPrompt(sessionId, parsed.data.input, parsed.data.attachments, (event) => {
           void stream.writeSSE({
             event: 'message',
             data: JSON.stringify({ seq: seq++, ...event }),
@@ -257,12 +254,12 @@ export function createApp() {
 
   app.post('/sessions/:id/steer', async (c) => {
     const body = await c.req.json()
-    const parsed = messageSchema.safeParse(body)
+    const parsed = chatMessageSchema.safeParse(body)
     if (!parsed.success) {
-      return c.json({ error: parsed.error.errors }, 400)
+      return c.json({ error: parsed.error.issues.map((issue) => issue.message).join('; ') }, 400)
     }
     try {
-      steerSession(c.req.param('id'), parsed.data.input)
+      steerSession(c.req.param('id'), parsed.data.input, parsed.data.attachments)
       return c.json({ success: true })
     } catch (error) {
       if (error instanceof SessionError) {

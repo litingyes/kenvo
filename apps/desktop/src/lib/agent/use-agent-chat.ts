@@ -1,6 +1,10 @@
 import * as React from 'react'
 
-import { createAgentServerClient, type AgentStreamEvent } from '@/lib/ai/server-client'
+import {
+  createAgentServerClient,
+  type AgentStreamEvent,
+  type ChatAttachmentPayload,
+} from '@/lib/ai/server-client'
 import {
   appendChatMessage,
   countChatMessages,
@@ -13,6 +17,21 @@ import {
 export interface TextContent {
   type: 'text'
   text: string
+  attachment?: ChatAttachmentMeta
+}
+
+export interface ImageContent {
+  type: 'image'
+  data: string
+  mimeType: string
+  attachment?: ChatAttachmentMeta
+}
+
+export interface ChatAttachmentMeta {
+  name: string
+  kind: 'text' | 'image'
+  mimeType: string
+  size: number
 }
 
 export interface ThinkingContent {
@@ -31,7 +50,7 @@ export type AssistantContentBlock = TextContent | ThinkingContent | ToolCallCont
 
 export interface UiUserMessage {
   role: 'user'
-  content: string | Array<{ type: string; text?: string }>
+  content: string | Array<TextContent | ImageContent | { type: string; text?: string }>
   timestamp: number
 }
 
@@ -80,8 +99,8 @@ export interface UseAgentChatResult {
   toolExecutions: Map<string, ToolExecutionState>
   running: boolean
   error: string | null
-  send: (input: string) => Promise<void>
-  steer: (input: string) => Promise<void>
+  send: (input: string, attachments?: ChatAttachmentPayload[]) => Promise<void>
+  steer: (input: string, attachments?: ChatAttachmentPayload[]) => Promise<void>
   abort: () => Promise<void>
   hydrate: (messages: UiMessage[]) => void
 }
@@ -92,7 +111,10 @@ function messageRole(message: Record<string, unknown>): string {
 
 function userMessageText(message: UiUserMessage): string {
   if (typeof message.content === 'string') return message.content
-  return message.content.map((c) => c.text ?? '').join('')
+  return message.content
+    .filter((c) => !('attachment' in c && c.attachment))
+    .map((c) => ('text' in c ? (c.text ?? '') : ''))
+    .join('')
 }
 
 /** Derive a short session title from the first user message. */
@@ -249,7 +271,7 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
   )
 
   const send = React.useCallback(
-    async (input: string) => {
+    async (input: string, attachments: ChatAttachmentPayload[] = []) => {
       if (!serverPort) {
         setError('Agent server is not running')
         return
@@ -260,7 +282,7 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
       setRunning(true)
       setError(null)
       try {
-        await client.sendMessage(sessionId, input, handleEvent, controller.signal)
+        await client.sendMessage(sessionId, input, attachments, handleEvent, controller.signal)
       } catch (e) {
         if (controller.signal.aborted) {
           setRunning(false)
@@ -274,10 +296,10 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
   )
 
   const steer = React.useCallback(
-    async (input: string) => {
+    async (input: string, attachments: ChatAttachmentPayload[] = []) => {
       if (!serverPort) return
       const client = createAgentServerClient(serverPort)
-      await client.steerSession(sessionId, input)
+      await client.steerSession(sessionId, input, attachments)
     },
     [serverPort, sessionId],
   )

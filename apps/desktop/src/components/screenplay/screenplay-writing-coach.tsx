@@ -4,6 +4,7 @@ import {
   CircleDotIcon,
   GaugeIcon,
   LightbulbIcon,
+  MoreHorizontalIcon,
   MessageSquareTextIcon,
   RefreshCwIcon,
   SparklesIcon,
@@ -11,8 +12,15 @@ import {
   FolderTreeIcon,
 } from 'lucide-react'
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { AgentPanel } from '@/components/agent/agent-panel'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
 import type { AgentProposal, ProviderMetadata } from '@/lib/ai/server-client'
 import type { AiSettings, ModelRef } from '@/lib/ai/settings-bridge'
@@ -24,16 +32,16 @@ interface ScreenplayWritingCoachProps {
   sessionId: string
   skillId: string
   modelRef: ModelRef | null
-  skills: { id: string; name: string; description: string }[]
   providers: ProviderMetadata[]
   settings: AiSettings | null
+  modelSupportsImages: boolean
   serverPort: number | null
   initialMessages?: UiMessage[]
   selectedScene: SceneSummary | null
   proposals: AgentProposal[]
   proposalBusy: boolean
   organizeRequest: { id: string; text: string } | null
-  onConfigChange: (update: { skillId?: string; providerId?: string; modelId?: string }) => void
+  onConfigChange: (update: { providerId?: string; modelId?: string }) => void
   onFileActivity: () => void
   onSessionActivity: () => void
   onRunningChange: (running: boolean) => void
@@ -45,18 +53,38 @@ interface ScreenplayWritingCoachProps {
 const ACTIONS: Array<{
   id: ScreenplayAction
   label: string
+  compactLabel?: string
   hint: string
   icon: React.ComponentType<{ className?: string }>
 }> = [
-  { id: 'outline', label: '规划总纲', hint: '建立全剧推进线', icon: AlignLeftIcon },
-  { id: 'episode-outline', label: '规划分集', hint: '补齐钩子与卡点', icon: CircleDotIcon },
+  {
+    id: 'outline',
+    label: '规划总纲',
+    compactLabel: '总纲',
+    hint: '建立全剧推进线',
+    icon: AlignLeftIcon,
+  },
+  {
+    id: 'episode-outline',
+    label: '规划分集',
+    compactLabel: '分集',
+    hint: '补齐钩子与卡点',
+    icon: CircleDotIcon,
+  },
   {
     id: 'scene-breakdown',
     label: '拆分镜头',
+    compactLabel: '拆镜',
     hint: '把场景变成可生成镜头',
     icon: WandSparklesIcon,
   },
-  { id: 'scene-draft', label: '生成下一场', hint: '承接当前节奏继续写', icon: SparklesIcon },
+  {
+    id: 'scene-draft',
+    label: '生成下一场',
+    compactLabel: '续写',
+    hint: '承接当前节奏继续写',
+    icon: SparklesIcon,
+  },
   { id: 'revision', label: '强化节奏', hint: '检查钩子、冲突与信息密度', icon: GaugeIcon },
   {
     id: 'continuity-audit',
@@ -87,6 +115,7 @@ function actionPrompt(action: ScreenplayAction, scene: SceneSummary | null): str
 }
 
 export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
+  const { t } = useTranslation()
   const [quickPrompt, setQuickPrompt] = React.useState<{ id: string; text: string } | null>(null)
 
   React.useEffect(() => {
@@ -110,22 +139,46 @@ export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
           </div>
           <MessageSquareTextIcon className="ml-auto size-3.5 text-muted-foreground" />
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-1.5">
-          {ACTIONS.map((action) => {
+        <div className="mt-2 flex min-w-0 items-center gap-1">
+          {ACTIONS.slice(0, 4).map((action) => {
             const Icon = action.icon
             return (
               <button
                 key={action.id}
                 type="button"
-                className="group rounded-md border border-border/70 bg-muted/20 px-2 py-2 text-left transition-colors hover:border-amber-500/50 hover:bg-amber-500/[0.06] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="group flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-border/70 bg-muted/20 px-2 text-left text-[10px] font-medium transition-colors hover:border-amber-500/50 hover:bg-amber-500/[0.06] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 onClick={() => triggerAction(action.id)}
                 title={action.hint}
               >
-                <Icon className="size-3.5 text-amber-600 transition-transform duration-200 group-hover:scale-110" />
-                <span className="mt-1 block text-[11px] font-medium">{action.label}</span>
+                <Icon className="size-3.5 shrink-0 text-amber-600 transition-transform duration-200 group-hover:scale-110" />
+                <span className="min-w-0 flex-1 truncate">
+                  {action.compactLabel ?? action.label}
+                </span>
               </button>
             )
           })}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-border/70 px-2 text-[10px] font-medium text-muted-foreground transition-colors outline-none hover:border-amber-500/50 hover:bg-amber-500/[0.06] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+              <MoreHorizontalIcon className="size-3.5" />
+              <span>{t('agent.more')}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {ACTIONS.slice(4).map((action) => {
+                const Icon = action.icon
+                return (
+                  <DropdownMenuItem key={action.id} onClick={() => triggerAction(action.id)}>
+                    <Icon className="text-amber-600" />
+                    <span className="min-w-0">
+                      <span className="block">{action.label}</span>
+                      <span className="block truncate text-[10px] text-muted-foreground">
+                        {action.hint}
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                )
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {props.selectedScene && (
           <div className="mt-2 flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-1.5 text-[10px] text-muted-foreground">
@@ -150,9 +203,9 @@ export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
           sessionId={props.sessionId}
           skillId={props.skillId}
           modelRef={props.modelRef}
-          skills={props.skills}
           providers={props.providers}
           settings={props.settings}
+          modelSupportsImages={props.modelSupportsImages}
           onConfigChange={props.onConfigChange}
           serverPort={props.serverPort}
           initialMessages={props.initialMessages}

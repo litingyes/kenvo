@@ -62,6 +62,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { aggregateAssistantUsage, type DisplayUsage } from '@/lib/agent/message-usage'
 import {
   useAgentChat,
   type ChatAttachmentMeta,
@@ -263,6 +264,10 @@ export function AgentPanel({
     onRunningChange,
     onAgentEnd,
   })
+  const displayUsageByMessage = React.useMemo(
+    () => aggregateAssistantUsage(messages, { includeTrailingSegment: !running }),
+    [messages, running],
+  )
   const [input, setInput] = React.useState('')
   const [pendingAttachments, setPendingAttachments] = React.useState<PendingAttachment[]>([])
   const [attachmentError, setAttachmentError] = React.useState<AttachmentErrorKey | null>(null)
@@ -392,6 +397,7 @@ export function AgentPanel({
                       message={message}
                       toolExecutions={toolExecutions}
                       onOpenFile={onOpenFile}
+                      displayUsage={displayUsageByMessage.get(index)}
                       streaming={running && index === messages.length - 1}
                     />
                   </MessageScrollerItem>
@@ -721,11 +727,13 @@ function MessageView({
   message,
   toolExecutions,
   streaming,
+  displayUsage,
   onOpenFile,
 }: {
   message: UiMessage
   toolExecutions: Map<string, ToolExecutionState>
   streaming: boolean
+  displayUsage?: DisplayUsage
   onOpenFile: (path: string) => void
 }) {
   if (message.role === 'user') {
@@ -737,6 +745,7 @@ function MessageView({
         message={message}
         toolExecutions={toolExecutions}
         streaming={streaming}
+        displayUsage={displayUsage}
         onOpenFile={onOpenFile}
       />
     )
@@ -786,11 +795,13 @@ function AssistantMessageView({
   message,
   toolExecutions,
   streaming,
+  displayUsage,
   onOpenFile,
 }: {
   message: UiAssistantMessage
   toolExecutions: Map<string, ToolExecutionState>
   streaming: boolean
+  displayUsage?: DisplayUsage
   onOpenFile: (path: string) => void
 }) {
   return (
@@ -822,10 +833,10 @@ function AssistantMessageView({
       {streaming && message.content.length === 0 && (
         <span className="text-sm text-muted-foreground">…</span>
       )}
-      {!streaming && message.usage && (
+      {!streaming && displayUsage && (
         <div className="text-[10px] text-muted-foreground">
-          {message.usage.input}↑ {message.usage.output}↓
-          {message.usage.cost ? ` · $${message.usage.cost.total.toFixed(4)}` : ''}
+          {displayUsage.input}↑ {displayUsage.output}↓
+          {displayUsage.cost ? ` · $${displayUsage.cost.total.toFixed(4)}` : ''}
         </div>
       )}
     </div>

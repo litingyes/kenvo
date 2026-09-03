@@ -124,22 +124,17 @@ export async function appendChatMessage(
   messageJson: string,
 ): Promise<void> {
   const db = await getDatabase()
-  const rows = await db.select<{ max_seq: number | null }>(
-    `SELECT MAX(seq) AS max_seq FROM chat_messages WHERE session_id = ?`,
-    [sessionId],
-  )
-  const seq = (rows[0]?.max_seq ?? -1) + 1
   await db.execute(
     `INSERT INTO chat_messages (session_id, seq, role, message, created_at)
-     VALUES (?, ?, ?, ?, ?)`,
-    [sessionId, seq, role, messageJson, Date.now()],
+     VALUES (?, (SELECT COALESCE(MAX(seq), -1) + 1 FROM chat_messages WHERE session_id = ?), ?, ?, ?)`,
+    [sessionId, sessionId, role, messageJson, Date.now()],
   )
 }
 
 export async function listChatMessages(sessionId: string): Promise<ChatMessageRow[]> {
   const db = await getDatabase()
   return db.select<ChatMessageRow>(
-    `SELECT * FROM chat_messages WHERE session_id = ? ORDER BY seq ASC`,
+    `SELECT * FROM chat_messages WHERE session_id = ? ORDER BY seq ASC, id ASC`,
     [sessionId],
   )
 }

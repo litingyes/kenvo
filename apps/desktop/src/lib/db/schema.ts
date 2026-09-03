@@ -76,6 +76,36 @@ async function migrateLegacyAgentColumns(): Promise<void> {
   }
 }
 
+/** Repair message ordering from databases written before seq allocation was atomic. */
+async function repairChatMessageSequences(): Promise<void> {
+  const duplicateSessions = await api.db.select<{ session_id: string }>(
+    `SELECT session_id
+       FROM chat_messages
+      GROUP BY session_id
+     HAVING COUNT(*) > COUNT(DISTINCT seq)`,
+  )
+
+  for (const { session_id: sessionId } of duplicateSessions) {
+    const rows = await api.db.select<{ id: number; seq: number }>(
+      `SELECT id, seq
+         FROM chat_messages
+        WHERE session_id = ?
+        ORDER BY seq ASC, id ASC`,
+      [sessionId],
+    )
+    for (const [index, row] of rows.entries()) {
+      if (row.seq !== index) {
+        await api.db.execute(`UPDATE chat_messages SET seq = ? WHERE id = ?`, [index, row.id])
+      }
+    }
+  }
+
+  await api.db.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_messages_session_seq
+       ON chat_messages(session_id, seq)`,
+  )
+}
+
 async function ensureSchema(): Promise<void> {
   for (const stmt of DROP_LEGACY_STATEMENTS) {
     await api.db.execute(stmt)
@@ -84,6 +114,7 @@ async function ensureSchema(): Promise<void> {
     await api.db.execute(stmt)
   }
   await migrateLegacyAgentColumns()
+  await repairChatMessageSequences()
 }
 
 export async function initDatabase(): Promise<void> {

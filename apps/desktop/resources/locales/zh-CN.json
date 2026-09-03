@@ -68,6 +68,8 @@
     "openProject": "打开项目"
   },
   "screenplay": {
+    "resizeScriptMap": "调整剧本地图宽度",
+    "resizeWritingCoach": "调整写作教练宽度",
     "canvas": {
       "emptyHint": "先从写作教练规划第一集，或打开左侧的总纲开始。"
     }

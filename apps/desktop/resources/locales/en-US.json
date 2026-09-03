@@ -68,6 +68,8 @@
     "openProject": "Open project"
   },
   "screenplay": {
+    "resizeScriptMap": "Resize screenplay map width",
+    "resizeWritingCoach": "Resize writing coach width",
     "canvas": {
       "emptyHint": "Plan the first episode with the writing coach, or open the outline from the map."
     }

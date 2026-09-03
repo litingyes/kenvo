@@ -127,7 +127,7 @@ export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-l border-border bg-background">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       <div className="shrink-0 border-b border-border px-3 py-3">
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">

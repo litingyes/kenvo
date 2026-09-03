@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { AppHeader } from '@/components/layout/app-header'
 import { Button } from '@/components/ui/button'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
 import {
@@ -84,6 +85,53 @@ const EMPTY_CANVAS: ScreenplayCanvasData = {
   totalScenes: 0,
   totalShots: 0,
   warningCount: 0,
+}
+
+type WorkbenchPanelId = 'script-map' | 'canvas' | 'coach'
+type WorkbenchPanelLayout = Record<WorkbenchPanelId, number>
+
+const WORKBENCH_LAYOUT_STORAGE_KEY = 'kenvo:screenplay-workbench-layout:v1'
+const WORKBENCH_PANEL_IDS: WorkbenchPanelId[] = ['script-map', 'canvas', 'coach']
+const DEFAULT_WORKBENCH_LAYOUT: WorkbenchPanelLayout = {
+  'script-map': 15,
+  canvas: 65,
+  coach: 20,
+}
+
+function isWorkbenchPanelLayout(value: unknown): value is WorkbenchPanelLayout {
+  if (typeof value !== 'object' || value === null) return false
+  const candidate = value as Record<string, unknown>
+  const sizes = WORKBENCH_PANEL_IDS.map((id) => candidate[id])
+  if (
+    !sizes.every(
+      (size): size is number =>
+        typeof size === 'number' && Number.isFinite(size) && size > 0 && size <= 100,
+    )
+  ) {
+    return false
+  }
+  return Math.abs(sizes.reduce((total, size) => total + size, 0) - 100) < 0.5
+}
+
+function readWorkbenchPanelLayout(): WorkbenchPanelLayout {
+  if (typeof window === 'undefined') return DEFAULT_WORKBENCH_LAYOUT
+  try {
+    const stored = window.localStorage.getItem(WORKBENCH_LAYOUT_STORAGE_KEY)
+    if (!stored) return DEFAULT_WORKBENCH_LAYOUT
+    const parsed: unknown = JSON.parse(stored)
+    return isWorkbenchPanelLayout(parsed) ? parsed : DEFAULT_WORKBENCH_LAYOUT
+  } catch {
+    return DEFAULT_WORKBENCH_LAYOUT
+  }
+}
+
+function persistWorkbenchPanelLayout(layout: Record<string, number>): void {
+  if (typeof window === 'undefined' || !isWorkbenchPanelLayout(layout)) return
+  try {
+    window.localStorage.setItem(WORKBENCH_LAYOUT_STORAGE_KEY, JSON.stringify(layout))
+  } catch {
+    // Layout persistence is best-effort; resizing must still work if storage is unavailable.
+  }
 }
 
 function chooseModel(
@@ -179,10 +227,7 @@ function ScriptMap({ data, selectedSceneId, onSelectScene, onOpenDocument }: Scr
   }
 
   return (
-    <aside
-      className="flex min-h-0 flex-col border-r border-border bg-muted/[0.16]"
-      aria-label="剧本地图"
-    >
+    <aside className="flex min-h-0 flex-col bg-muted/[0.16]" aria-label="剧本地图">
       <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3">
         <ClapperboardIcon className="size-4 text-amber-600" />
         <span className="text-xs font-semibold">剧本地图</span>
@@ -350,6 +395,9 @@ export function ScreenplayWorkbench({
 }: ScreenplayWorkbenchProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const [defaultPanelLayout] = React.useState<WorkbenchPanelLayout>(() =>
+    readWorkbenchPanelLayout(),
+  )
   const [project, setProject] = React.useState<Project | null>(null)
   const [data, setData] = React.useState<ScreenplayCanvasData>(EMPTY_CANVAS)
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null)
@@ -769,117 +817,142 @@ export function ScreenplayWorkbench({
           </div>
         }
       />
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(150px,180px)_minmax(240px,1fr)_minmax(240px,280px)]">
-        <ScriptMap
-          data={data}
-          selectedSceneId={selectedSceneId}
-          onSelectScene={handleSelectScene}
-          onOpenDocument={handleOpenDocument}
+      <ResizablePanelGroup
+        id="screenplay-workbench-panels"
+        orientation="horizontal"
+        defaultLayout={defaultPanelLayout}
+        onLayoutChanged={(layout, meta) => {
+          if (meta.isUserInteraction) persistWorkbenchPanelLayout(layout)
+        }}
+        resizeTargetMinimumSize={{ coarse: 28, fine: 20 }}
+        className="min-h-0 min-w-0 flex-1"
+      >
+        <ResizablePanel id="script-map" minSize={150} maxSize={360} className="min-w-0">
+          <ScriptMap
+            data={data}
+            selectedSceneId={selectedSceneId}
+            onSelectScene={handleSelectScene}
+            onOpenDocument={handleOpenDocument}
+          />
+        </ResizablePanel>
+        <ResizableHandle
+          withHandle
+          aria-label={t('screenplay.resizeScriptMap')}
+          className="bg-border/70 transition-colors hover:bg-amber-500/50 focus-visible:bg-amber-500/50"
         />
-        <main className="flex min-h-0 min-w-0 flex-col">
-          <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-3">
-            <ViewButton
-              active={view === 'canvas'}
-              onClick={() => changeMode('canvas')}
-              icon={<GaugeIcon />}
-              label="总览 Canvas"
-            />
-            <ViewButton
-              active={view === 'editor'}
-              onClick={() => changeMode('editor', documentPath)}
-              icon={<FileTextIcon />}
-              label="场景编辑"
-              disabled={!selectedScene && !documentPath}
-            />
-            <span className="ml-auto text-[10px] text-muted-foreground">
-              {data.warningCount > 0 ? `${data.warningCount} 个结构提醒` : '结构清晰'}
-            </span>
-          </div>
-          {serverError && (
-            <div
-              role="alert"
-              className="mx-3 mt-3 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
-            >
-              <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0" />
-              <span className="min-w-0 flex-1">{serverError}</span>
+        <ResizablePanel id="canvas" minSize={320} className="min-w-0">
+          <main className="flex h-full min-h-0 min-w-0 flex-col">
+            <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-3">
+              <ViewButton
+                active={view === 'canvas'}
+                onClick={() => changeMode('canvas')}
+                icon={<GaugeIcon />}
+                label="总览 Canvas"
+              />
+              <ViewButton
+                active={view === 'editor'}
+                onClick={() => changeMode('editor', documentPath)}
+                icon={<FileTextIcon />}
+                label="场景编辑"
+                disabled={!selectedScene && !documentPath}
+              />
+              <span className="ml-auto text-[10px] text-muted-foreground">
+                {data.warningCount > 0 ? `${data.warningCount} 个结构提醒` : '结构清晰'}
+              </span>
             </div>
-          )}
-          <div className="min-h-0 flex-1">
-            {view === 'canvas' && (
-              <ScreenplayCanvas
-                episodes={data.episodes}
-                unorganized={data.unorganized}
-                selectedSceneId={selectedSceneId}
-                onOrganize={handleOrganize}
-                organizeDisabled={!session || !serverPort || agentRunning || proposalBusy}
-                onSelectScene={handleSelectScene}
-                onEditScene={handleEditScene}
-                onOpenDocument={handleOpenDocument}
-                onRefresh={() => void refreshIndex()}
-                onReorderScene={handleReorderScene}
-                onReorderShot={handleReorderShot}
-              />
-            )}
-            {view === 'editor' && sceneForEditor && !documentForEditor && (
-              <ScreenplaySceneEditor
-                rootPath={project.path}
-                scene={sceneForEditor}
-                onBack={() => changeMode('canvas')}
-                onSaved={() => void refreshIndex()}
-                onNavigate={(direction) => {
-                  const scenes = allScenes(data)
-                  const index = scenes.findIndex((item) => item.id === sceneForEditor.id)
-                  const next = scenes[direction === 'previous' ? index - 1 : index + 1]
-                  if (next) setSelectedSceneId(next.id)
-                }}
-              />
-            )}
-            {view === 'editor' && documentForEditor && (
-              <MarkdownDocumentView filePath={documentForEditor} />
-            )}
-            {view === 'editor' && !sceneForEditor && !documentForEditor && (
-              <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                请先从左侧选择一个场景。
+            {serverError && (
+              <div
+                role="alert"
+                className="mx-3 mt-3 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+              >
+                <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0" />
+                <span className="min-w-0 flex-1">{serverError}</span>
               </div>
             )}
-          </div>
-        </main>
-        {session ? (
-          <ScreenplayWritingCoach
-            sessionId={session.id}
-            modelRef={modelRef}
-            providers={providers}
-            settings={settings}
-            modelSupportsImages={Boolean(
-              modelRef &&
-              modelInputs[`${modelRef.providerId}::${modelRef.modelId}`]?.includes('image'),
-            )}
-            serverPort={serverPort}
-            initialMessages={historyMessages}
-            selectedScene={selectedScene}
-            organizeRequest={organizeRequest}
-            proposals={allProposals}
-            proposalBusy={proposalBusy}
-            onConfigChange={(update) => void handleConfigChange(update)}
-            onOpenFile={handleOpenFile}
-            onFileActivity={() => void refreshIndex()}
-            onSessionActivity={() => {}}
-            onRunningChange={setAgentRunning}
-            onAgentEnd={onAgentEnd}
-            onApplyProposal={(proposal) => void handleApplyProposal(proposal)}
-            onDiscardProposal={(proposal) => void handleDiscardProposal(proposal)}
-          />
-        ) : (
-          <CoachUnavailable
-            message={serverError ?? t('agent.noModel')}
-            proposals={allProposals}
-            proposalBusy={proposalBusy}
-            onApplyProposal={(proposal) => void handleApplyProposal(proposal)}
-            onDiscardProposal={(proposal) => void handleDiscardProposal(proposal)}
-            onConfigureAi={() => void api.window.openSettings('settings/ai/providers')}
-          />
-        )}
-      </div>
+            <div className="min-h-0 flex-1">
+              {view === 'canvas' && (
+                <ScreenplayCanvas
+                  episodes={data.episodes}
+                  unorganized={data.unorganized}
+                  selectedSceneId={selectedSceneId}
+                  onOrganize={handleOrganize}
+                  organizeDisabled={!session || !serverPort || agentRunning || proposalBusy}
+                  onSelectScene={handleSelectScene}
+                  onEditScene={handleEditScene}
+                  onOpenDocument={handleOpenDocument}
+                  onRefresh={() => void refreshIndex()}
+                  onReorderScene={handleReorderScene}
+                  onReorderShot={handleReorderShot}
+                />
+              )}
+              {view === 'editor' && sceneForEditor && !documentForEditor && (
+                <ScreenplaySceneEditor
+                  rootPath={project.path}
+                  scene={sceneForEditor}
+                  onBack={() => changeMode('canvas')}
+                  onSaved={() => void refreshIndex()}
+                  onNavigate={(direction) => {
+                    const scenes = allScenes(data)
+                    const index = scenes.findIndex((item) => item.id === sceneForEditor.id)
+                    const next = scenes[direction === 'previous' ? index - 1 : index + 1]
+                    if (next) setSelectedSceneId(next.id)
+                  }}
+                />
+              )}
+              {view === 'editor' && documentForEditor && (
+                <MarkdownDocumentView filePath={documentForEditor} />
+              )}
+              {view === 'editor' && !sceneForEditor && !documentForEditor && (
+                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                  请先从左侧选择一个场景。
+                </div>
+              )}
+            </div>
+          </main>
+        </ResizablePanel>
+        <ResizableHandle
+          withHandle
+          aria-label={t('screenplay.resizeWritingCoach')}
+          className="bg-border/70 transition-colors hover:bg-amber-500/50 focus-visible:bg-amber-500/50"
+        />
+        <ResizablePanel id="coach" minSize={240} maxSize={440} className="min-w-0">
+          {session ? (
+            <ScreenplayWritingCoach
+              sessionId={session.id}
+              modelRef={modelRef}
+              providers={providers}
+              settings={settings}
+              modelSupportsImages={Boolean(
+                modelRef &&
+                modelInputs[`${modelRef.providerId}::${modelRef.modelId}`]?.includes('image'),
+              )}
+              serverPort={serverPort}
+              initialMessages={historyMessages}
+              selectedScene={selectedScene}
+              organizeRequest={organizeRequest}
+              proposals={allProposals}
+              proposalBusy={proposalBusy}
+              onConfigChange={(update) => void handleConfigChange(update)}
+              onOpenFile={handleOpenFile}
+              onFileActivity={() => void refreshIndex()}
+              onSessionActivity={() => {}}
+              onRunningChange={setAgentRunning}
+              onAgentEnd={onAgentEnd}
+              onApplyProposal={(proposal) => void handleApplyProposal(proposal)}
+              onDiscardProposal={(proposal) => void handleDiscardProposal(proposal)}
+            />
+          ) : (
+            <CoachUnavailable
+              message={serverError ?? t('agent.noModel')}
+              proposals={allProposals}
+              proposalBusy={proposalBusy}
+              onApplyProposal={(proposal) => void handleApplyProposal(proposal)}
+              onDiscardProposal={(proposal) => void handleDiscardProposal(proposal)}
+              onConfigureAi={() => void api.window.openSettings('settings/ai/providers')}
+            />
+          )}
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   )
 }

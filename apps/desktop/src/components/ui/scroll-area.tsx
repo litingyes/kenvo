@@ -1,4 +1,4 @@
-import type * as React from "react"
+import * as React from "react"
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
 
 import { cn } from "@/lib/utils"
@@ -6,24 +6,8 @@ import { cn } from "@/lib/utils"
 function ScrollArea({
   className,
   children,
-  orientation = "vertical",
-  viewportRef,
-  viewportClassName,
-  contentClassName,
-  onScroll,
   ...props
-}: ScrollAreaPrimitive.Root.Props & {
-  /** Which scrollbar(s) to render. */
-  orientation?: "vertical" | "horizontal" | "both"
-  /** Ref to the scrollable viewport element. */
-  viewportRef?: React.Ref<HTMLDivElement>
-  /** Extra classes merged onto the viewport element. */
-  viewportClassName?: string
-  /** Extra classes merged onto the content wrapper element. */
-  contentClassName?: string
-  /** Scroll handler attached to the viewport element. */
-  onScroll?: React.UIEventHandler<HTMLDivElement>
-}) {
+}: ScrollAreaPrimitive.Root.Props) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
@@ -31,19 +15,12 @@ function ScrollArea({
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
-        ref={viewportRef}
-        onScroll={onScroll}
         data-slot="scroll-area-viewport"
-        className={cn("size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1", viewportClassName)}
+        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
       >
-        {/* Content wrapper gives Base UI a ResizeObserver target so scrollbars
-            appear when content grows after mount (streaming chat, async lists). */}
-        <ScrollAreaPrimitive.Content className={contentClassName}>
-          {children}
-        </ScrollAreaPrimitive.Content>
+        {children}
       </ScrollAreaPrimitive.Viewport>
-      {orientation !== "horizontal" && <ScrollBar />}
-      {orientation !== "vertical" && <ScrollBar orientation="horizontal" />}
+      <ScrollBar />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   )

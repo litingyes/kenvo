@@ -1,5 +1,6 @@
 import { api } from '@/lib/electron/api'
 
+import { isUnorganizedScreenplayDocument } from './screenplay-classification'
 import { analyzeSceneDocument, parseSceneDocument } from './screenplay-document'
 import type {
   EpisodeSummary,
@@ -189,7 +190,7 @@ export async function loadScreenplayIndex(
       continue
     }
 
-    if (record.path !== 'README.md' && record.path !== 'project.md') unorganized.push(ref(record))
+    if (isUnorganizedScreenplayDocument(record.path, record.content)) unorganized.push(ref(record))
   }
 
   for (const episode of episodes.values()) {

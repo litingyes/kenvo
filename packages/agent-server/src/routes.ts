@@ -33,7 +33,6 @@ import {
   SessionError,
   steerSession,
 } from './sessions.js'
-import { listSkills } from './skills.js'
 import type { ProviderMetadata } from './types.js'
 
 const configureSchema = z.object({
@@ -49,12 +48,10 @@ const testSchema = z.object({
 
 const createSessionSchema = z.object({
   sessionId: z.string().min(1),
-  skillId: z.string().min(1),
   projectRoot: z.string().min(1),
   providerId: z.string().min(1),
   modelId: z.string().min(1),
   history: z.array(z.unknown()).optional(),
-  writePolicy: z.enum(['direct', 'proposal']).optional(),
 })
 
 export function createApp() {
@@ -148,12 +145,6 @@ export function createApp() {
     })
   })
 
-  // ---------- Skills ----------
-
-  app.get('/skills', (c) => {
-    return c.json({ skills: listSkills() })
-  })
-
   // ---------- Sessions ----------
 
   app.post('/sessions', async (c) => {
@@ -163,18 +154,15 @@ export function createApp() {
       return c.json({ error: parsed.error.errors }, 400)
     }
 
-    const { sessionId, skillId, projectRoot, providerId, modelId, history, writePolicy } =
-      parsed.data
+    const { sessionId, projectRoot, providerId, modelId, history } = parsed.data
 
     try {
       await createSession({
         sessionId,
-        skillId,
         projectRoot,
         providerId,
         modelId,
         history: history as never,
-        writePolicy,
       })
       return c.json({ success: true })
     } catch (error) {

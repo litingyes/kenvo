@@ -4,18 +4,19 @@
 
 ### 💥 Breaking Changes
 
-- **app:** Repositioned Kenvo from an AI-native terminal workspace to a local-first AI writing studio — "Write what you imagine, and beyond." The terminal, Git panel, and workspace features were removed entirely; the old SQLite tables (workspaces, terminal_sessions, terminal_history, workspace_tabs) are dropped on first launch.
+- **app:** Repositioned Kenvo as a local-first AI short-form screenplay production workbench. The product loop is now outline → episodes → scenes → shots → Agent proposal → Diff review → Markdown write → structure check.
 - **agent-server:** Replaced the Vercel AI SDK with `@earendil-works/pi-agent-core` + `@earendil-works/pi-ai` as the agent runtime. The old `coder` agent and `/agents/:id/run` endpoint were removed; new session-based SSE endpoints (`POST /sessions`, `POST /sessions/:id/messages`, `/steer`, `/abort`) power the writing agents.
 - **desktop:** Replaced Monaco with CodeMirror 6 for the Markdown editor.
 
 ### 🚀 Enhancements
 
-- **agents:** Four built-in writing agents — Writer, Novelist, Screenwriter, Prompt Engineer — each with craft-specific instructions and project templates.
-- **agents:** Autonomous agent loop with six project-scoped file tools (list/read/write/edit/delete/search), mid-run steering, abort, and per-turn token/cost reporting.
-- **desktop:** New home screen with project cards and a create-project flow that materializes the agent's template into a local folder.
-- **desktop:** New writing studio: document tree, tabbed Markdown editor with external-change watching, and an agent panel with streaming messages, tool-call cards, and thinking blocks.
+- **agents:** Removed the Writer, Novelist, and Prompt Engineer entry points. New sessions use the focused Screenwriter skill and proposal writes; legacy chat rows remain readable.
+- **agents:** Autonomous agent loop with project-scoped read/search/proposal tools, mid-run steering, abort, and per-turn token/cost reporting.
+- **desktop:** Projects now open directly in the screenplay workbench. New projects create only the short-drama template; imported folders are never populated automatically, and unrecognized files can be organized by proposal.
+- **desktop:** Kept the screenplay map and central Markdown editor, removed the unmounted file sidebar and tab state, and folded deterministic structure reminders into Canvas.
+- **desktop:** Agent runs now produce grouped proposals with run IDs, timestamps, before/after Diff previews, hash preflight, conflict preservation, and rollback on partial apply failure.
 - **desktop:** Chat history persisted per project in SQLite and resumed into the agent on project open.
-- **settings:** Models page now shows pi-ai catalog metadata (context window, reasoning, vision); Agents page configures the four writing agents.
+- **settings:** Kept the Basic, Providers, and Models AI settings pages, with an in-workbench setup entry when no usable model is configured.
 - **portal:** Landing page rewritten for the writing-studio positioning.
 
 ## v0.0.5

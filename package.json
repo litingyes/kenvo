@@ -11,6 +11,7 @@
     "release": "tsx scripts/release.ts",
     "lint": "pnpm --filter @kenvo/desktop lint",
     "lint:fix": "pnpm --filter @kenvo/desktop lint:fix",
+    "test": "node --import tsx --test apps/desktop/src/components/editor/markdown-document.test.ts apps/desktop/src/components/screenplay/screenplay-document.test.ts apps/desktop/src/components/screenplay/screenplay-classification.test.ts apps/desktop/src/lib/project/project-config-schema.test.ts apps/desktop/src/lib/project/project-import.test.ts packages/agent-server/src/chat-attachments.test.ts packages/agent-server/src/proposals.test.ts",
     "portal:dev": "pnpm --filter @kenvo/portal dev",
     "portal:build": "pnpm --filter @kenvo/portal build",
     "portal:preview": "pnpm --filter @kenvo/portal preview",

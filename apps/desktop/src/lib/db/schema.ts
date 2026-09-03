@@ -3,6 +3,7 @@ import { api } from '@/lib/electron/api'
 let initPromise: Promise<void> | null = null
 
 const DROP_LEGACY_STATEMENTS = [
+  `DROP TABLE IF EXISTS project_tabs`,
   `DROP TABLE IF EXISTS workspace_tabs`,
   `DROP TABLE IF EXISTS terminal_history`,
   `DROP TABLE IF EXISTS terminal_sessions`,
@@ -19,17 +20,6 @@ const SCHEMA_STATEMENTS = [
   )`,
   `CREATE INDEX IF NOT EXISTS idx_projects_active
      ON projects(last_active_at DESC)`,
-  `CREATE TABLE IF NOT EXISTS project_tabs (
-    id             TEXT PRIMARY KEY,
-    project_id     TEXT NOT NULL,
-    file_path      TEXT NOT NULL,
-    position       INTEGER NOT NULL DEFAULT 0,
-    created_at     INTEGER NOT NULL,
-    last_active_at INTEGER NOT NULL,
-    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-  )`,
-  `CREATE INDEX IF NOT EXISTS idx_tabs_project
-     ON project_tabs(project_id, position)`,
   `CREATE TABLE IF NOT EXISTS chat_sessions (
     id             TEXT PRIMARY KEY,
     project_id     TEXT NOT NULL,

@@ -59,7 +59,7 @@ const dictionary: Record<Locale, Translations> = {
     meta: {
       title: 'Kenvo — Write what you imagine, and beyond.',
       description:
-        'Kenvo is a local-first AI writing studio. Autonomous writing agents create novels, screenplays, and prompts right in your local folders.',
+        'Kenvo is a local-first AI short-form screenplay workbench. Build outlines, episodes, scenes, and shot cards as Markdown in your own folders.',
     },
     nav: {
       docs: 'Docs',
@@ -69,7 +69,7 @@ const dictionary: Record<Locale, Translations> = {
     hero: {
       tagline: 'Write what you imagine, and beyond.',
       description:
-        'Kenvo is a local-first AI writing studio. Autonomous writing agents plan, draft, and revise novels, screenplays, and prompts as real Markdown files in your own folders — you steer, they write.',
+        'Kenvo is a local-first AI short-form screenplay workbench. Move from outline to episodes, scenes, and shot cards as real Markdown files in your own folders — you steer, it proposes.',
       ctaPrimary: 'Download',
       ctaSecondary: 'View on GitHub',
     },
@@ -77,14 +77,14 @@ const dictionary: Record<Locale, Translations> = {
       title: 'A studio built for writing with agents',
       items: [
         {
-          title: 'Autonomous Writing Agents',
+          title: 'Screenplay production loop',
           description:
-            'Novelist, Screenwriter, Prompt Engineer, and a general Writer — each with its own craft instructions and project templates.',
+            'Go from outline to episodes, scenes, and shots with a focused Screenwriter agent built for short-form AI video.',
         },
         {
           title: 'Real Files, Your Folders',
           description:
-            'Agents read and write Markdown directly in the project folder you choose. Everything stays usable in any editor.',
+            'Your screenplay remains Markdown in the folder you choose. Import existing files without overwriting them, then organize with a proposal.',
         },
         {
           title: 'Steer Mid-Run',
@@ -94,12 +94,12 @@ const dictionary: Record<Locale, Translations> = {
         {
           title: 'Multi-provider Models',
           description:
-            'OpenAI, Anthropic, DeepSeek, Moonshot, Alibaba Cloud, and xAI via a local agent server, with per-agent model assignment.',
+            'Connect the provider and model that fit your workflow through the local agent server.',
         },
         {
-          title: 'Long-form Continuity',
+          title: 'Scene continuity',
           description:
-            'Chapters, characters, and worldbuilding stay consistent as agents re-read the project before writing more.',
+            'Keep characters, props, spaces, and shot-to-shot continuity visible in the screenplay map and writing coach.',
         },
         {
           title: 'Local-first',
@@ -141,7 +141,7 @@ const dictionary: Record<Locale, Translations> = {
     meta: {
       title: 'Kenvo — Write what you imagine, and beyond.',
       description:
-        'Kenvo 是一个本地优先的 AI 写作工作台。自主写作 Agent 在你的本地文件夹中直接创作小说、剧本与 Prompt。',
+        'Kenvo 是一个本地优先的 AI 短视频剧本工作台。总纲、分集、场景和镜头都以 Markdown 保存在你的文件夹中。',
     },
     nav: {
       docs: '文档',
@@ -151,7 +151,7 @@ const dictionary: Record<Locale, Translations> = {
     hero: {
       tagline: 'Write what you imagine, and beyond.',
       description:
-        'Kenvo 是一个本地优先的 AI 写作工作台。写作 Agent 在你选择的文件夹里构思、起草、修改小说、剧本与 Prompt——你掌舵，它落笔。',
+        'Kenvo 是一个本地优先的 AI 短视频剧本工作台。Agent 帮你从总纲推进到分集、场景和镜头——你掌舵，它先提案。',
       ctaPrimary: '下载',
       ctaSecondary: '在 GitHub 上查看',
     },
@@ -159,13 +159,14 @@ const dictionary: Record<Locale, Translations> = {
       title: '为「与 Agent 一起写作」而生的工作台',
       items: [
         {
-          title: '自主写作 Agent',
+          title: '短视频剧本闭环',
           description:
-            'Novelist、Screenwriter、Prompt Engineer 与通用 Writer，各自拥有专属写作指令与项目模板。',
+            '围绕短视频 AI 生成，从总纲、分集推进到场景和镜头卡片，使用专注的 Screenwriter Agent。',
         },
         {
           title: '真实文件，你的文件夹',
-          description: 'Agent 直接在你选择的项目文件夹中读写 Markdown，任何编辑器都能继续创作。',
+          description:
+            '剧本始终是你文件夹里的 Markdown。导入不会覆盖文件，结构整理通过可审阅提案完成。',
         },
         {
           title: '运行中随时掌舵',
@@ -173,12 +174,11 @@ const dictionary: Record<Locale, Translations> = {
         },
         {
           title: '多 Provider 模型',
-          description:
-            '通过本地 Agent 服务接入 OpenAI、Anthropic、DeepSeek、Moonshot、阿里云与 xAI，每个 Agent 可指派不同模型。',
+          description: '通过本地 Agent 服务连接适合你工作流的 Provider 与模型。',
         },
         {
-          title: '长篇一致性',
-          description: '章节、人物与世界观保持连贯——Agent 落笔前会先重读项目。',
+          title: '场景连续性',
+          description: '在剧本地图和写作教练中保持人物、道具、空间与镜头衔接清晰。',
         },
         {
           title: '本地优先',

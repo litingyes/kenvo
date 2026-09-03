@@ -20,6 +20,8 @@ export interface ChatMessageRow {
   created_at: number
 }
 
+export const SCREENWRITER_SKILL_ID = 'screenwriter'
+
 function genId(): string {
   return crypto.randomUUID()
 }
@@ -28,7 +30,6 @@ function genId(): string {
 
 export async function createChatSession(
   projectId: string,
-  skillId: string,
   providerId?: string,
   modelId?: string,
 ): Promise<ChatSession> {
@@ -37,7 +38,7 @@ export async function createChatSession(
   const session: ChatSession = {
     id: genId(),
     project_id: projectId,
-    skill_id: skillId,
+    skill_id: SCREENWRITER_SKILL_ID,
     title: null,
     provider_id: providerId ?? null,
     model_id: modelId ?? null,
@@ -87,15 +88,12 @@ export async function updateChatSessionTitle(id: string, title: string): Promise
   await db.execute(`UPDATE chat_sessions SET title = ? WHERE id = ?`, [title, id])
 }
 
-/** Update the session's skill / model selection (used when the user switches either in chat). */
+/** Update the provider/model selection while retaining the legacy skill column. */
 export async function updateChatSessionConfig(
   id: string,
-  config: { skillId?: string; providerId?: string; modelId?: string },
+  config: { providerId?: string; modelId?: string },
 ): Promise<void> {
   const db = await getDatabase()
-  if (config.skillId !== undefined) {
-    await db.execute(`UPDATE chat_sessions SET skill_id = ? WHERE id = ?`, [config.skillId, id])
-  }
   if (config.providerId !== undefined) {
     await db.execute(`UPDATE chat_sessions SET provider_id = ? WHERE id = ?`, [
       config.providerId,

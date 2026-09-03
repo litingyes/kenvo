@@ -22,7 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { Project } from '@/lib/db/project-repo'
 import { api } from '@/lib/electron/api'
-import { useProjectStore, type SessionListSort } from '@/lib/store/project-store'
+import { useProjectStore, type ProjectListSort } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
 
 interface StudioSidebarProps {
@@ -33,7 +33,7 @@ interface StudioSidebarProps {
   onNewProject: () => void
 }
 
-function compareBySort(sort: SessionListSort) {
+function compareBySort(sort: ProjectListSort) {
   return (a: Project, b: Project) =>
     sort === 'name' ? a.title.localeCompare(b.title) : b.last_active_at - a.last_active_at
 }
@@ -47,8 +47,8 @@ export function StudioSidebar({
   onNewProject,
 }: StudioSidebarProps) {
   const { t } = useTranslation()
-  const listSort = useProjectStore((s) => s.sessionListSort)
-  const setListSort = useProjectStore((s) => s.setSessionListSort)
+  const listSort = useProjectStore((s) => s.projectListSort)
+  const setListSort = useProjectStore((s) => s.setProjectListSort)
   const [sortMenuOpen, setSortMenuOpen] = React.useState(false)
 
   const sortedProjects = React.useMemo(
@@ -106,7 +106,7 @@ export function StudioSidebar({
                 <DropdownMenuLabel>{t('studio.sort')}</DropdownMenuLabel>
                 <DropdownMenuRadioGroup
                   value={listSort}
-                  onValueChange={(value) => setListSort(value as SessionListSort)}
+                  onValueChange={(value) => setListSort(value as ProjectListSort)}
                 >
                   <DropdownMenuRadioItem value="recent" className="text-xs">
                     {t('studio.sortRecent')}

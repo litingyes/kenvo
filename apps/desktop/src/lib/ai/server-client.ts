@@ -24,12 +24,6 @@ export interface ModelMetadata {
   cost: { input: number; output: number; cacheRead: number; cacheWrite: number }
 }
 
-export interface SkillMetadata {
-  id: string
-  name: string
-  description: string
-}
-
 export interface ChatAttachmentPayload {
   name: string
   kind: 'text' | 'image'
@@ -41,12 +35,10 @@ export interface ChatAttachmentPayload {
 
 export interface CreateSessionRequest {
   sessionId: string
-  skillId: string
   projectRoot: string
   providerId: string
   modelId: string
   history?: unknown[]
-  writePolicy?: 'direct' | 'proposal'
 }
 
 export interface AgentProposalChange {
@@ -61,6 +53,8 @@ export interface AgentProposalChange {
 
 export interface AgentProposal {
   id: string
+  runId: string
+  createdAt: number
   title: string
   changes: AgentProposalChange[]
 }
@@ -125,12 +119,6 @@ export class AgentServerClient {
     const response = await this.request(`/providers/${id}/models`)
     const data = await response.json()
     return data.models
-  }
-
-  async getSkills(): Promise<SkillMetadata[]> {
-    const response = await this.request('/skills')
-    const data = await response.json()
-    return data.skills
   }
 
   async createSession(body: CreateSessionRequest): Promise<void> {

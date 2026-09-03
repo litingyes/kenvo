@@ -30,7 +30,6 @@ import type { SceneSummary, ScreenplayAction } from './types'
 
 interface ScreenplayWritingCoachProps {
   sessionId: string
-  skillId: string
   modelRef: ModelRef | null
   providers: ProviderMetadata[]
   settings: AiSettings | null
@@ -42,6 +41,7 @@ interface ScreenplayWritingCoachProps {
   proposalBusy: boolean
   organizeRequest: { id: string; text: string } | null
   onConfigChange: (update: { providerId?: string; modelId?: string }) => void
+  onOpenFile: (path: string) => void
   onFileActivity: () => void
   onSessionActivity: () => void
   onRunningChange: (running: boolean) => void
@@ -139,14 +139,15 @@ export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
           </div>
           <MessageSquareTextIcon className="ml-auto size-3.5 text-muted-foreground" />
         </div>
-        <div className="mt-2 flex min-w-0 items-center gap-1">
+        <div className="mt-2 grid min-w-0 grid-cols-3 gap-1 xl:flex xl:items-center">
           {ACTIONS.slice(0, 4).map((action) => {
             const Icon = action.icon
             return (
               <button
                 key={action.id}
                 type="button"
-                className="group flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-border/70 bg-muted/20 px-2 text-left text-[10px] font-medium transition-colors hover:border-amber-500/50 hover:bg-amber-500/[0.06] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="group flex h-8 w-full min-w-0 items-center gap-1.5 rounded-md border border-border/70 bg-muted/20 px-2 text-left text-[10px] font-medium transition-colors hover:border-amber-500/50 hover:bg-amber-500/[0.06] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none xl:w-auto xl:flex-1"
+                aria-label={action.label}
                 onClick={() => triggerAction(action.id)}
                 title={action.hint}
               >
@@ -158,7 +159,7 @@ export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
             )
           })}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-border/70 px-2 text-[10px] font-medium text-muted-foreground transition-colors outline-none hover:border-amber-500/50 hover:bg-amber-500/[0.06] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+            <DropdownMenuTrigger className="flex h-8 w-full items-center justify-center gap-1 rounded-md border border-border/70 px-2 text-[10px] font-medium text-muted-foreground transition-colors outline-none hover:border-amber-500/50 hover:bg-amber-500/[0.06] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring xl:w-auto">
               <MoreHorizontalIcon className="size-3.5" />
               <span>{t('agent.more')}</span>
             </DropdownMenuTrigger>
@@ -201,12 +202,12 @@ export function ScreenplayWritingCoach(props: ScreenplayWritingCoachProps) {
       <div className="min-h-0 flex-1">
         <AgentPanel
           sessionId={props.sessionId}
-          skillId={props.skillId}
           modelRef={props.modelRef}
           providers={props.providers}
           settings={props.settings}
           modelSupportsImages={props.modelSupportsImages}
           onConfigChange={props.onConfigChange}
+          onOpenFile={props.onOpenFile}
           serverPort={props.serverPort}
           initialMessages={props.initialMessages}
           onFileActivity={props.onFileActivity}

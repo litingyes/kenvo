@@ -16,6 +16,8 @@ export interface ProposedFileChange {
 
 export interface ChangeSet {
   id: string
+  runId: string
+  createdAt: number
   title: string
   changes: ProposedFileChange[]
 }
@@ -27,6 +29,35 @@ export class ProposalConflictError extends Error {
 }
 
 const proposals = new Map<string, ChangeSet[]>()
+const activeRuns = new Map<string, string>()
+
+export function startProposalRun(sessionId: string, title = '剧本改动提案'): string {
+  const runId = crypto.randomUUID()
+  const current = proposals.get(sessionId) ?? []
+  current.push({
+    id: crypto.randomUUID(),
+    runId,
+    createdAt: Date.now(),
+    title,
+    changes: [],
+  })
+  proposals.set(sessionId, current)
+  activeRuns.set(sessionId, runId)
+  return runId
+}
+
+export function finishProposalRun(sessionId: string, runId: string): void {
+  if (activeRuns.get(sessionId) !== runId) return
+  activeRuns.delete(sessionId)
+  const current = proposals.get(sessionId) ?? []
+  const next = current.filter((proposal) => proposal.runId !== runId || proposal.changes.length > 0)
+  if (next.length === 0) proposals.delete(sessionId)
+  else proposals.set(sessionId, next)
+}
+
+export function getActiveProposalRunId(sessionId: string): string | undefined {
+  return activeRuns.get(sessionId)
+}
 
 function resolveInProject(projectRoot: string, relativePath: string): string {
   if (isHiddenPath(relativePath)) {
@@ -72,6 +103,7 @@ export async function proposeFileChange(
     content?: string
     summary?: string
   },
+  runId?: string,
 ): Promise<{ proposal: ChangeSet; change: ProposedFileChange }> {
   const relativePath = input.path.replaceAll('\\', '/')
   if (!relativePath || relativePath.startsWith('/') || relativePath.includes('..')) {
@@ -119,9 +151,17 @@ export async function proposeFileChange(
     summary: input.summary?.trim() || `${input.operation} ${relativePath}`,
   }
   const existing = proposals.get(sessionId) ?? []
-  let proposal = existing[existing.length - 1]
+  let proposal = runId
+    ? [...existing].reverse().find((item) => item.runId === runId)
+    : existing[existing.length - 1]
   if (!proposal) {
-    proposal = { id: crypto.randomUUID(), title: '剧本改动提案', changes: [] }
+    proposal = {
+      id: crypto.randomUUID(),
+      runId: runId ?? crypto.randomUUID(),
+      createdAt: Date.now(),
+      title: '剧本改动提案',
+      changes: [],
+    }
     existing.push(proposal)
     proposals.set(sessionId, existing)
   }
@@ -132,7 +172,7 @@ export async function proposeFileChange(
 }
 
 export function listProposals(sessionId: string): ChangeSet[] {
-  return proposals.get(sessionId) ?? []
+  return (proposals.get(sessionId) ?? []).filter((proposal) => proposal.changes.length > 0)
 }
 
 export function discardProposal(sessionId: string, proposalId: string): boolean {
@@ -152,33 +192,54 @@ export async function applyProposal(
   const proposal = (proposals.get(sessionId) ?? []).find((item) => item.id === proposalId)
   if (!proposal) throw new Error(`Unknown proposal: ${proposalId}`)
 
-  const conflicts: string[] = []
+  const conflicts = new Set<string>()
   for (const change of proposal.changes) {
     const sourcePath = change.operation === 'move' ? change.fromPath : change.path
     const current = await readCurrent(projectRoot, sourcePath ?? change.path)
     const currentHash = current === null ? null : hashText(current)
-    if (currentHash !== change.beforeHash) conflicts.push(sourcePath ?? change.path)
+    if (currentHash !== change.beforeHash) conflicts.add(sourcePath ?? change.path)
     if (change.operation === 'move' && (await readCurrent(projectRoot, change.path)) !== null) {
-      conflicts.push(change.path)
+      conflicts.add(change.path)
     }
   }
-  if (conflicts.length > 0) throw new ProposalConflictError(conflicts)
+  if (conflicts.size > 0) throw new ProposalConflictError([...conflicts])
 
+  const backups = new Map<string, string | null>()
   for (const change of proposal.changes) {
-    const absolute = resolveInProject(projectRoot, change.path)
-    if (change.operation === 'delete') {
-      await fs.rm(absolute)
-      continue
+    for (const relativePath of [change.fromPath, change.path]) {
+      if (!relativePath || backups.has(relativePath)) continue
+      backups.set(relativePath, await readCurrent(projectRoot, relativePath))
     }
-    if (change.operation === 'move') {
-      const source = resolveInProject(projectRoot, change.fromPath ?? '')
+  }
+
+  try {
+    for (const change of proposal.changes) {
+      const absolute = resolveInProject(projectRoot, change.path)
+      if (change.operation === 'delete') {
+        await fs.rm(absolute)
+        continue
+      }
+      if (change.operation === 'move') {
+        const source = resolveInProject(projectRoot, change.fromPath ?? '')
+        await fs.mkdir(path.dirname(absolute), { recursive: true })
+        await fs.rename(source, absolute)
+        if (change.afterText !== undefined) await fs.writeFile(absolute, change.afterText, 'utf8')
+        continue
+      }
       await fs.mkdir(path.dirname(absolute), { recursive: true })
-      await fs.rename(source, absolute)
-      if (change.afterText !== undefined) await fs.writeFile(absolute, change.afterText, 'utf8')
-      continue
+      await fs.writeFile(absolute, change.afterText ?? '', 'utf8')
     }
-    await fs.mkdir(path.dirname(absolute), { recursive: true })
-    await fs.writeFile(absolute, change.afterText ?? '', 'utf8')
+  } catch (error) {
+    for (const [relativePath, previous] of backups) {
+      const absolute = resolveInProject(projectRoot, relativePath)
+      if (previous === null) {
+        await fs.rm(absolute, { force: true })
+      } else {
+        await fs.mkdir(path.dirname(absolute), { recursive: true })
+        await fs.writeFile(absolute, previous, 'utf8')
+      }
+    }
+    throw error
   }
   discardProposal(sessionId, proposalId)
   return proposal
@@ -186,4 +247,5 @@ export async function applyProposal(
 
 export function clearProposals(sessionId: string): void {
   proposals.delete(sessionId)
+  activeRuns.delete(sessionId)
 }

@@ -4,7 +4,7 @@ import type { Model } from '@earendil-works/pi-ai'
 
 import { buildAgentUserMessage, type ChatAttachmentInput } from './chat-attachments.js'
 import { serverLog, writeAiRecord } from './logging.js'
-import { clearProposals } from './proposals.js'
+import { clearProposals, finishProposalRun, startProposalRun } from './proposals.js'
 import {
   getModelsCollection,
   getProviderInstance,
@@ -16,12 +16,10 @@ import { createFsTools } from './tools/fs-tools.js'
 
 interface SessionEntry {
   agent: Agent
-  skillId: string
   projectRoot: string
   providerId: string
   modelId: string
   createdAt: number
-  writePolicy: 'direct' | 'proposal'
 }
 
 const sessions = new Map<string, SessionEntry>()
@@ -52,33 +50,27 @@ async function resolveModel(providerId: string, modelId: string): Promise<Model<
 
 export interface CreateSessionOptions {
   sessionId: string
-  skillId: string
   projectRoot: string
   providerId: string
   modelId: string
   /** Prior transcript to resume from (pi AgentMessage JSON). */
   history?: AgentMessage[]
-  writePolicy?: 'direct' | 'proposal'
 }
 
 export async function createSession(options: CreateSessionOptions): Promise<void> {
-  const skill = getSkill(options.skillId)
+  const skill = getSkill('screenwriter')
   if (!skill) {
-    throw new SessionError(`Unknown skill: ${options.skillId}`, 404)
+    throw new SessionError('Screenwriter skill is unavailable', 404)
   }
 
   const model = await resolveModel(options.providerId, options.modelId)
   const models = getModelsCollection()
-  const writePolicy =
-    options.writePolicy ?? (options.skillId === 'screenwriter' ? 'proposal' : 'direct')
-
   const agent = new Agent({
     initialState: {
       systemPrompt: buildSystemPrompt(skill),
       model,
       tools: createFsTools(options.projectRoot, {
         sessionId: options.sessionId,
-        writePolicy,
       }),
       messages: options.history ?? [],
     },
@@ -88,17 +80,14 @@ export async function createSession(options: CreateSessionOptions): Promise<void
 
   sessions.set(options.sessionId, {
     agent,
-    skillId: options.skillId,
     projectRoot: options.projectRoot,
     providerId: options.providerId,
     modelId: options.modelId,
     createdAt: Date.now(),
-    writePolicy,
   })
 
   serverLog('info', 'session created', {
     sessionId: options.sessionId,
-    skillId: options.skillId,
     providerId: options.providerId,
     modelId: options.modelId,
     resumedMessages: options.history?.length ?? 0,
@@ -145,6 +134,7 @@ export async function runPrompt(
   }
 
   const startedAt = Date.now()
+  const runId = startProposalRun(sessionId)
   const unsubscribe = entry.agent.subscribe((event) => {
     onEvent(event)
     if (event.type === 'message_end' && event.message.role === 'assistant') {
@@ -152,7 +142,7 @@ export async function runPrompt(
       writeAiRecord({
         type: 'assistant-message',
         sessionId,
-        agentId: entry.skillId,
+        agentId: 'screenwriter',
         provider: entry.providerId,
         model: entry.modelId,
         stopReason: event.message.stopReason,
@@ -177,6 +167,7 @@ export async function runPrompt(
     return entry.agent.state.messages
   } finally {
     unsubscribe()
+    finishProposalRun(sessionId, runId)
   }
 }
 

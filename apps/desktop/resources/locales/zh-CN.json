@@ -11,17 +11,24 @@
   },
   "home": {
     "slogan": "Write what you imagine, and beyond.",
-    "subtitle": "本地 AI 写作工作台：让 Agent 帮你写小说、剧本与 Prompt。",
+    "subtitle": "本地优先的 AI 短视频剧本工作台：从总纲、场景到镜头，和 Agent 一起完成可拍的剧本。",
     "newProject": "新建项目",
-    "newProjectDesc": "选择一个文件夹作为项目目录，所有作品都会以 Markdown 文件保存在本地。",
+    "newProjectDesc": "创建短视频剧本模板，所有内容都会以 Markdown 文件保存在本地。",
+    "createProjectTitle": "创建短视频剧本项目",
+    "createProjectDesc": "选择一个空文件夹，Kenvo 会创建总纲、分集、场景和连续性模板。",
+    "importProjectTitle": "导入已有剧本文件夹",
+    "importProjectDesc": "导入不会改写文件；无法识别的 Markdown 会在工作台中标记为未整理。",
+    "createMode": "创建模板",
+    "createModeHint": "从短视频剧本结构开始",
+    "importMode": "导入文件夹",
+    "importModeHint": "保留现有文件，稍后提案整理",
     "projectTitle": "项目名称（可选）",
-    "projectTemplate": "项目模板",
-    "templates": {
-      "shortVideoDrama": "短视频网剧",
-      "blank": "空白写作项目"
-    },
+    "projectTitlePlaceholder": "例如：深夜便利店",
+    "untitledProject": "未命名短剧",
+    "createFolderEmpty": "创建项目需要选择空文件夹；已有内容请切换为导入。",
     "pickFolder": "选择项目文件夹",
-    "pickFolderAndCreate": "选择文件夹并创建"
+    "pickFolderAndCreate": "选择文件夹并创建",
+    "pickFolderAndImport": "选择文件夹并导入"
   },
   "project": {
     "files": "文件",
@@ -43,17 +50,6 @@
     "editorSourceOnly": "仅支持源码",
     "editorSourceOnlyReason": "此文件包含无法安全保留的 Markdown 语法，请使用源码模式编辑。"
   },
-  "projectViews": {
-    "pickerTitle": "选择项目视图",
-    "pickerDescription": "选择打开这个项目时使用的工作方式。之后可以在项目中切换。",
-    "openView": "进入项目",
-    "invalidConfig": "项目视图配置无法读取。原配置已保留，请选择一个视图重新保存。",
-    "screenplay": {
-      "title": "剧本工作台",
-      "description": "从总览、场景编辑到维护检查，集中管理可用于 AI 视频生成的剧本。"
-    },
-    "switchView": "切换项目视图"
-  },
   "studio": {
     "newProject": "新建项目",
     "projects": "项目",
@@ -61,9 +57,11 @@
     "sortRecent": "最近活跃",
     "sortName": "按名称",
     "noProjects": "还没有项目",
-    "noProjectsHint": "创建一个项目，开始与 Agent 一起写作。",
-    "launcherTitle": "选择一个项目，继续你的故事",
-    "launcherDescription": "Kenvo 会把项目目录里的 Markdown 变成可浏览、可编辑、可持续整理的剧本工作空间。",
+    "noProjectsHint": "创建或导入一个短视频剧本文件夹，开始完成第一集。",
+    "launcherTitle": "把想法推进成可拍的短视频剧本",
+    "launcherDescription": "从总纲到分集、场景和镜头，Kenvo 把本地 Markdown 变成一张可持续编辑的剧本地图。",
+    "workbenchEyebrow": "短视频剧本生产工作台",
+    "importProject": "导入文件夹",
     "deleteProject": "删除项目",
     "deleteProjectTitle": "删除该项目？",
     "deleteProjectDesc": "项目将从 Kenvo 中移除，磁盘上的文件不会被删除。",
@@ -83,7 +81,7 @@
     "stop": "停止",
     "thinking": "思考过程",
     "connecting": "正在连接 Agent…",
-    "noModel": "尚未配置模型。请在 设置 → AI → Models 页启用模型。",
+    "noModel": "尚未配置可用模型。请先连接 Provider，再在 Models 页面启用模型。",
     "serverStopped": "Agent 服务未运行。请在 设置 → AI → 基础配置 中启动。",
     "sessions": "会话",
     "newSession": "新会话",
@@ -109,30 +107,15 @@
     "attachmentVisionRequired": "当前模型不支持图片输入，请切换支持视觉的模型。",
     "attachmentLimit": "最多添加 5 个附件。",
     "unavailable": "不可用",
-    "emptyHint": "从下面的方向开始，或直接描述你的想法。",
+    "emptyHint": "从下面的方向开始，或直接描述你想推进的剧本。",
+    "configureModels": "配置 Provider / Models",
     "starters": {
-      "writer": [
-        "写一篇关于“远行的意义”的随笔",
-        "帮我起草一封正式的求职邮件",
-        "把我的大纲扩展成一篇完整的文章"
-      ],
-      "novelist": [
-        "写一篇 600 字左右的短篇科幻小说",
-        "构思一个故事大纲和三个主要人物",
-        "为第一章写一个吸引人的开场"
-      ],
       "screenwriter": [
-        "写一个 3 分钟短片的开场场景，发生在深夜便利店",
-        "写一段两个对手之间的对峙戏",
-        "写一个只有一场戏、结尾反转的短片剧本"
-      ],
-      "prompt-engineer": [
-        "设计一个代码审查 prompt 模板",
-        "为图像生成模型写一个 prompt",
-        "帮我评审并改进一个现有 prompt"
+        "规划一个 3 分钟短剧的第一集，发生在深夜便利店",
+        "把当前场景拆成可用于 AI 视频生成的镜头卡片",
+        "检查当前剧本的钩子、冲突和结尾卡点"
       ]
     },
-    "skill": "技能",
     "model": "模型",
     "noModelShort": "未配置模型"
   },

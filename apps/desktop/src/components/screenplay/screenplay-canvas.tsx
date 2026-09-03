@@ -1,7 +1,9 @@
 import {
   AlertTriangleIcon,
   ArrowDownIcon,
+  ArrowRightIcon,
   ArrowUpIcon,
+  CheckCircle2Icon,
   ChevronDownIcon,
   ChevronRightIcon,
   ClapperboardIcon,
@@ -11,6 +13,7 @@ import {
   GripVerticalIcon,
   Layers3Icon,
   PencilLineIcon,
+  RefreshCwIcon,
   SparklesIcon,
   WandSparklesIcon,
 } from 'lucide-react'
@@ -34,6 +37,7 @@ interface ScreenplayCanvasProps {
   onSelectScene: (scene: SceneSummary) => void
   onEditScene: (scene: SceneSummary) => void
   onOpenDocument: (document: ScreenplayDocumentRef) => void
+  onRefresh?: () => void
   onReorderScene: (episode: EpisodeSummary, from: number, to: number) => void
   onReorderShot: (scene: SceneSummary, from: number, to: number) => void
 }
@@ -88,17 +92,6 @@ function SceneCard({
 
   return (
     <article
-      draggable
-      onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.setData('text/plain', String(index))
-      }}
-      onDragOver={(event) => event.preventDefault()}
-      onDrop={(event) => {
-        event.preventDefault()
-        const from = Number(event.dataTransfer.getData('text/plain'))
-        if (Number.isInteger(from) && from !== index) onMove(from)
-      }}
       className={cn('relative shrink-0 snap-start', expanded ? 'w-[min(100%,520px)]' : 'w-auto')}
       style={{ minWidth: expanded ? undefined : `${width}px` }}
       data-testid={`scene-card-${scene.id}`}
@@ -334,6 +327,7 @@ export function ScreenplayCanvas({
   onSelectScene,
   onEditScene,
   onOpenDocument,
+  onRefresh,
   onReorderScene,
   onReorderShot,
 }: ScreenplayCanvasProps) {
@@ -354,6 +348,10 @@ export function ScreenplayCanvas({
     onSelectScene(scene)
     setExpandedSceneId((current) => (current === scene.id ? null : scene.id))
   }
+
+  const warnings = episodes.flatMap((episode) =>
+    episode.scenes.flatMap((scene) => scene.warnings.map((message) => ({ scene, message }))),
+  )
 
   if (episodes.length === 0 && unorganized.length === 0) {
     return (
@@ -405,6 +403,66 @@ export function ScreenplayCanvas({
             </span>
           </div>
         </div>
+
+        {warnings.length > 0 ? (
+          <section
+            className="rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3"
+            aria-labelledby="canvas-structure-check"
+            data-testid="canvas-structure-check"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+                <AlertTriangleIcon className="size-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 id="canvas-structure-check" className="text-sm font-semibold">
+                      结构检查 · {warnings.length} 个提醒
+                    </h2>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      这些是基于 Markdown 的确定性检查，可直接定位到对应场景。
+                    </p>
+                  </div>
+                  {onRefresh && (
+                    <Button variant="ghost" size="xs" onClick={onRefresh}>
+                      <RefreshCwIcon />
+                      重新检查
+                    </Button>
+                  )}
+                </div>
+                <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                  {warnings.slice(0, 6).map(({ scene, message }, index) => (
+                    <button
+                      key={`${scene.path}-${message}-${index}`}
+                      type="button"
+                      className="flex min-w-0 items-start gap-2 rounded-md border border-border/70 bg-background/70 px-2.5 py-2 text-left text-[11px] transition-colors hover:border-amber-500/50 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      onClick={() => onEditScene(scene)}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{scene.title}</span>
+                        <span className="mt-0.5 line-clamp-2 block text-muted-foreground">
+                          {message}
+                        </span>
+                      </span>
+                      <ArrowRightIcon className="mt-0.5 size-3 shrink-0 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+                {warnings.length > 6 && (
+                  <p className="mt-2 text-[10px] text-muted-foreground">
+                    还有 {warnings.length - 6} 个提醒，已在场景卡片和剧本地图中标记。
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.04] px-3 py-2 text-[11px] text-emerald-700 dark:text-emerald-300">
+            <CheckCircle2Icon className="size-3.5" />
+            结构检查通过 · 暂无确定性提醒
+          </div>
+        )}
 
         <div className="flex flex-col gap-5">
           {episodes.map((episode) => {

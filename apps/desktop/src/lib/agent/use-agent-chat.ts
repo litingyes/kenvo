@@ -215,7 +215,8 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
           if (
             event.toolName === 'write_file' ||
             event.toolName === 'edit_file' ||
-            event.toolName === 'delete_file'
+            event.toolName === 'delete_file' ||
+            event.toolName === 'propose_file_change'
           ) {
             fileActivityRef.current?.()
           }

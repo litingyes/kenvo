@@ -1,8 +1,7 @@
 import type { ProjectTemplate } from '@/components/screenplay/screenplay-template'
-import type { ScreenplayMode } from '@/components/screenplay/types'
-
 export type ProjectViewId = 'screenplay'
-export type ProjectDefaultMode = Exclude<ScreenplayMode, 'editor'>
+/** Legacy config value retained only so old .kenvo/project.json remains readable. */
+export type ProjectDefaultMode = 'canvas' | 'audit'
 
 export interface ProjectConfig {
   schemaVersion: 1

@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { AgentTool } from '@earendil-works/pi-agent-core'
 import { Type, type TSchema } from '@earendil-works/pi-ai'
 
-import { proposeFileChange, type ProposalOperation } from '../proposals.js'
+import { getActiveProposalRunId, proposeFileChange, type ProposalOperation } from '../proposals.js'
 
 /** Identity helper that preserves TypeBox parameter inference for AgentTool objects. */
 function defineTool<P extends TSchema, D>(def: AgentTool<P, D>): AgentTool<P, D> {
@@ -69,7 +69,7 @@ async function listDirRecursive(
 
 export function createFsTools(
   projectRoot: string,
-  options: { sessionId?: string; writePolicy?: 'direct' | 'proposal' } = {},
+  options: { sessionId?: string } = {},
 ): AgentTool<any>[] {
   const listFiles = defineTool({
     name: 'list_files',
@@ -253,7 +253,7 @@ export function createFsTools(
     },
   })
 
-  if (options.writePolicy !== 'proposal' || !options.sessionId) {
+  if (!options.sessionId) {
     return [listFiles, readFile, writeFile, editFile, deleteFile, searchFiles]
   }
 
@@ -279,13 +279,18 @@ export function createFsTools(
       summary: Type.Optional(Type.String({ description: 'Short human-readable change summary.' })),
     }),
     execute: async (_id, params) => {
-      const result = await proposeFileChange(options.sessionId as string, projectRoot, {
-        path: params.path,
-        operation: params.operation as ProposalOperation,
-        fromPath: params.from_path,
-        content: params.content,
-        summary: params.summary,
-      })
+      const result = await proposeFileChange(
+        options.sessionId as string,
+        projectRoot,
+        {
+          path: params.path,
+          operation: params.operation as ProposalOperation,
+          fromPath: params.from_path,
+          content: params.content,
+          summary: params.summary,
+        },
+        getActiveProposalRunId(options.sessionId as string),
+      )
       return {
         content: [
           {

@@ -2,6 +2,7 @@ import {
   BrainIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  ClapperboardIcon,
   FileCode2Icon,
   FileImageIcon,
   FileTextIcon,
@@ -17,7 +18,6 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { MarkdownStream } from '@/components/agent/markdown-stream'
-import { skillIcon, skillName } from '@/components/agent/skill-meta'
 import {
   Attachment,
   AttachmentAction,
@@ -78,7 +78,6 @@ import {
 } from '@/lib/ai/server-client'
 import type { AiSettings, ModelRef } from '@/lib/ai/settings-bridge'
 import { api } from '@/lib/electron/api'
-import { useProjectStore } from '@/lib/store/project-store'
 import { cn } from '@/lib/utils'
 
 const MAX_ATTACHMENTS = 5
@@ -219,13 +218,13 @@ async function readAttachment(
 
 interface AgentPanelProps {
   sessionId: string
-  skillId: string
   /** The session's stored model; null for legacy sessions (falls back visually). */
   modelRef: ModelRef | null
   providers: ProviderMetadata[]
   settings: AiSettings | null
   modelSupportsImages: boolean
   onConfigChange: (update: { providerId?: string; modelId?: string }) => void
+  onOpenFile: (path: string) => void
   serverPort: number | null
   initialMessages?: UiMessage[]
   onFileActivity?: () => void
@@ -237,16 +236,16 @@ interface AgentPanelProps {
 
 /**
  * The main chat view: agent conversation in a centered reading column.
- * File viewing/editing lives in the auxiliary editor drawer.
+ * File viewing/editing lives in the screenplay workbench's central editor.
  */
 export function AgentPanel({
   sessionId,
-  skillId,
   modelRef,
   providers,
   settings,
   modelSupportsImages,
   onConfigChange,
+  onOpenFile,
   serverPort,
   initialMessages,
   onFileActivity,
@@ -380,7 +379,7 @@ export function AgentPanel({
             <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-5 px-4 py-5 sm:px-6">
               {empty ? (
                 <div className="flex min-h-[18rem] flex-1 flex-col justify-center">
-                  <EmptyState skillId={skillId} onPick={(text) => void submit(text)} />
+                  <EmptyState onPick={(text) => void submit(text)} />
                 </div>
               ) : (
                 messages.map((message, index) => (
@@ -392,6 +391,7 @@ export function AgentPanel({
                     <MessageView
                       message={message}
                       toolExecutions={toolExecutions}
+                      onOpenFile={onOpenFile}
                       streaming={running && index === messages.length - 1}
                     />
                   </MessageScrollerItem>
@@ -683,19 +683,18 @@ function ConfigPickers({
 
 // ---------- Empty state ----------
 
-function EmptyState({ skillId, onPick }: { skillId: string; onPick: (text: string) => void }) {
+function EmptyState({ onPick }: { onPick: (text: string) => void }) {
   const { t } = useTranslation()
-  const Icon = skillIcon(skillId)
-  const starters = t(`agent.starters.${skillId}`, {
+  const starters = t('agent.starters.screenwriter', {
     returnObjects: true,
     defaultValue: [],
   }) as string[]
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
-      <Icon className="size-8 text-muted-foreground" />
+      <ClapperboardIcon className="size-8 text-muted-foreground" />
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium">{skillName(skillId)}</p>
+        <p className="text-sm font-medium">写作教练</p>
         <p className="text-xs text-muted-foreground">{t('agent.empty')}</p>
       </div>
       {starters.length > 0 && (
@@ -722,10 +721,12 @@ function MessageView({
   message,
   toolExecutions,
   streaming,
+  onOpenFile,
 }: {
   message: UiMessage
   toolExecutions: Map<string, ToolExecutionState>
   streaming: boolean
+  onOpenFile: (path: string) => void
 }) {
   if (message.role === 'user') {
     return <UserMessageView message={message} />
@@ -736,6 +737,7 @@ function MessageView({
         message={message}
         toolExecutions={toolExecutions}
         streaming={streaming}
+        onOpenFile={onOpenFile}
       />
     )
   }
@@ -784,10 +786,12 @@ function AssistantMessageView({
   message,
   toolExecutions,
   streaming,
+  onOpenFile,
 }: {
   message: UiAssistantMessage
   toolExecutions: Map<string, ToolExecutionState>
   streaming: boolean
+  onOpenFile: (path: string) => void
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -809,6 +813,7 @@ function AssistantMessageView({
               name={block.name}
               args={block.arguments}
               execution={toolExecutions.get(block.id)}
+              onOpenFile={onOpenFile}
             />
           )
         }
@@ -852,19 +857,20 @@ function ThinkingBlock({ text }: { text: string }) {
 }
 
 /** Tools whose `path` argument points at a real file that can be opened. */
-const OPENABLE_TOOLS = new Set(['write_file', 'edit_file', 'read_file'])
+const OPENABLE_TOOLS = new Set(['write_file', 'edit_file', 'read_file', 'propose_file_change'])
 
 function ToolCallView({
   name,
   args,
   execution,
+  onOpenFile,
 }: {
   name: string
   args: Record<string, unknown>
   execution?: ToolExecutionState
+  onOpenFile: (path: string) => void
 }) {
   const { t } = useTranslation()
-  const openFile = useProjectStore((s) => s.openFile)
   const [open, setOpen] = React.useState(false)
   const status = execution?.status
   const path = typeof args?.path === 'string' ? args.path : undefined
@@ -909,7 +915,7 @@ function ToolCallView({
                 <button
                   type="button"
                   className="mr-1 shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  onClick={() => void openFile(path)}
+                  onClick={() => onOpenFile(path)}
                   aria-label={t('agent.openFile')}
                 >
                   <SquareArrowOutUpRightIcon className="size-3" />

@@ -1,8 +1,6 @@
 export type ScreenplayStatus = 'idea' | 'outline' | 'draft' | 'revision' | 'locked'
 
-export type ScreenplayMode = 'canvas' | 'editor' | 'audit'
-/** @deprecated Use ScreenplayMode for the screenplay workbench sub-view. */
-export type ScreenplayView = ScreenplayMode
+export type ScreenplayMode = 'canvas' | 'editor'
 
 export type ScreenplayAction =
   | 'outline'
@@ -112,6 +110,8 @@ export interface ProposedFileChange {
 
 export interface ChangeSet {
   id: string
+  runId: string
+  createdAt: number
   title: string
   changes: ProposedFileChange[]
 }

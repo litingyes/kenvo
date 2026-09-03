@@ -129,9 +129,16 @@ export function ScreenplaySceneEditor({
   return (
     <div className="flex h-full min-h-0 flex-col bg-background" data-testid="scene-editor">
       <div className="flex min-h-11 shrink-0 items-center gap-2 border-b border-border px-4">
-        <Button variant="ghost" size="sm" onClick={onBack}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          aria-label="返回总览"
+          title="返回总览"
+          className="shrink-0 px-2 xl:px-3"
+        >
           <ArrowLeftIcon />
-          返回总览
+          <span className="hidden xl:inline">返回总览</span>
         </Button>
         <div className="h-4 w-px bg-border" aria-hidden="true" />
         <div className="min-w-0 flex-1">
@@ -139,35 +146,56 @@ export function ScreenplaySceneEditor({
           <p className="truncate text-[10px] text-muted-foreground">{sceneSummary.path}</p>
         </div>
         {dirty ? (
-          <Badge variant="outline" className="text-[10px] text-amber-600">
+          <Badge
+            variant="outline"
+            className="shrink-0 text-[10px] text-amber-600"
+            aria-label="未保存"
+            title="未保存"
+          >
             未保存
           </Badge>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+          <span
+            className="inline-flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground"
+            title="已保存"
+          >
             <CheckIcon className="size-3 text-emerald-600" />
-            已保存
+            <span className="hidden xl:inline">已保存</span>
           </span>
         )}
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             variant={mode === 'cards' ? 'secondary' : 'ghost'}
             size="xs"
             onClick={() => setMode('cards')}
+            aria-label="镜头卡片"
+            title="镜头卡片"
+            className="px-2 xl:px-2.5"
           >
             <FileTextIcon />
-            镜头卡片
+            <span className="hidden xl:inline">镜头卡片</span>
           </Button>
           <Button
             variant={mode === 'source' ? 'secondary' : 'ghost'}
             size="xs"
             onClick={() => setMode('source')}
+            aria-label="源码"
+            title="源码"
+            className="px-2 xl:px-2.5"
           >
             <Code2Icon />
-            源码
+            <span className="hidden xl:inline">源码</span>
           </Button>
-          <Button size="sm" onClick={() => void save()} disabled={!dirty || saving}>
+          <Button
+            size="sm"
+            onClick={() => void save()}
+            disabled={!dirty || saving}
+            aria-label={saving ? '保存中' : t('common.save')}
+            title={saving ? '保存中' : t('common.save')}
+            className="px-2 xl:px-3"
+          >
             <SaveIcon />
-            {saving ? '保存中…' : t('common.save')}
+            <span className="hidden xl:inline">{saving ? '保存中…' : t('common.save')}</span>
           </Button>
         </div>
       </div>
@@ -189,7 +217,7 @@ export function ScreenplaySceneEditor({
           contentClassName="mx-auto w-full max-w-4xl pb-12"
         >
           <div className="flex flex-col gap-4">
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid gap-2 min-[1100px]:grid-cols-3">
               <MetaItem label="地点" value={parsed.location || '待补充'} />
               <MetaItem label="时间" value={parsed.time || '待补充'} />
               <MetaItem label="时长" value={parsed.duration ? `${parsed.duration} 秒` : '待计时'} />
@@ -198,7 +226,7 @@ export function ScreenplaySceneEditor({
               <CardHeader className="px-4 py-3">
                 <CardTitle className="text-sm">场景意图</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-3">
+              <CardContent className="grid gap-3 px-4 pb-4 min-[1100px]:grid-cols-3">
                 <MetaItem label="摘要" value={parsed.summary || '待补充'} stacked />
                 <MetaItem label="冲突" value={parsed.conflict || '待补充'} stacked />
                 <MetaItem label="戏剧变化" value={parsed.turn || '待补充'} stacked />

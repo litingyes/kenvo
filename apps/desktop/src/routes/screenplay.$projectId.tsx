@@ -4,7 +4,7 @@ import { ScreenplayWorkbench } from '@/components/screenplay/screenplay-workbenc
 import type { ScreenplayMode } from '@/components/screenplay/types'
 
 function parseMode(value: unknown): ScreenplayMode | undefined {
-  return value === 'canvas' || value === 'editor' || value === 'audit' ? value : undefined
+  return value === 'canvas' || value === 'editor' ? value : undefined
 }
 
 export interface ScreenplaySearch {

@@ -11,17 +11,24 @@
   },
   "home": {
     "slogan": "Write what you imagine, and beyond.",
-    "subtitle": "A local-first AI writing studio: let agents write novels, screenplays, and prompts with you.",
+    "subtitle": "A local-first AI short-form screenplay workbench: move from outline to scenes and shot cards with an agent.",
     "newProject": "New Project",
-    "newProjectDesc": "Pick a folder as the project directory. Everything is saved locally as Markdown files.",
+    "newProjectDesc": "Create a short-form screenplay template. Everything is saved locally as Markdown files.",
+    "createProjectTitle": "Create a short-form screenplay project",
+    "createProjectDesc": "Choose an empty folder and Kenvo will create an outline, episodes, scenes, and continuity template.",
+    "importProjectTitle": "Import an existing screenplay folder",
+    "importProjectDesc": "Import never rewrites files. Unrecognized Markdown is marked for proposal-based organization in the workbench.",
+    "createMode": "Create template",
+    "createModeHint": "Start with the short-form screenplay structure",
+    "importMode": "Import folder",
+    "importModeHint": "Keep existing files and organize later with a proposal",
     "projectTitle": "Project title (optional)",
-    "projectTemplate": "Project template",
-    "templates": {
-      "shortVideoDrama": "Short-form drama",
-      "blank": "Blank writing project"
-    },
+    "projectTitlePlaceholder": "e.g. The Late-Night Store",
+    "untitledProject": "Untitled short drama",
+    "createFolderEmpty": "New projects require an empty folder. Switch to Import for an existing folder.",
     "pickFolder": "Choose project folder",
-    "pickFolderAndCreate": "Choose folder & create"
+    "pickFolderAndCreate": "Choose folder & create",
+    "pickFolderAndImport": "Choose folder & import"
   },
   "project": {
     "files": "Files",
@@ -43,17 +50,6 @@
     "editorSourceOnly": "Source only",
     "editorSourceOnlyReason": "This file contains Markdown syntax that cannot be safely preserved. Use Source mode to edit it."
   },
-  "projectViews": {
-    "pickerTitle": "Choose a project view",
-    "pickerDescription": "Choose how Kenvo should open this project. You can switch inside the project later.",
-    "openView": "Enter project",
-    "invalidConfig": "The project view config could not be read. The original file was kept; choose a view to save a new config.",
-    "screenplay": {
-      "title": "Screenplay workbench",
-      "description": "Manage AI-video-ready screenplays across the overview, scene editor, and maintenance checks."
-    },
-    "switchView": "Switch project view"
-  },
   "studio": {
     "newProject": "New project",
     "projects": "Projects",
@@ -61,9 +57,11 @@
     "sortRecent": "Recent activity",
     "sortName": "Name",
     "noProjects": "No projects yet",
-    "noProjectsHint": "Create a project to start writing with an agent.",
-    "launcherTitle": "Choose a project and continue the story",
-    "launcherDescription": "Kenvo turns the Markdown in your project folder into a screenplay workspace you can browse, edit, and keep organized.",
+    "noProjectsHint": "Create or import a short-form screenplay folder to start the first episode.",
+    "launcherTitle": "Turn an idea into a shootable short-form screenplay",
+    "launcherDescription": "Kenvo turns local Markdown into a screenplay map you can carry from outline to episodes, scenes, and shots.",
+    "workbenchEyebrow": "Short-form screenplay production workbench",
+    "importProject": "Import folder",
     "deleteProject": "Delete project",
     "deleteProjectTitle": "Delete this project?",
     "deleteProjectDesc": "The project will be removed from Kenvo. Files on disk are not deleted.",
@@ -83,7 +81,7 @@
     "stop": "Stop",
     "thinking": "Thinking",
     "connecting": "Connecting to agent…",
-    "noModel": "No model configured. Enable one in Settings → AI → Models.",
+    "noModel": "No usable model is configured. Connect a provider, then enable a model in Models.",
     "serverStopped": "Agent server is not running. Start it in Settings → AI → Basic.",
     "sessions": "Sessions",
     "newSession": "New Session",
@@ -109,30 +107,15 @@
     "attachmentVisionRequired": "The selected model does not support image input. Switch to a vision model.",
     "attachmentLimit": "You can add up to 5 attachments.",
     "unavailable": "Unavailable",
-    "emptyHint": "Pick a starting point, or describe your own idea below.",
+    "emptyHint": "Pick a direction, or describe the screenplay you want to move forward.",
+    "configureModels": "Configure Provider / Models",
     "starters": {
-      "writer": [
-        "Write an essay about the meaning of travel",
-        "Draft a formal job application email",
-        "Expand my outline into a full article"
-      ],
-      "novelist": [
-        "Write a sci-fi short story of about 600 words",
-        "Outline a story premise with three main characters",
-        "Write the opening scene of chapter one"
-      ],
       "screenwriter": [
-        "Write the opening scene of a 3-minute short film, set in a late-night convenience store",
-        "Write a face-off dialogue scene between two rivals",
-        "Write a single-scene screenplay with a twist ending"
-      ],
-      "prompt-engineer": [
-        "Design a code review prompt template",
-        "Write a prompt for an image-generation model",
-        "Help me critique and improve an existing prompt"
+        "Plan the first episode of a 3-minute short drama set in a late-night store",
+        "Break the current scene into shot cards ready for AI video generation",
+        "Check the screenplay's hook, conflict, and episode cliffhanger"
       ]
     },
-    "skill": "Skill",
     "model": "Model",
     "noModelShort": "No model"
   },

@@ -2,8 +2,6 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   AlertTriangleIcon,
   ArrowLeftIcon,
-  CheckCircle2Icon,
-  ChevronDownIcon,
   ClapperboardIcon,
   FileTextIcon,
   GaugeIcon,
@@ -11,7 +9,6 @@ import {
   ListChecksIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
-  RefreshCwIcon,
   SparklesIcon,
   UsersIcon,
 } from 'lucide-react'
@@ -21,13 +18,6 @@ import { useTranslation } from 'react-i18next'
 import { MarkdownEditor } from '@/components/editor/markdown-editor'
 import { AppHeader } from '@/components/layout/app-header'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import type { UiMessage } from '@/lib/agent/use-agent-chat'
 import {
@@ -38,7 +28,7 @@ import {
 import {
   getAiSettings,
   isModelUsable,
-  resolveDefaultModel,
+  listUsableModels,
   type AiSettings,
   type ModelRef,
 } from '@/lib/ai/settings-bridge'
@@ -49,16 +39,8 @@ import {
   updateChatSessionConfig,
   type ChatSession,
 } from '@/lib/db/chat-repo'
-import { getProject, listTabs, type Project } from '@/lib/db/project-repo'
+import { getProject, type Project } from '@/lib/db/project-repo'
 import { api } from '@/lib/electron/api'
-import {
-  defaultProjectConfig,
-  readProjectConfig,
-  withProjectDefaultMode,
-  writeProjectConfig,
-  type ProjectDefaultMode,
-} from '@/lib/project/project-config'
-import { useProjectStore } from '@/lib/store/project-store'
 
 import { ScreenplayCanvas } from './screenplay-canvas'
 import { ScreenplayChangePreview } from './screenplay-change-preview'
@@ -104,12 +86,18 @@ const EMPTY_CANVAS: ScreenplayCanvasData = {
   warningCount: 0,
 }
 
-function chooseModel(settings: AiSettings, session: ChatSession | null): ModelRef | null {
+function chooseModel(
+  settings: AiSettings,
+  session: ChatSession | null,
+  availableModels?: Set<string>,
+): ModelRef | null {
+  const isAvailable = (ref: ModelRef) =>
+    !availableModels || availableModels.has(`${ref.providerId}::${ref.modelId}`)
   if (session?.provider_id && session.model_id) {
     const stored = { providerId: session.provider_id, modelId: session.model_id }
-    if (isModelUsable(settings, stored)) return stored
+    if (isModelUsable(settings, stored) && isAvailable(stored)) return stored
   }
-  return resolveDefaultModel(settings) ?? null
+  return listUsableModels(settings).find(isAvailable) ?? null
 }
 
 function formatDuration(seconds: number): string {
@@ -131,6 +119,10 @@ function allScenes(data: ScreenplayCanvasData): SceneSummary[] {
   return data.episodes.flatMap((episode) => episode.scenes)
 }
 
+function isSafeProjectRelativePath(filePath: string | null | undefined): filePath is string {
+  return Boolean(filePath && !filePath.startsWith('/') && !filePath.includes('..'))
+}
+
 function makeLocalProposal(
   title: string,
   changes: Array<{ path: string; beforeText: string; afterText: string; summary: string }>,
@@ -138,6 +130,8 @@ function makeLocalProposal(
   return {
     id: `local-${crypto.randomUUID()}`,
     title,
+    runId: `local-${crypto.randomUUID()}`,
+    createdAt: Date.now(),
     changes: changes.map((change) => ({
       ...change,
       operation: 'update' as const,
@@ -153,14 +147,23 @@ const ORGANIZE_PROMPT = `请整理当前项目中的剧本 Markdown 结构。
 整理边界：优先只移动或改名文件，保留正文内容和未知字段；只有为了让剧本索引识别文件时，才补齐最小 frontmatter 或索引。不要重写正文，不要拆分或合并文档，不要删除文件。所有移动和修改都必须使用 propose_file_change，移动使用 operation=move 和 from_path。目标路径已存在时不要覆盖，保留为未整理并说明原因。完成后生成一份可审核的结构整理提案。`
 
 async function applyLocalProposal(rootPath: string, proposal: AgentProposal): Promise<void> {
+  const backups = new Map<string, string>()
   for (const change of proposal.changes) {
     const current = await api.fs.readTextFile(`${rootPath}/${change.path}`)
     if (current !== change.beforeText) {
       throw new Error(`文件在预览后发生变化：${change.path}`)
     }
+    backups.set(change.path, current)
   }
-  for (const change of proposal.changes) {
-    await api.fs.writeTextFile(`${rootPath}/${change.path}`, change.afterText ?? '')
+  try {
+    for (const change of proposal.changes) {
+      await api.fs.writeTextFile(`${rootPath}/${change.path}`, change.afterText ?? '')
+    }
+  } catch (error) {
+    for (const [relativePath, content] of backups) {
+      await api.fs.writeTextFile(`${rootPath}/${relativePath}`, content).catch(() => {})
+    }
+    throw error
   }
 }
 
@@ -340,101 +343,6 @@ function MapDocumentButton({
   )
 }
 
-function AuditPanel({
-  data,
-  onSelectScene,
-  onRefresh,
-}: {
-  data: ScreenplayCanvasData
-  onSelectScene: (scene: SceneSummary) => void
-  onRefresh: () => void
-}) {
-  const issues = data.episodes.flatMap((episode) =>
-    episode.scenes.flatMap((scene) =>
-      scene.warnings.map((message, index) => ({ scene, message, index })),
-    ),
-  )
-  return (
-    <ScrollArea
-      className="h-full"
-      viewportClassName="px-6 py-6"
-      contentClassName="mx-auto w-full max-w-3xl pb-10"
-    >
-      <div className="flex flex-col gap-5" data-testid="screenplay-audit">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2 text-[10px] font-medium tracking-[0.18em] text-amber-600 uppercase">
-              <ListChecksIcon className="size-3.5" />
-              Continuity desk
-            </div>
-            <h1 className="mt-1 text-xl font-semibold tracking-tight">剧本维护检查</h1>
-            <p className="mt-1 text-xs text-muted-foreground">这些是建议，不会阻止你继续创作。</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCwIcon />
-            重新检查
-          </Button>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <AuditStat label="场景" value={String(data.totalScenes)} />
-          <AuditStat label="镜头" value={String(data.totalShots)} />
-          <AuditStat
-            label="提醒"
-            value={String(data.warningCount)}
-            warning={data.warningCount > 0}
-          />
-        </div>
-        {issues.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] px-5 py-12 text-center">
-            <CheckCircle2Icon className="size-7 text-emerald-600" />
-            <p className="text-sm font-medium">当前没有结构提醒</p>
-            <p className="text-xs text-muted-foreground">
-              继续写作，新的文件变化会自动刷新检查结果。
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {issues.map(({ scene, message, index }) => (
-              <button
-                key={`${scene.id}-${index}`}
-                type="button"
-                className="flex items-start gap-3 rounded-lg border border-border/70 bg-card px-3 py-3 text-left transition-colors hover:border-amber-500/50 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                onClick={() => onSelectScene(scene)}
-              >
-                <AlertTriangleIcon className="mt-0.5 size-4 shrink-0 text-amber-600" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs font-medium">{message}</span>
-                  <span className="mt-1 block truncate text-[10px] text-muted-foreground">
-                    {scene.path}
-                  </span>
-                </span>
-                <ArrowLeftIcon className="mt-0.5 size-3 rotate-180 text-muted-foreground" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </ScrollArea>
-  )
-}
-
-function AuditStat({
-  label,
-  value,
-  warning = false,
-}: {
-  label: string
-  value: string
-  warning?: boolean
-}) {
-  return (
-    <div className="rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 text-lg font-semibold ${warning ? 'text-amber-600' : ''}`}>{value}</p>
-    </div>
-  )
-}
-
 export function ScreenplayWorkbench({
   projectId,
   initialMode,
@@ -446,7 +354,11 @@ export function ScreenplayWorkbench({
   const [data, setData] = React.useState<ScreenplayCanvasData>(EMPTY_CANVAS)
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null)
   const [view, setView] = React.useState<ScreenplayMode>(initialMode ?? 'canvas')
-  const [documentPath, setDocumentPath] = React.useState<string | null>(initialDocumentPath ?? null)
+  const [documentPath, setDocumentPath] = React.useState<string | null>(
+    initialMode === 'editor' && isSafeProjectRelativePath(initialDocumentPath)
+      ? initialDocumentPath
+      : null,
+  )
   const [serverPort, setServerPort] = React.useState<number | null>(null)
   const [session, setSession] = React.useState<ChatSession | null>(null)
   const [historyMessages, setHistoryMessages] = React.useState<UiMessage[]>([])
@@ -476,12 +388,13 @@ export function ScreenplayWorkbench({
   } | null>(null)
 
   const selectedScene = findScene(data, selectedSceneId)
-  const allProposals = [...serverProposals, ...localProposals]
+  const allProposals = [...serverProposals, ...localProposals].sort(
+    (a, b) => a.createdAt - b.createdAt,
+  )
   const refreshIndex = React.useCallback(async () => {
     if (!project) return
     const next = await loadScreenplayIndex(project.path, project.title)
     setData(next)
-    useProjectStore.getState().bumpTree()
     setSelectedSceneId((current) => (current && findScene(next, current) ? current : null))
   }, [project])
 
@@ -494,44 +407,33 @@ export function ScreenplayWorkbench({
     }
   }, [serverPort, session])
 
-  const persistDefaultMode = React.useCallback(
-    async (mode: ProjectDefaultMode) => {
-      if (!project) return
-      const result = await readProjectConfig(project.path)
-      if (result.status === 'invalid') return
-      const config = result.status === 'valid' ? result.config : defaultProjectConfig('blank')
-      await writeProjectConfig(project.path, withProjectDefaultMode(config, mode))
-    },
-    [project],
-  )
-
   const changeMode = React.useCallback(
     (next: ScreenplayMode, nextDocumentPath: string | null = null) => {
+      const safeDocumentPath = isSafeProjectRelativePath(nextDocumentPath) ? nextDocumentPath : null
       setView(next)
-      setDocumentPath(next === 'editor' ? nextDocumentPath : null)
+      setDocumentPath(next === 'editor' ? safeDocumentPath : null)
       void navigate({
         to: '/screenplay/$projectId',
         params: { projectId },
         search:
-          next === 'editor' && nextDocumentPath
-            ? { mode: next, file: nextDocumentPath }
+          next === 'editor' && safeDocumentPath
+            ? { mode: next, file: safeDocumentPath }
             : { mode: next },
       }).catch((error: unknown) => {
         setServerError(error instanceof Error ? error.message : String(error))
       })
-      if (next === 'canvas' || next === 'audit') {
-        void persistDefaultMode(next).catch((error: unknown) => {
-          setServerError(error instanceof Error ? error.message : String(error))
-        })
-      }
     },
-    [navigate, persistDefaultMode, projectId],
+    [navigate, projectId],
   )
 
   React.useEffect(() => {
     if (!initialMode) return
     setView(initialMode)
-    setDocumentPath(initialMode === 'editor' ? (initialDocumentPath ?? null) : null)
+    setDocumentPath(
+      initialMode === 'editor' && isSafeProjectRelativePath(initialDocumentPath)
+        ? initialDocumentPath
+        : null,
+    )
   }, [initialDocumentPath, initialMode])
 
   React.useEffect(() => {
@@ -563,11 +465,6 @@ export function ScreenplayWorkbench({
       try {
         const foundProject = await getProject(projectId)
         if (!foundProject) throw new Error('找不到这个项目。')
-        const projectConfig = await readProjectConfig(foundProject.path)
-        if (!initialMode && projectConfig.status === 'valid') {
-          setView(projectConfig.config.screenplay.defaultMode)
-          setDocumentPath(null)
-        }
         const nextData = await loadScreenplayIndex(foundProject.path, foundProject.title)
         const aiSettings = await getAiSettings()
         const client = serverPort ? createAgentServerClient(serverPort) : null
@@ -600,27 +497,22 @@ export function ScreenplayWorkbench({
         setSettings(aiSettings)
         setProviders(availableProviders)
         setModelInputs(Object.fromEntries(modelEntries.flat()))
-        const tabs = await listTabs(foundProject.id)
-        useProjectStore.getState().hydrate(foundProject, tabs)
-
         const projectSessions = await listChatSessions(foundProject.id)
         const existing = projectSessions.find((item) => item.skill_id === 'screenwriter') ?? null
-        const model = chooseModel(aiSettings, existing)
+        const model = chooseModel(
+          aiSettings,
+          existing,
+          new Set(modelEntries.flat().map(([key]) => key)),
+        )
         if (!model) {
           setSession(null)
           setHistoryMessages([])
           setServerReady(Boolean(client))
-          setServerError(t('agent.noModel'))
+          setServerError(null)
           return
         }
         const nextSession =
-          existing ??
-          (await createChatSession(
-            foundProject.id,
-            'screenwriter',
-            model.providerId,
-            model.modelId,
-          ))
+          existing ?? (await createChatSession(foundProject.id, model.providerId, model.modelId))
         if (
           existing &&
           (existing.provider_id !== model.providerId || existing.model_id !== model.modelId)
@@ -636,12 +528,10 @@ export function ScreenplayWorkbench({
           await client.destroySession(nextSession.id).catch(() => {})
           await client.createSession({
             sessionId: nextSession.id,
-            skillId: 'screenwriter',
             projectRoot: foundProject.path,
             providerId: model.providerId,
             modelId: model.modelId,
             history,
-            writePolicy: 'proposal',
           })
           createdSessionId = nextSession.id
         }
@@ -651,7 +541,11 @@ export function ScreenplayWorkbench({
         setServerReady(Boolean(client))
         setServerError(null)
       } catch (error) {
-        if (!cancelled) setServerError(error instanceof Error ? error.message : String(error))
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : String(error)
+          const isAiSetupError = /provider|model|session|skill|api key/i.test(message)
+          setServerError(isAiSetupError ? null : message)
+        }
       }
     }
     if (serverPort) void setup()
@@ -680,11 +574,16 @@ export function ScreenplayWorkbench({
 
   const handleEditScene = (scene: SceneSummary) => {
     setSelectedSceneId(scene.id)
-    changeMode('editor', scene.path)
+    changeMode('editor')
   }
 
   const handleOpenDocument = (document: ScreenplayDocumentRef) => {
     changeMode('editor', document.path)
+  }
+
+  const handleOpenFile = (path: string) => {
+    if (!isSafeProjectRelativePath(path)) return
+    changeMode('editor', path)
   }
 
   const handleOrganize = () => {
@@ -758,15 +657,7 @@ export function ScreenplayWorkbench({
         setLocalProposals((previous) => previous.filter((item) => item.id !== proposal.id))
       } else {
         if (!session) return
-        const applied = await createAgentServerClient(serverPort).applyProposal(
-          session.id,
-          proposal.id,
-        )
-        for (const change of applied.changes) {
-          if (change.operation === 'move' && change.fromPath) {
-            await useProjectStore.getState().remapFilePath(change.fromPath, change.path)
-          }
-        }
+        await createAgentServerClient(serverPort).applyProposal(session.id, proposal.id)
         await refreshProposals()
       }
       await refreshIndex()
@@ -792,7 +683,6 @@ export function ScreenplayWorkbench({
   const handleConfigChange = async (update: { providerId?: string; modelId?: string }) => {
     if (!session || !project || !serverPort || !settings || !update.providerId || !update.modelId)
       return
-    const nextSkill = session.skill_id
     const client = createAgentServerClient(serverPort)
     const rows = await listChatMessages(session.id)
     await updateChatSessionConfig(session.id, {
@@ -802,12 +692,10 @@ export function ScreenplayWorkbench({
     await client.destroySession(session.id).catch(() => {})
     await client.createSession({
       sessionId: session.id,
-      skillId: nextSkill,
       projectRoot: project.path,
       providerId: update.providerId,
       modelId: update.modelId,
       history: rows.map((row) => JSON.parse(row.message)),
-      writePolicy: nextSkill === 'screenwriter' ? 'proposal' : 'direct',
     })
     setSession((previous) =>
       previous
@@ -870,22 +758,7 @@ export function ScreenplayWorkbench({
           <div className="flex min-w-0 items-center gap-2">
             <ClapperboardIcon className="size-3.5 shrink-0 text-amber-600" />
             <span className="truncate text-xs font-medium">{project.title}</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className="flex items-center gap-1 rounded px-1.5 py-1 text-[10px] text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={t('projectViews.switchView')}
-              >
-                <span>/ {t('projectViews.screenplay.title')}</span>
-                <ChevronDownIcon className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuRadioGroup value="screenplay">
-                  <DropdownMenuRadioItem value="screenplay" className="text-xs">
-                    {t('projectViews.screenplay.title')}
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <span className="text-[10px] text-muted-foreground">/ 剧本工作台</span>
           </div>
         }
         rightContent={
@@ -896,7 +769,7 @@ export function ScreenplayWorkbench({
           </div>
         }
       />
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(180px,220px)_minmax(0,1fr)_minmax(300px,360px)]">
+      <div className="grid min-h-0 flex-1 grid-cols-[minmax(150px,180px)_minmax(240px,1fr)_minmax(240px,280px)]">
         <ScriptMap
           data={data}
           selectedSceneId={selectedSceneId}
@@ -918,14 +791,8 @@ export function ScreenplayWorkbench({
               label="场景编辑"
               disabled={!selectedScene && !documentPath}
             />
-            <ViewButton
-              active={view === 'audit'}
-              onClick={() => changeMode('audit')}
-              icon={<ListChecksIcon />}
-              label="维护检查"
-            />
             <span className="ml-auto text-[10px] text-muted-foreground">
-              {data.warningCount > 0 ? `${data.warningCount} 个提醒` : '结构清晰'}
+              {data.warningCount > 0 ? `${data.warningCount} 个结构提醒` : '结构清晰'}
             </span>
           </div>
           {serverError && (
@@ -948,15 +815,9 @@ export function ScreenplayWorkbench({
                 onSelectScene={handleSelectScene}
                 onEditScene={handleEditScene}
                 onOpenDocument={handleOpenDocument}
+                onRefresh={() => void refreshIndex()}
                 onReorderScene={handleReorderScene}
                 onReorderShot={handleReorderShot}
-              />
-            )}
-            {view === 'audit' && (
-              <AuditPanel
-                data={data}
-                onSelectScene={handleEditScene}
-                onRefresh={() => void refreshIndex()}
               />
             )}
             {view === 'editor' && sceneForEditor && !documentForEditor && (
@@ -986,7 +847,6 @@ export function ScreenplayWorkbench({
         {session ? (
           <ScreenplayWritingCoach
             sessionId={session.id}
-            skillId={session.skill_id}
             modelRef={modelRef}
             providers={providers}
             settings={settings}
@@ -1001,6 +861,7 @@ export function ScreenplayWorkbench({
             proposals={allProposals}
             proposalBusy={proposalBusy}
             onConfigChange={(update) => void handleConfigChange(update)}
+            onOpenFile={handleOpenFile}
             onFileActivity={() => void refreshIndex()}
             onSessionActivity={() => {}}
             onRunningChange={setAgentRunning}
@@ -1015,6 +876,7 @@ export function ScreenplayWorkbench({
             proposalBusy={proposalBusy}
             onApplyProposal={(proposal) => void handleApplyProposal(proposal)}
             onDiscardProposal={(proposal) => void handleDiscardProposal(proposal)}
+            onConfigureAi={() => void api.window.openSettings('settings/ai/providers')}
           />
         )}
       </div>
@@ -1058,13 +920,16 @@ function CoachUnavailable({
   proposalBusy,
   onApplyProposal,
   onDiscardProposal,
+  onConfigureAi,
 }: {
   message: string
   proposals: AgentProposal[]
   proposalBusy: boolean
   onApplyProposal: (proposal: AgentProposal) => void
   onDiscardProposal: (proposal: AgentProposal) => void
+  onConfigureAi: () => void
 }) {
+  const { t } = useTranslation()
   return (
     <aside className="flex h-full min-h-0 flex-col border-l border-border bg-background">
       <div className="border-b border-border px-4 py-4">
@@ -1084,8 +949,11 @@ function CoachUnavailable({
           <p className="text-sm font-medium">AI 写作暂不可用</p>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{message}</p>
           <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
-            Canvas、场景编辑和维护检查仍可继续使用。配置模型后即可启用提案式改稿。
+            Canvas、场景编辑和结构检查仍可继续使用。配置模型后即可启用提案式改稿。
           </p>
+          <Button className="mt-4" size="sm" onClick={onConfigureAi}>
+            {t('agent.configureModels')}
+          </Button>
         </div>
       </div>
     </aside>

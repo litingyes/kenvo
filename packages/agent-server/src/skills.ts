@@ -7,24 +7,12 @@ import { NodeExecutionEnv } from '@earendil-works/pi-agent-core/node'
 
 import { serverLog } from './logging.js'
 
-export interface SkillMetadata {
-  id: string
-  name: string
-  description: string
-}
-
-/**
- * Shared base prompt for every writing session. The selected skill's
- * instructions are appended on top of this (see {@link buildSystemPrompt}).
- */
+/** Shared base prompt for the fixed Screenwriter writing session. */
 const BASE_SYSTEM_PROMPT = `You are Kenvo, an AI writing agent built into the Kenvo writing studio.
 
 You work inside a writing project directory using your file tools:
 - list_files to explore the project structure
 - read_file to read existing content
-- write_file to create or fully rewrite files
-- edit_file to make targeted edits to existing files (preferred for small changes)
-- delete_file to remove files (only when asked)
 - search_files to find text across the project
 - propose_file_change to prepare a reviewable file change without writing it yet
 
@@ -79,15 +67,7 @@ export function getSkill(id: string): Skill | undefined {
   return skillMap.get(id)
 }
 
-export function listSkills(): SkillMetadata[] {
-  return Array.from(skillMap.values()).map((skill) => ({
-    id: skill.name,
-    name: skill.name,
-    description: skill.description,
-  }))
-}
-
-/** Compose the session system prompt: shared base + the selected skill. */
+/** Compose the fixed Screenwriter session prompt. */
 export function buildSystemPrompt(skill: Skill): string {
   return `${BASE_SYSTEM_PROMPT}\n\nYou are currently writing with the "${skill.name}" skill. Follow these skill instructions:\n\n${skill.content}`
 }

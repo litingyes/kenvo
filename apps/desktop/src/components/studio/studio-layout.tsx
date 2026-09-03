@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 
 import { AppHeader } from '@/components/layout/app-header'
 import { NewProjectDialog } from '@/components/project/new-project-dialog'
-import { ProjectViewPicker } from '@/components/project/project-view-picker'
 import { StudioSidebar } from '@/components/studio/studio-sidebar'
 import {
   AlertDialog,
@@ -28,18 +27,12 @@ import {
   touchProject,
   type Project,
 } from '@/lib/db/project-repo'
-import {
-  defaultProjectConfig,
-  readProjectConfig,
-  writeProjectConfig,
-  type ProjectConfig,
-  type ProjectViewId,
-} from '@/lib/project/project-config'
 import { useProjectStore } from '@/lib/store/project-store'
 
 type ConfirmAction = { type: 'deleteProject'; projectId: string } | null
+export type ProjectDialogMode = 'create' | 'import'
 
-/** Project launcher: project selection now leads to a configured project view. */
+/** Project launcher: every project opens directly in the screenplay workbench. */
 export function StudioLayout() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -49,9 +42,7 @@ export function StudioLayout() {
   const [projects, setProjects] = React.useState<Project[]>([])
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
   const [newProjectOpen, setNewProjectOpen] = React.useState(false)
-  const [pickerProject, setPickerProject] = React.useState<Project | null>(null)
-  const [pickerConfig, setPickerConfig] = React.useState<ProjectConfig | null>(null)
-  const [pickerInvalid, setPickerInvalid] = React.useState(false)
+  const [projectDialogMode, setProjectDialogMode] = React.useState<ProjectDialogMode>('create')
   const [confirmAction, setConfirmAction] = React.useState<ConfirmAction>(null)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -65,40 +56,15 @@ export function StudioLayout() {
     })
   }, [refreshProjects])
 
-  const openProjectView = React.useCallback(
-    async (project: Project, viewId: ProjectViewId, existingConfig: ProjectConfig | null) => {
-      if (viewId !== 'screenplay') return
-      const config = existingConfig ?? defaultProjectConfig('blank')
-      await writeProjectConfig(project.path, {
-        ...config,
-        views: ['screenplay'],
-        defaultView: 'screenplay',
-      })
-      await touchProject(project.id)
-      setActiveProjectId(project.id)
-      setPickerProject(null)
-      await navigate({ to: '/screenplay/$projectId', params: { projectId: project.id } })
-    },
-    [navigate],
-  )
-
   const handleOpenProject = async (projectId: string) => {
     try {
       const project =
         projects.find((item) => item.id === projectId) ?? (await getProject(projectId))
       if (!project) return
       setError(null)
-      const result = await readProjectConfig(project.path)
-      if (result.status === 'valid') {
-        const viewId = result.config.defaultView
-        if (viewId === 'screenplay') {
-          await openProjectView(project, viewId, result.config)
-          return
-        }
-      }
-      setPickerProject(project)
-      setPickerConfig(result.config)
-      setPickerInvalid(result.status === 'invalid')
+      await touchProject(project.id)
+      setActiveProjectId(project.id)
+      await navigate({ to: '/screenplay/$projectId', params: { projectId: project.id } })
     } catch (reason: unknown) {
       setError(reason instanceof Error ? reason.message : String(reason))
     }
@@ -110,6 +76,11 @@ export function StudioLayout() {
     if (!project) return
     setActiveProjectId(project.id)
     await navigate({ to: '/screenplay/$projectId', params: { projectId } })
+  }
+
+  const openProjectDialog = (mode: ProjectDialogMode) => {
+    setProjectDialogMode(mode)
+    setNewProjectOpen(true)
   }
 
   const handleDeleteProject = async () => {
@@ -159,7 +130,7 @@ export function StudioLayout() {
                     onDeleteProject={(id) =>
                       setConfirmAction({ type: 'deleteProject', projectId: id })
                     }
-                    onNewProject={() => setNewProjectOpen(true)}
+                    onNewProject={() => openProjectDialog('create')}
                   />
                 </div>
               </div>
@@ -180,10 +151,16 @@ export function StudioLayout() {
                 </div>
               }
               rightContent={
-                <Button variant="outline" size="xs" onClick={() => setNewProjectOpen(true)}>
-                  <PlusIcon />
-                  {t('studio.newProject')}
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Button variant="ghost" size="xs" onClick={() => openProjectDialog('import')}>
+                    <FolderIcon />
+                    {t('studio.importProject')}
+                  </Button>
+                  <Button variant="outline" size="xs" onClick={() => openProjectDialog('create')}>
+                    <PlusIcon />
+                    {t('studio.newProject')}
+                  </Button>
+                </div>
               }
             />
             <ScrollArea
@@ -198,7 +175,7 @@ export function StudioLayout() {
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-2 text-[10px] font-medium tracking-[0.18em] text-amber-600 uppercase">
                     <SparklesIcon className="size-3.5" />
-                    {t('projectViews.screenplay.title')}
+                    {t('studio.workbenchEyebrow')}
                   </div>
                   <h1 className="mt-2 text-2xl font-semibold tracking-tight">
                     {t('studio.launcherTitle')}
@@ -225,10 +202,20 @@ export function StudioLayout() {
                         {t('studio.noProjectsHint')}
                       </p>
                     </div>
-                    <Button size="sm" onClick={() => setNewProjectOpen(true)}>
-                      <PlusIcon />
-                      {t('studio.newProject')}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={() => openProjectDialog('create')}>
+                        <PlusIcon />
+                        {t('studio.newProject')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openProjectDialog('import')}
+                      >
+                        <FolderIcon />
+                        {t('studio.importProject')}
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -266,20 +253,8 @@ export function StudioLayout() {
       <NewProjectDialog
         open={newProjectOpen}
         onOpenChange={setNewProjectOpen}
+        mode={projectDialogMode}
         onCreated={(id) => void handleProjectCreated(id)}
-      />
-
-      <ProjectViewPicker
-        open={pickerProject !== null}
-        project={pickerProject}
-        config={pickerConfig}
-        invalidConfig={pickerInvalid}
-        onOpenChange={(open) => {
-          if (!open) setPickerProject(null)
-        }}
-        onConfirm={(viewId) => {
-          if (pickerProject) void openProjectView(pickerProject, viewId, pickerConfig)
-        }}
       />
 
       <AlertDialog

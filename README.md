@@ -2,35 +2,36 @@
 
 > Write what you imagine, and beyond.
 
-Kenvo is a local-first AI writing studio. Autonomous writing agents plan, draft, and revise novels, screenplays, and prompts as real Markdown files in your own folders — you steer, they write.
+Kenvo is a local-first AI short-form screenplay production workbench. It turns a folder of Markdown into a practical loop from outline and episodes to scenes, shots, proposals, and structural checks.
 
 ---
 
 ## 1. Project Introduction
 
-Kenvo is an Electron desktop app built around a simple idea: a writing project is just a folder of Markdown files, and an AI agent should be able to work in it like a co-author. A local agent server runs a real agent loop (model → tools → model → …) with file tools scoped to your project directory, while the desktop app gives you a document tree, a Markdown editor, and an agent panel where you can watch and steer the work as it happens.
+Kenvo is an Electron desktop app built around a simple idea: a writing project is just a folder of Markdown files, and an AI agent should be able to work in it like a co-author. A local agent server runs a real agent loop (model → tools → model → …) with file tools scoped to your project directory, while the desktop app gives you a screenplay map, a central Markdown editor, and an agent panel where you can watch and steer the work as it happens.
 
 ### Target Users
 
-- Fiction writers who want AI help with long-form work (novels, novellas, short stories)
-- Screenwriters drafting scenes, dialogue, and act structure
-- Prompt engineers maintaining libraries of LLM prompts
-- Anyone who wants local-first, file-based AI writing instead of a chat box
+- AI video short-drama creators planning episodes, scenes, and shot prompts
+- Screenwriters who want a visual script map with a central Markdown editor
+- Creators who want local-first, file-based AI writing instead of a chat box
 
 ### Core Value
 
 - **Local-first**: projects are plain folders of Markdown files; metadata and chat history live in SQLite. Your words never leave your machine except to the model APIs you choose.
-- **Real agent loop**: the writing agents read the project, write and edit files, and iterate — not one-shot generation.
+- **Production loop**: the Screenwriter agent reads the project, proposes grouped changes, and helps move a script from outline to shot-ready scenes.
 - **Steerable**: interrupt the agent mid-run to redirect the work ("rename the protagonist", "make it darker") without losing progress.
-- **Long-form continuity**: chapters, characters, and worldbuilding stay consistent because agents re-read the project before writing more.
+- **Reviewable writes**: every Agent run can produce before/after diffs; changes are hash-checked before batch confirmation and never silently overwrite conflicts.
+- **Scene structure**: the screenplay map and Canvas expose episodes, scenes, shots, unorganized files, and deterministic structure reminders.
 
 ### Key Features
 
-- Four built-in writing agents: **Writer** (general), **Novelist**, **Screenwriter**, **Prompt Engineer** — each with its own craft instructions and project template
-- Project = local folder + Markdown files, with an in-app document tree and CodeMirror-based Markdown editor
+- Focused Screenwriter agent for AI-video short dramas, using proposal writes by default
+- Project = local folder + Markdown files, with a screenplay map, Canvas, scene editor, and central CodeMirror Markdown editor
 - Agent panel with streaming output, tool-call cards, thinking blocks, token/cost display, mid-run steering, and abort
 - Chat history persisted per project; resume where you left off after restart
-- Multi-provider models: OpenAI / Anthropic / DeepSeek / Moonshot / Alibaba Cloud / xAI, with per-agent model assignment
+- Multi-provider models: OpenAI / Anthropic / DeepSeek / Moonshot / Alibaba Cloud / xAI
+- Import existing folders without writing template files; organize unrecognized Markdown through a proposal
 - Themes: light / dark / system; English and Simplified Chinese UI
 
 ### Tech Stack
@@ -75,7 +76,7 @@ pnpm install
 1. Launch the app and go to **Settings → AI → Providers**
 2. Select a provider, enter your API key (and optional Base URL), click **Test**, then save
 3. Go to **Settings → AI → Models** and enable the models you want to use
-4. Go to **Settings → AI → Agents** and assign a default model to each writing agent (or leave on Auto)
+4. Return to the screenplay workbench; choose a model from the coach header when you have more than one enabled model
 
 > The agent server listens on port `32420` by default; override it with the `AGENT_SERVER_PORT` environment variable.
 
@@ -91,10 +92,10 @@ pnpm dev
 
 ### Your First Project
 
-1. On the home screen, click **New Project**
-2. Pick an agent type (e.g. Novelist) and choose a folder — Kenvo materializes a starter structure (`outline.md`, `characters/`, `chapters/`, …)
-3. Open a document from the file tree, then tell the agent in the right panel what to write
-4. Watch it read, plan, and write files directly into your folder; steer it mid-run whenever you like
+1. On the home screen, click **New Project** to create the short-drama template, or **Import folder** to open an existing directory without changing its files
+2. Start from the screenplay map: open the outline, episode outline, scene, or shot card in the central editor
+3. Ask the Screenwriter coach to plan, break down, revise, or organize; one run produces a grouped proposal
+4. Inspect each file's before/after Diff, confirm the batch write, then use Canvas structure reminders to continue polishing
 
 ### Build and Package
 
@@ -122,10 +123,10 @@ packages/agent-server Local Hono server: agent sessions, providers, SSE streamin
 apps/portal           Astro landing page
 ```
 
-- **Agent runtime**: `@earendil-works/pi-agent-core` runs the tool loop (list/read/write/edit/delete/search files scoped to the project root), with steering, abort, and per-turn usage/cost events.
+- **Agent runtime**: `@earendil-works/pi-agent-core` runs the tool loop (list/read/search plus reviewable file proposals scoped to the project root), with steering, abort, and per-turn usage/cost events.
 - **Providers**: `@earendil-works/pi-ai` supplies model catalogs (context window, reasoning, cost metadata) and streaming; API keys configured in the UI are injected into the local server.
 - **Streaming**: the server forwards raw agent events over SSE (`POST /sessions/:id/messages`); the renderer incrementally builds the transcript.
-- **Persistence**: project metadata, open tabs, and chat transcripts are stored in SQLite; document content is plain Markdown in the project folder.
+- **Persistence**: project metadata and chat transcripts are stored in SQLite; document content is plain Markdown in the project folder. Open-tab UI state is intentionally ephemeral and legacy `project_tabs` data is removed during migration.
 
 ---
 

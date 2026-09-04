@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ArrowDownIcon } from "lucide-react"
 
+const SCROLL_EDGE_THRESHOLD = 8
+
 function MessageScrollerProvider(
   props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>
 ) {
@@ -34,8 +36,23 @@ function MessageScroller({
 
 function MessageScrollerViewport({
   className,
+  onScroll,
   ...props
 }: React.ComponentProps<typeof MessageScrollerPrimitive.Viewport>) {
+  const { scrollToEnd } = useMessageScroller()
+  const handleScroll = React.useCallback(
+    (event: React.UIEvent<HTMLDivElement>) => {
+      onScroll?.(event)
+
+      const viewport = event.currentTarget
+      const distanceFromEnd = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight
+      if (distanceFromEnd <= SCROLL_EDGE_THRESHOLD) {
+        scrollToEnd({ behavior: "auto" })
+      }
+    },
+    [onScroll, scrollToEnd]
+  )
+
   return (
     <MessageScrollerPrimitive.Viewport
       data-slot="message-scroller-viewport"
@@ -44,6 +61,7 @@ function MessageScrollerViewport({
         className
       )}
       {...props}
+      onScroll={handleScroll}
     />
   )
 }

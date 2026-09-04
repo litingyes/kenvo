@@ -18,6 +18,7 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { MarkdownStream } from '@/components/agent/markdown-stream'
+import { QuestionnaireCard } from '@/components/agent/questionnaire-card'
 import {
   Attachment,
   AttachmentAction,
@@ -76,6 +77,7 @@ import {
   createAgentServerClient,
   type ChatAttachmentPayload,
   type ProviderMetadata,
+  type QuestionnaireResponsePayload,
 } from '@/lib/ai/server-client'
 import type { AiSettings, ModelRef } from '@/lib/ai/settings-bridge'
 import { api } from '@/lib/electron/api'
@@ -264,6 +266,33 @@ export function AgentPanel({
     onRunningChange,
     onAgentEnd,
   })
+  const questionnairePending = React.useMemo(
+    () =>
+      Array.from(toolExecutions.values()).some(
+        (execution) => execution.toolName === 'questionnaire' && execution.status === 'running',
+      ),
+    [toolExecutions],
+  )
+  const questionnaireResults = React.useMemo(
+    () =>
+      new Map(
+        messages
+          .filter((message): message is UiToolResultMessage => message.role === 'toolResult')
+          .map((message) => [message.toolCallId, message]),
+      ),
+    [messages],
+  )
+  const respondToQuestionnaire = React.useCallback(
+    async (toolCallId: string, response: QuestionnaireResponsePayload) => {
+      if (!serverPort) throw new Error(t('agent.serverStopped'))
+      await createAgentServerClient(serverPort).respondToQuestionnaire(
+        sessionId,
+        toolCallId,
+        response,
+      )
+    },
+    [serverPort, sessionId, t],
+  )
   const displayUsageByMessage = React.useMemo(
     () => aggregateAssistantUsage(messages, { includeTrailingSegment: !running }),
     [messages, running],
@@ -329,7 +358,7 @@ export function AgentPanel({
       clearAttachments = true,
     ) => {
       const trimmed = text.trim()
-      if (!trimmed && attachments.length === 0) return
+      if ((!trimmed && attachments.length === 0) || questionnairePending) return
       const payload = attachments.map(
         (attachment): ChatAttachmentPayload => ({
           name: attachment.name,
@@ -353,7 +382,7 @@ export function AgentPanel({
         setAttachmentError('read')
       }
     },
-    [pendingAttachments, running, send, steer],
+    [pendingAttachments, questionnairePending, running, send, steer],
   )
 
   React.useEffect(() => {
@@ -363,7 +392,8 @@ export function AgentPanel({
   }, [quickPrompt, submit])
 
   const empty = messages.length === 0 && !running
-  const sendDisabled = (!input.trim() && pendingAttachments.length === 0) || !serverPort
+  const sendDisabled =
+    (!input.trim() && pendingAttachments.length === 0) || !serverPort || questionnairePending
   const sendButton = (
     <Button
       variant="default"
@@ -396,6 +426,8 @@ export function AgentPanel({
                     <MessageView
                       message={message}
                       toolExecutions={toolExecutions}
+                      questionnaireResults={questionnaireResults}
+                      onQuestionnaireRespond={respondToQuestionnaire}
                       onOpenFile={onOpenFile}
                       displayUsage={displayUsageByMessage.get(index)}
                       streaming={running && index === messages.length - 1}
@@ -444,6 +476,7 @@ export function AgentPanel({
             <InputGroupTextarea
               ref={textareaRef}
               value={input}
+              disabled={questionnairePending}
               onChange={(e) => setInput(e.target.value)}
               placeholder={running ? t('agent.steerPlaceholder') : t('agent.placeholder')}
               className="max-h-44 min-h-[76px] px-3 py-3 text-sm leading-5"
@@ -466,7 +499,7 @@ export function AgentPanel({
                       <InputGroupButton
                         size="icon-sm"
                         aria-label={t('agent.attach')}
-                        disabled={!serverPort}
+                        disabled={!serverPort || questionnairePending}
                       />
                     }
                   >
@@ -496,7 +529,7 @@ export function AgentPanel({
                   modelRef={modelRef}
                   providers={providers}
                   settings={settings}
-                  disabled={running}
+                  disabled={running || questionnairePending}
                   onConfigChange={onConfigChange}
                 />
               </div>
@@ -726,12 +759,19 @@ function EmptyState({ onPick }: { onPick: (text: string) => void }) {
 function MessageView({
   message,
   toolExecutions,
+  questionnaireResults,
+  onQuestionnaireRespond,
   streaming,
   displayUsage,
   onOpenFile,
 }: {
   message: UiMessage
   toolExecutions: Map<string, ToolExecutionState>
+  questionnaireResults: Map<string, UiToolResultMessage>
+  onQuestionnaireRespond: (
+    toolCallId: string,
+    response: QuestionnaireResponsePayload,
+  ) => Promise<void>
   streaming: boolean
   displayUsage?: DisplayUsage
   onOpenFile: (path: string) => void
@@ -744,6 +784,8 @@ function MessageView({
       <AssistantMessageView
         message={message}
         toolExecutions={toolExecutions}
+        questionnaireResults={questionnaireResults}
+        onQuestionnaireRespond={onQuestionnaireRespond}
         streaming={streaming}
         displayUsage={displayUsage}
         onOpenFile={onOpenFile}
@@ -794,12 +836,19 @@ function UserMessageView({ message }: { message: UiUserMessage }) {
 function AssistantMessageView({
   message,
   toolExecutions,
+  questionnaireResults,
+  onQuestionnaireRespond,
   streaming,
   displayUsage,
   onOpenFile,
 }: {
   message: UiAssistantMessage
   toolExecutions: Map<string, ToolExecutionState>
+  questionnaireResults: Map<string, UiToolResultMessage>
+  onQuestionnaireRespond: (
+    toolCallId: string,
+    response: QuestionnaireResponsePayload,
+  ) => Promise<void>
   streaming: boolean
   displayUsage?: DisplayUsage
   onOpenFile: (path: string) => void
@@ -821,9 +870,12 @@ function AssistantMessageView({
           return (
             <ToolCallView
               key={block.id}
+              toolCallId={block.id}
               name={block.name}
               args={block.arguments}
               execution={toolExecutions.get(block.id)}
+              result={questionnaireResults.get(block.id)}
+              onQuestionnaireRespond={onQuestionnaireRespond}
               onOpenFile={onOpenFile}
             />
           )
@@ -871,18 +923,38 @@ function ThinkingBlock({ text }: { text: string }) {
 const OPENABLE_TOOLS = new Set(['write_file', 'edit_file', 'read_file', 'propose_file_change'])
 
 function ToolCallView({
+  toolCallId,
   name,
   args,
   execution,
+  result,
+  onQuestionnaireRespond,
   onOpenFile,
 }: {
+  toolCallId: string
   name: string
   args: Record<string, unknown>
   execution?: ToolExecutionState
+  result?: UiToolResultMessage
+  onQuestionnaireRespond: (
+    toolCallId: string,
+    response: QuestionnaireResponsePayload,
+  ) => Promise<void>
   onOpenFile: (path: string) => void
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
+  if (name === 'questionnaire') {
+    return (
+      <QuestionnaireCard
+        toolCallId={toolCallId}
+        args={args}
+        execution={execution}
+        result={result}
+        onRespond={onQuestionnaireRespond}
+      />
+    )
+  }
   const status = execution?.status
   const path = typeof args?.path === 'string' ? args.path : undefined
   const openable = path && OPENABLE_TOOLS.has(name)

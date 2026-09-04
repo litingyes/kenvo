@@ -119,7 +119,26 @@
       ]
     },
     "model": "Model",
-    "noModelShort": "No model"
+    "noModelShort": "No model",
+    "questionnaire": {
+      "title": "Your choices",
+      "required": "required",
+      "optional": "optional",
+      "requiredError": "Choose an answer to continue.",
+      "optionalError": "Choose an answer or skip this question.",
+      "previous": "Previous",
+      "next": "Next",
+      "skip": "Skip",
+      "submit": "Submit choices",
+      "cancel": "Cancel",
+      "other": "Other",
+      "otherPlaceholder": "Add your own answer",
+      "completed": "Choices submitted",
+      "waiting": "Choices submitted — continuing…",
+      "skipped": "Skipped",
+      "cancelled": "Questionnaire cancelled",
+      "unavailable": "This questionnaire is no longer available."
+    }
   },
   "settings": {
     "title": "Settings",

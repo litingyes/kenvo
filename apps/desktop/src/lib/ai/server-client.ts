@@ -33,6 +33,15 @@ export interface ChatAttachmentPayload {
   data?: string
 }
 
+export interface QuestionnaireResponsePayload {
+  cancelled?: boolean
+  answers?: Array<{
+    id: string
+    values?: string[]
+    status?: 'answered' | 'skipped'
+  }>
+}
+
 export interface CreateSessionRequest {
   sessionId: string
   projectRoot: string
@@ -182,6 +191,28 @@ export class AgentServerClient {
 
   async abortSession(sessionId: string): Promise<void> {
     await this.request(`/sessions/${sessionId}/abort`, { method: 'POST' })
+  }
+
+  async respondToQuestionnaire(
+    sessionId: string,
+    toolCallId: string,
+    responsePayload: QuestionnaireResponsePayload,
+  ): Promise<void> {
+    const response = await this.request(
+      `/sessions/${encodeURIComponent(sessionId)}/questionnaires/${encodeURIComponent(toolCallId)}/respond`,
+      {
+        method: 'POST',
+        body: JSON.stringify(responsePayload),
+      },
+    )
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      throw new Error(
+        typeof data.error === 'string'
+          ? data.error
+          : `Questionnaire response failed (${response.status})`,
+      )
+    }
   }
 
   /**

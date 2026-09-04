@@ -34,6 +34,10 @@ import {
   steerSession,
 } from './sessions.js'
 import type { ProviderMetadata } from './types.js'
+import {
+  QuestionnaireInteractionError,
+  respondToQuestionnaire,
+} from './tools/questionnaire.js'
 
 const configureSchema = z.object({
   apiKey: z.string().nullish(),
@@ -254,6 +258,19 @@ export function createApp() {
         return c.json({ error: error.message }, error.status)
       }
       throw error
+    }
+  })
+
+  app.post('/sessions/:id/questionnaires/:toolCallId/respond', async (c) => {
+    try {
+      const body = await c.req.json()
+      respondToQuestionnaire(c.req.param('id'), c.req.param('toolCallId'), body)
+      return c.json({ success: true })
+    } catch (error) {
+      if (error instanceof QuestionnaireInteractionError) {
+        return c.json({ error: error.message }, error.status)
+      }
+      return c.json({ error: error instanceof Error ? error.message : String(error) }, 400)
     }
   })
 

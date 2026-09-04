@@ -68,6 +68,7 @@ export interface UiToolResultMessage {
   toolCallId: string
   toolName: string
   content: Array<{ type: string; text?: string }>
+  details?: unknown
   isError: boolean
   timestamp: number
 }
@@ -80,6 +81,7 @@ export interface ToolExecutionState {
   args?: Record<string, unknown>
   status: 'running' | 'done' | 'error'
   summary?: string
+  result?: { content?: Array<{ text?: string }>; details?: unknown }
 }
 
 interface UseAgentChatOptions {
@@ -250,6 +252,9 @@ export function useAgentChat(options: UseAgentChatOptions): UseAgentChatResult {
             next.set(toolCallId, {
               ...existing,
               status: event.isError ? 'error' : 'done',
+              result: event.result as
+                | { content?: Array<{ text?: string }>; details?: unknown }
+                | undefined,
             })
             return next
           })

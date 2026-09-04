@@ -13,6 +13,11 @@ import {
 } from './providers.js'
 import { buildSystemPrompt, getSkill } from './skills.js'
 import { createFsTools } from './tools/fs-tools.js'
+import {
+  cancelPendingQuestionnaires,
+  createQuestionnaireTool,
+  hasPendingQuestionnaire,
+} from './tools/questionnaire.js'
 
 interface SessionEntry {
   agent: Agent
@@ -69,9 +74,10 @@ export async function createSession(options: CreateSessionOptions): Promise<void
     initialState: {
       systemPrompt: buildSystemPrompt(skill),
       model,
-      tools: createFsTools(options.projectRoot, {
-        sessionId: options.sessionId,
-      }),
+      tools: [
+        ...createFsTools(options.projectRoot, { sessionId: options.sessionId }),
+        createQuestionnaireTool(options.sessionId),
+      ],
       messages: options.history ?? [],
     },
     streamFn: models.streamSimple.bind(models),
@@ -104,6 +110,7 @@ export function destroySession(sessionId: string): void {
   if (entry.agent.state.isStreaming) {
     entry.agent.abort()
   }
+  cancelPendingQuestionnaires(sessionId)
   sessions.delete(sessionId)
   clearProposals(sessionId)
   serverLog('info', 'session destroyed', { sessionId })
@@ -183,6 +190,9 @@ export function steerSession(
   if (!entry.agent.state.isStreaming) {
     throw new SessionError('Session is not running; send a normal message instead', 409)
   }
+  if (hasPendingQuestionnaire(sessionId)) {
+    throw new SessionError('Answer the pending questionnaire before steering the session', 409)
+  }
   if (
     attachments.some((attachment) => attachment.kind === 'image') &&
     !entry.agent.state.model.input.includes('image')
@@ -199,6 +209,7 @@ export function abortSession(sessionId: string): void {
     throw new SessionError(`Unknown session: ${sessionId}`, 404)
   }
   entry.agent.abort()
+  cancelPendingQuestionnaires(sessionId)
   serverLog('info', 'session aborted', { sessionId })
 }
 

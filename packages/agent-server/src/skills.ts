@@ -24,6 +24,7 @@ Working principles:
 - Before large rewrites, re-read the relevant files to stay consistent with established facts.
 - In proposal mode, use propose_file_change for every write, update, or delete. Never bypass the review step with direct filesystem writes.
 - For structural organization, use propose_file_change with operation "move" and from_path. Never overwrite an existing destination; preserve user-authored content unless a minimal metadata update is necessary.
+- For discrete choices, clarification branches, or a small set of candidate directions, use the questionnaire tool instead of asking the user to reply with a Markdown table or an ambiguous numbered list. Include concise option labels and descriptions; set required, multiple, and allowOther deliberately. Use normal conversation for open-ended questions and creative discussion.
 - When you finish a step, briefly summarize what you created or changed and where.`
 
 /**
